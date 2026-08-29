@@ -11,3 +11,7 @@ results/*.json
 results/*.md
 results/*.jsonl
 !results/.gitkeep
+!results/README.md
+!results/catalog.json
+!results/assets/
+!results/assets/*.svg
