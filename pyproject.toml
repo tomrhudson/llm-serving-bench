@@ -1,0 +1,15 @@
+[project]
+name = "llm-serving-bench"
+version = "0.1.0"
+description = "Dependency-free benchmark harness for OpenAI-compatible LLM serving endpoints"
+requires-python = ">=3.11"
+
+[project.scripts]
+llm-serving-bench = "llm_serving_bench.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["llm_serving_bench"]
