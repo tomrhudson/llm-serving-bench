@@ -150,10 +150,10 @@
       "concurrency": 1,
       "repetitions": 1,
       "cases": [
-        {"prompt": "Reply with exactly: CEDAR-17", "expected": "CEDAR-17", "output_tokens": 32},
-        {"prompt": "What is 37 multiplied by 19? Reply with only the integer.", "expected": "703", "output_tokens": 32},
-        {"prompt": "The sequence is amber, cobalt, jade, and violet. Reply with only the third item.", "expected": "jade", "output_tokens": 32},
-        {"prompt": "Reverse the ASCII string SPARK38. Reply with only the reversed string.", "expected": "83KRAPS", "output_tokens": 32}
+        {"prompt": "Reply with exactly: CEDAR-17", "expected": "CEDAR-17", "output_tokens": 128},
+        {"prompt": "What is 37 multiplied by 19? Reply with only the integer.", "expected": "703", "output_tokens": 128},
+        {"prompt": "The sequence is amber, cobalt, jade, and violet. Reply with only the third item.", "expected": "jade", "output_tokens": 128},
+        {"prompt": "Reverse the ASCII string SPARK38. Reply with only the reversed string.", "expected": "83KRAPS", "output_tokens": 128}
       ]
     },
     {
@@ -162,10 +162,10 @@
       "concurrency": 8,
       "repetitions": 2,
       "cases": [
-        {"prompt": "Reply with exactly: CEDAR-17", "expected": "CEDAR-17", "output_tokens": 32},
-        {"prompt": "What is 37 multiplied by 19? Reply with only the integer.", "expected": "703", "output_tokens": 32},
-        {"prompt": "The sequence is amber, cobalt, jade, and violet. Reply with only the third item.", "expected": "jade", "output_tokens": 32},
-        {"prompt": "Reverse the ASCII string SPARK38. Reply with only the reversed string.", "expected": "83KRAPS", "output_tokens": 32}
+        {"prompt": "Reply with exactly: CEDAR-17", "expected": "CEDAR-17", "output_tokens": 128},
+        {"prompt": "What is 37 multiplied by 19? Reply with only the integer.", "expected": "703", "output_tokens": 128},
+        {"prompt": "The sequence is amber, cobalt, jade, and violet. Reply with only the third item.", "expected": "jade", "output_tokens": 128},
+        {"prompt": "Reverse the ASCII string SPARK38. Reply with only the reversed string.", "expected": "83KRAPS", "output_tokens": 128}
       ]
     },
     {

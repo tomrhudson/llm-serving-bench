@@ -94,10 +94,17 @@ class OpenAIClient:
         return int(response["count"])
 
     def flush_cache(self) -> bool:
+        request = urllib.request.Request(
+            self.root_url + "/flush_cache",
+            data=b"{}",
+            headers=self.headers,
+            method="POST",
+        )
         try:
-            self._json_request(self.root_url + "/flush_cache", {})
-            return True
-        except (RuntimeError, json.JSONDecodeError):
+            with urllib.request.urlopen(request, timeout=self.timeout) as response:
+                response.read()
+                return 200 <= response.status < 300
+        except (OSError, urllib.error.URLError):
             return False
 
     def metrics_text(self) -> str | None:

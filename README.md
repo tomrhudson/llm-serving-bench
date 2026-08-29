@@ -82,3 +82,7 @@ python3 -m unittest discover -s tests -v
 Raw results are ignored because they can contain generated text, model names,
 and operational telemetry. Review and sanitize an artifact before force-adding
 it to version control.
+
+## Published baselines
+
+- [Qwen3.8-Flash-Next-NVFP4, two DGX Sparks, native 262K context](results/2026-08-29-qwen38-flash-next-nvfp4-native-262k.md)
