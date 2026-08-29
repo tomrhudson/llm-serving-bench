@@ -86,3 +86,4 @@ it to version control.
 ## Published baselines
 
 - [Qwen3.8-Flash-Next-NVFP4, two DGX Sparks, native 262K context](results/2026-08-29-qwen38-flash-next-nvfp4-native-262k.md)
+- [GLM-5.3-Flash-EXL3, two DGX Sparks, native 1M context](results/2026-08-29-glm53-flash-exl3-native-1m.md) — served with [MiaAI-Lab's original two-Spark recipe](https://github.com/MiaAI-Lab/GLM-5.3-Flash-EXL3-2x-DGX-Sparks/tree/79f10b91f84779b2b1ff2c9327b1a5847cd97f70)
