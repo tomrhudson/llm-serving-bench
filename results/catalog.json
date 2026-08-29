@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "baselines": [
+    {
+      "id": "qwen38-flash-next-nvfp4-native-262k",
+      "label": "Qwen3.8-Flash-Next-NVFP4",
+      "chart_label": "Qwen3.8 NVFP4",
+      "date": "2026-08-29",
+      "report": "2026-08-29-qwen38-flash-next-nvfp4-native-262k.md",
+      "hardware": "2x DGX Spark",
+      "runtime": "SGLang",
+      "context_tokens": 262144,
+      "recipe_credit": "Sparkfleet deployment",
+      "recommendation": "Concurrency 8",
+      "decode": [
+        {"concurrency": 1, "output_tps": 38.43, "ttft_p95_seconds": 0.41},
+        {"concurrency": 2, "output_tps": 68.64, "ttft_p95_seconds": 0.82},
+        {"concurrency": 4, "output_tps": 151.70, "ttft_p95_seconds": 1.28},
+        {"concurrency": 8, "output_tps": 215.06, "ttft_p95_seconds": 1.58},
+        {"concurrency": 12, "output_tps": 153.55, "ttft_p95_seconds": 29.90},
+        {"concurrency": 16, "output_tps": 184.47, "ttft_p95_seconds": 30.48}
+      ],
+      "prefill": [
+        {"input_tokens": 4096, "input_tps": 1015.76, "ttft_p95_seconds": 2.55},
+        {"input_tokens": 32768, "input_tps": 1551.13, "ttft_p95_seconds": 19.36},
+        {"input_tokens": 131072, "input_tps": 1808.72, "ttft_p95_seconds": 83.49},
+        {"input_tokens": 245760, "input_tps": 409.67, "ttft_p95_seconds": 598.56}
+      ],
+      "prefix": {"unique_ttft_p95_seconds": 56.03, "warm_ttft_p95_seconds": 0.78},
+      "soak": {"concurrency": 8, "minutes": 20, "output_tps": 157.61, "ttft_p95_seconds": 1.64, "requests": 374, "errors": 0},
+      "quality": {"passed": 13, "total": 13}
+    },
+    {
+      "id": "glm53-flash-exl3-native-1m",
+      "label": "GLM-5.3-Flash-EXL3",
+      "chart_label": "GLM-5.3 EXL3",
+      "date": "2026-08-29",
+      "report": "2026-08-29-glm53-flash-exl3-native-1m.md",
+      "hardware": "2x DGX Spark",
+      "runtime": "vLLM",
+      "context_tokens": 1000000,
+      "recipe_credit": "[MiaAI-Lab original recipe](https://github.com/MiaAI-Lab/GLM-5.3-Flash-EXL3-2x-DGX-Sparks/tree/79f10b91f84779b2b1ff2c9327b1a5847cd97f70)",
+      "recommendation": "Concurrency 1 interactive; 4 batch",
+      "decode": [
+        {"concurrency": 1, "output_tps": 35.13, "ttft_p95_seconds": 0.95},
+        {"concurrency": 2, "output_tps": 40.52, "ttft_p95_seconds": 15.78},
+        {"concurrency": 4, "output_tps": 62.52, "ttft_p95_seconds": 23.65},
+        {"concurrency": 8, "output_tps": 70.02, "ttft_p95_seconds": 50.09},
+        {"concurrency": 12, "output_tps": 76.97, "ttft_p95_seconds": 65.28},
+        {"concurrency": 16, "output_tps": 79.51, "ttft_p95_seconds": 91.26}
+      ],
+      "prefill": [
+        {"input_tokens": 4096, "input_tps": 566.73, "ttft_p95_seconds": 5.00},
+        {"input_tokens": 32768, "input_tps": 833.16, "ttft_p95_seconds": 36.85},
+        {"input_tokens": 131072, "input_tps": 882.52, "ttft_p95_seconds": 147.00},
+        {"input_tokens": 245760, "input_tps": 876.11, "ttft_p95_seconds": 279.80}
+      ],
+      "prefix": {"unique_ttft_p95_seconds": 153.63, "warm_ttft_p95_seconds": 13.91},
+      "soak": {"concurrency": 8, "minutes": 20, "output_tps": 38.53, "ttft_p95_seconds": 98.77, "requests": 98, "errors": 0},
+      "quality": {"passed": 13, "total": 13}
+    }
+  ]
+}
