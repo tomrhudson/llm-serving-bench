@@ -10,7 +10,7 @@
       "hardware": "2x DGX Spark",
       "runtime": "SGLang",
       "context_tokens": 262144,
-      "recipe_credit": "Sparkfleet deployment",
+      "recipe_credit": "[Qwen3.8 Flash Next DGX Spark recipe](https://github.com/tomrhudson/qwen38-flash-next-dgx-spark-recipe/tree/main)",
       "recommendation": "Concurrency 8",
       "decode": [
         {"concurrency": 1, "output_tps": 38.43, "ttft_p95_seconds": 0.41},
