@@ -4,6 +4,8 @@ Date: 2026-08-29
 
 Status: **PASS with an operational concurrency recommendation of 8**
 
+> Serving recipe: [Qwen3.8 Flash Next DGX Spark recipe](https://github.com/tomrhudson/qwen38-flash-next-dgx-spark-recipe/tree/main).
+
 ## Configuration
 
 - Model: `Qwen3.8-Flash-Next-NVFP4`
