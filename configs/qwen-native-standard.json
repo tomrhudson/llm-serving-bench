@@ -1,0 +1,183 @@
+{
+  "name": "qwen-native-standard-v1",
+  "seed": 20260829,
+  "scenarios": [
+    {
+      "name": "warmup",
+      "kind": "throughput",
+      "prompt_tokens": 256,
+      "output_tokens": 128,
+      "requests": 2,
+      "concurrency": 1
+    },
+    {
+      "name": "decode-c1",
+      "kind": "throughput",
+      "comparison_group": "decode-256-512",
+      "prompt_tokens": 256,
+      "output_tokens": 512,
+      "requests": 6,
+      "concurrency": 1,
+      "ignore_eos": true,
+      "flush_cache": true
+    },
+    {
+      "name": "decode-c2",
+      "kind": "throughput",
+      "comparison_group": "decode-256-512",
+      "prompt_tokens": 256,
+      "output_tokens": 512,
+      "requests": 8,
+      "concurrency": 2,
+      "ignore_eos": true,
+      "flush_cache": true
+    },
+    {
+      "name": "decode-c4",
+      "kind": "throughput",
+      "comparison_group": "decode-256-512",
+      "prompt_tokens": 256,
+      "output_tokens": 512,
+      "requests": 12,
+      "concurrency": 4,
+      "ignore_eos": true,
+      "flush_cache": true
+    },
+    {
+      "name": "decode-c8",
+      "kind": "throughput",
+      "comparison_group": "decode-256-512",
+      "prompt_tokens": 256,
+      "output_tokens": 512,
+      "requests": 16,
+      "concurrency": 8,
+      "ignore_eos": true,
+      "flush_cache": true
+    },
+    {
+      "name": "decode-c12",
+      "kind": "throughput",
+      "comparison_group": "decode-256-512",
+      "prompt_tokens": 256,
+      "output_tokens": 512,
+      "requests": 24,
+      "concurrency": 12,
+      "ignore_eos": true,
+      "flush_cache": true
+    },
+    {
+      "name": "decode-c16",
+      "kind": "throughput",
+      "comparison_group": "decode-256-512",
+      "prompt_tokens": 256,
+      "output_tokens": 512,
+      "requests": 32,
+      "concurrency": 16,
+      "ignore_eos": true,
+      "flush_cache": true
+    },
+    {
+      "name": "prefill-4k-c1",
+      "kind": "throughput",
+      "prompt_tokens": 4096,
+      "output_tokens": 64,
+      "requests": 3,
+      "concurrency": 1,
+      "flush_cache": true
+    },
+    {
+      "name": "prefill-32k-c1",
+      "kind": "throughput",
+      "prompt_tokens": 32768,
+      "output_tokens": 64,
+      "requests": 3,
+      "concurrency": 1,
+      "flush_cache": true
+    },
+    {
+      "name": "prefill-128k-c1",
+      "kind": "throughput",
+      "prompt_tokens": 131072,
+      "output_tokens": 64,
+      "requests": 2,
+      "concurrency": 1,
+      "flush_cache": true
+    },
+    {
+      "name": "prefix-unique-32k-c4",
+      "kind": "throughput",
+      "prompt_mode": "unique",
+      "prompt_tokens": 32768,
+      "output_tokens": 128,
+      "requests": 4,
+      "concurrency": 4,
+      "flush_cache": true
+    },
+    {
+      "name": "prefix-cold-32k-c4",
+      "kind": "throughput",
+      "prompt_mode": "shared",
+      "prompt_group": "shared-32k",
+      "prompt_tokens": 32768,
+      "output_tokens": 128,
+      "requests": 4,
+      "concurrency": 4,
+      "flush_cache": true
+    },
+    {
+      "name": "prefix-warm-32k-c4",
+      "kind": "throughput",
+      "prompt_mode": "shared",
+      "prompt_group": "shared-32k",
+      "prompt_tokens": 32768,
+      "output_tokens": 128,
+      "requests": 4,
+      "concurrency": 4
+    },
+    {
+      "name": "needle-240k-c1",
+      "kind": "needle",
+      "prompt_tokens": 245760,
+      "output_tokens": 128,
+      "requests": 1,
+      "concurrency": 1,
+      "passkey": "ORBIT-7319-CEDAR",
+      "flush_cache": true
+    },
+    {
+      "name": "canary-serial",
+      "kind": "canary",
+      "concurrency": 1,
+      "repetitions": 1,
+      "cases": [
+        {"prompt": "Reply with exactly: CEDAR-17", "expected": "CEDAR-17", "output_tokens": 128},
+        {"prompt": "What is 37 multiplied by 19? Reply with only the integer.", "expected": "703", "output_tokens": 128},
+        {"prompt": "The sequence is amber, cobalt, jade, and violet. Reply with only the third item.", "expected": "jade", "output_tokens": 128},
+        {"prompt": "Reverse the ASCII string SPARK38. Reply with only the reversed string.", "expected": "83KRAPS", "output_tokens": 128}
+      ]
+    },
+    {
+      "name": "canary-concurrent-c8",
+      "kind": "canary",
+      "concurrency": 8,
+      "repetitions": 2,
+      "cases": [
+        {"prompt": "Reply with exactly: CEDAR-17", "expected": "CEDAR-17", "output_tokens": 128},
+        {"prompt": "What is 37 multiplied by 19? Reply with only the integer.", "expected": "703", "output_tokens": 128},
+        {"prompt": "The sequence is amber, cobalt, jade, and violet. Reply with only the third item.", "expected": "jade", "output_tokens": 128},
+        {"prompt": "Reverse the ASCII string SPARK38. Reply with only the reversed string.", "expected": "83KRAPS", "output_tokens": 128}
+      ]
+    },
+    {
+      "name": "soak-c8-20m",
+      "kind": "throughput",
+      "prompt_tokens": 1024,
+      "output_tokens": 512,
+      "requests": 64,
+      "concurrency": 8,
+      "duration_seconds": 1200,
+      "ignore_eos": true,
+      "flush_cache": true
+    }
+  ]
+}
