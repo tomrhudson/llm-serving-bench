@@ -174,10 +174,7 @@ class OpenAIClient:
                     finish_reason = choice.get("finish_reason") or finish_reason
                     delta = choice.get("delta") or {}
                     content = delta.get("content") or ""
-                    reasoning = delta.get("reasoning_content") or ""
-                    if not content and not reasoning:
-                        provider = delta.get("provider_specific_fields") or {}
-                        reasoning = provider.get("reasoning_content") or ""
+                    reasoning = _reasoning_text(delta)
                     if content:
                         content_parts.append(content)
                     if reasoning:
@@ -228,3 +225,14 @@ class OpenAIClient:
             reasoning_content=full_reasoning,
             expected=expected,
         )
+
+
+def _reasoning_text(delta: dict[str, Any]) -> str:
+    """Normalize reasoning deltas emitted by OpenAI-compatible servers."""
+    reasoning = delta.get("reasoning_content") or delta.get("reasoning")
+    if reasoning:
+        return str(reasoning)
+    provider = delta.get("provider_specific_fields") or {}
+    return str(
+        provider.get("reasoning_content") or provider.get("reasoning") or ""
+    )
