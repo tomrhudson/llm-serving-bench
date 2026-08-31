@@ -232,7 +232,7 @@ Last updated: {newest} · Published baselines: {len(baselines)}
 
 ## At a glance
 
-| Model | Hardware / runtime | Native context | Peak decode tok/s | c1 TTFT p95 | Longest-context TTFT p95 | Soak tok/s | Quality | Recommended concurrency | Recipe credit |
+| Model | Hardware / runtime | Configured context | Peak decode tok/s | c1 TTFT p95 | Longest-context TTFT p95 | Soak tok/s | Quality | Recommended concurrency | Recipe credit |
 |---|---|---:|---:|---:|---:|---:|---:|---|---|
 {chr(10).join(rows)}
 

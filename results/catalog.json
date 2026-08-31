@@ -2,6 +2,35 @@
   "schema_version": 1,
   "baselines": [
     {
+      "id": "qwen38-flash-next-vllm-mia-yarn-1m",
+      "label": "Qwen3.8-Flash-Next-NVFP4 (Mia vLLM)",
+      "chart_label": "Qwen3.8 vLLM",
+      "date": "2026-08-31",
+      "report": "2026-08-31-qwen38-flash-next-vllm-mia-yarn-1m.md",
+      "hardware": "2x DGX Spark",
+      "runtime": "vLLM",
+      "context_tokens": 1000000,
+      "recipe_credit": "[MiaAI-Lab Qwen dual-Spark recipe](https://github.com/MiaAI-Lab/Qwen3.8-Flash-Next-Dual-DGX-Sparks/tree/169fbad266f2791335a3102f0d3d625e7c295563)",
+      "recommendation": "Concurrency 8",
+      "decode": [
+        {"concurrency": 1, "output_tps": 48.93, "ttft_p95_seconds": 0.43},
+        {"concurrency": 2, "output_tps": 83.20, "ttft_p95_seconds": 0.87},
+        {"concurrency": 4, "output_tps": 134.62, "ttft_p95_seconds": 1.22},
+        {"concurrency": 8, "output_tps": 206.78, "ttft_p95_seconds": 1.18},
+        {"concurrency": 12, "output_tps": 209.12, "ttft_p95_seconds": 19.13},
+        {"concurrency": 16, "output_tps": 208.17, "ttft_p95_seconds": 20.96}
+      ],
+      "prefill": [
+        {"input_tokens": 4096, "input_tps": 1312.80, "ttft_p95_seconds": 1.88},
+        {"input_tokens": 32768, "input_tps": 2399.48, "ttft_p95_seconds": 12.50},
+        {"input_tokens": 131072, "input_tps": 2380.23, "ttft_p95_seconds": 53.85},
+        {"input_tokens": 245760, "input_tps": 2069.12, "ttft_p95_seconds": 117.30}
+      ],
+      "prefix": {"unique_ttft_p95_seconds": 53.14, "warm_ttft_p95_seconds": 4.04},
+      "soak": {"concurrency": 8, "minutes": 20, "output_tps": 197.71, "ttft_p95_seconds": 1.19, "requests": 469, "errors": 0},
+      "quality": {"passed": 13, "total": 13}
+    },
+    {
       "id": "qwen38-flash-next-nvfp4-native-262k",
       "label": "Qwen3.8-Flash-Next-NVFP4",
       "chart_label": "Qwen3.8 NVFP4",
