@@ -22,10 +22,13 @@
   <text class="subtitle" x="78" y="50">Higher is better; approximately 256 input and 512 output tokens per request</text>
   <line x1="78" y1="72" x2="102" y2="72" stroke="#2563eb" stroke-width="3" stroke-dasharray=""/>
   <circle cx="90" cy="72" r="4" fill="#2563eb"/>
-  <text x="109" y="76">Qwen3.8 NVFP4</text>
-  <line x1="246" y1="72" x2="270" y2="72" stroke="#dc2626" stroke-width="3" stroke-dasharray=""/>
-  <circle cx="258" cy="72" r="4" fill="#dc2626"/>
-  <text x="277" y="76">GLM-5.3 EXL3</text>
+  <text x="109" y="76">Qwen3.8 vLLM</text>
+  <line x1="238" y1="72" x2="262" y2="72" stroke="#dc2626" stroke-width="3" stroke-dasharray=""/>
+  <circle cx="250" cy="72" r="4" fill="#dc2626"/>
+  <text x="269" y="76">Qwen3.8 NVFP4</text>
+  <line x1="406" y1="72" x2="430" y2="72" stroke="#059669" stroke-width="3" stroke-dasharray=""/>
+  <circle cx="418" cy="72" r="4" fill="#059669"/>
+  <text x="437" y="76">GLM-5.3 EXL3</text>
   <line class="grid" x1="78" y1="404.0" x2="892" y2="404.0"/>
   <text class="tick" x="68" y="408.0" text-anchor="end">0</text>
   <line class="grid" x1="78" y1="342.4" x2="892" y2="342.4"/>
@@ -54,18 +57,25 @@
   <line class="axis" x1="78" y1="96" x2="78" y2="404"/>
   <text x="485.0" y="454" text-anchor="middle">Offered concurrency (requests)</text>
   <text transform="translate(20 250.0) rotate(-90)" text-anchor="middle">Aggregate output throughput (tokens/s)</text>
-  <path class="series" d="M 78.0 356.7 L 132.3 319.4 L 240.8 217.1 L 457.9 139.0 L 674.9 214.8 L 892.0 176.7" stroke="#2563eb" stroke-dasharray=""/>
-  <circle class="marker" cx="78.0" cy="356.7" r="5" fill="#2563eb"><title>Qwen3.8 NVFP4: 38.43</title></circle>
-  <circle class="marker" cx="132.3" cy="319.4" r="5" fill="#2563eb"><title>Qwen3.8 NVFP4: 68.64</title></circle>
-  <circle class="marker" cx="240.8" cy="217.1" r="5" fill="#2563eb"><title>Qwen3.8 NVFP4: 151.7</title></circle>
-  <circle class="marker" cx="457.9" cy="139.0" r="5" fill="#2563eb"><title>Qwen3.8 NVFP4: 215.06</title></circle>
-  <circle class="marker" cx="674.9" cy="214.8" r="5" fill="#2563eb"><title>Qwen3.8 NVFP4: 153.55</title></circle>
-  <circle class="marker" cx="892.0" cy="176.7" r="5" fill="#2563eb"><title>Qwen3.8 NVFP4: 184.47</title></circle>
-  <path class="series" d="M 78.0 360.7 L 132.3 354.1 L 240.8 327.0 L 457.9 317.7 L 674.9 309.2 L 892.0 306.0" stroke="#dc2626" stroke-dasharray=""/>
-  <circle class="marker" cx="78.0" cy="360.7" r="5" fill="#dc2626"><title>GLM-5.3 EXL3: 35.13</title></circle>
-  <circle class="marker" cx="132.3" cy="354.1" r="5" fill="#dc2626"><title>GLM-5.3 EXL3: 40.52</title></circle>
-  <circle class="marker" cx="240.8" cy="327.0" r="5" fill="#dc2626"><title>GLM-5.3 EXL3: 62.52</title></circle>
-  <circle class="marker" cx="457.9" cy="317.7" r="5" fill="#dc2626"><title>GLM-5.3 EXL3: 70.02</title></circle>
-  <circle class="marker" cx="674.9" cy="309.2" r="5" fill="#dc2626"><title>GLM-5.3 EXL3: 76.97</title></circle>
-  <circle class="marker" cx="892.0" cy="306.0" r="5" fill="#dc2626"><title>GLM-5.3 EXL3: 79.51</title></circle>
+  <path class="series" d="M 78.0 343.7 L 132.3 301.5 L 240.8 238.1 L 457.9 149.2 L 674.9 146.4 L 892.0 147.5" stroke="#2563eb" stroke-dasharray=""/>
+  <circle class="marker" cx="78.0" cy="343.7" r="5" fill="#2563eb"><title>Qwen3.8 vLLM: 48.93</title></circle>
+  <circle class="marker" cx="132.3" cy="301.5" r="5" fill="#2563eb"><title>Qwen3.8 vLLM: 83.2</title></circle>
+  <circle class="marker" cx="240.8" cy="238.1" r="5" fill="#2563eb"><title>Qwen3.8 vLLM: 134.62</title></circle>
+  <circle class="marker" cx="457.9" cy="149.2" r="5" fill="#2563eb"><title>Qwen3.8 vLLM: 206.78</title></circle>
+  <circle class="marker" cx="674.9" cy="146.4" r="5" fill="#2563eb"><title>Qwen3.8 vLLM: 209.12</title></circle>
+  <circle class="marker" cx="892.0" cy="147.5" r="5" fill="#2563eb"><title>Qwen3.8 vLLM: 208.17</title></circle>
+  <path class="series" d="M 78.0 356.7 L 132.3 319.4 L 240.8 217.1 L 457.9 139.0 L 674.9 214.8 L 892.0 176.7" stroke="#dc2626" stroke-dasharray=""/>
+  <circle class="marker" cx="78.0" cy="356.7" r="5" fill="#dc2626"><title>Qwen3.8 NVFP4: 38.43</title></circle>
+  <circle class="marker" cx="132.3" cy="319.4" r="5" fill="#dc2626"><title>Qwen3.8 NVFP4: 68.64</title></circle>
+  <circle class="marker" cx="240.8" cy="217.1" r="5" fill="#dc2626"><title>Qwen3.8 NVFP4: 151.7</title></circle>
+  <circle class="marker" cx="457.9" cy="139.0" r="5" fill="#dc2626"><title>Qwen3.8 NVFP4: 215.06</title></circle>
+  <circle class="marker" cx="674.9" cy="214.8" r="5" fill="#dc2626"><title>Qwen3.8 NVFP4: 153.55</title></circle>
+  <circle class="marker" cx="892.0" cy="176.7" r="5" fill="#dc2626"><title>Qwen3.8 NVFP4: 184.47</title></circle>
+  <path class="series" d="M 78.0 360.7 L 132.3 354.1 L 240.8 327.0 L 457.9 317.7 L 674.9 309.2 L 892.0 306.0" stroke="#059669" stroke-dasharray=""/>
+  <circle class="marker" cx="78.0" cy="360.7" r="5" fill="#059669"><title>GLM-5.3 EXL3: 35.13</title></circle>
+  <circle class="marker" cx="132.3" cy="354.1" r="5" fill="#059669"><title>GLM-5.3 EXL3: 40.52</title></circle>
+  <circle class="marker" cx="240.8" cy="327.0" r="5" fill="#059669"><title>GLM-5.3 EXL3: 62.52</title></circle>
+  <circle class="marker" cx="457.9" cy="317.7" r="5" fill="#059669"><title>GLM-5.3 EXL3: 70.02</title></circle>
+  <circle class="marker" cx="674.9" cy="309.2" r="5" fill="#059669"><title>GLM-5.3 EXL3: 76.97</title></circle>
+  <circle class="marker" cx="892.0" cy="306.0" r="5" fill="#059669"><title>GLM-5.3 EXL3: 79.51</title></circle>
 </svg>
