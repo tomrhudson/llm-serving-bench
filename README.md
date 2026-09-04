@@ -88,6 +88,7 @@ it to version control.
 [Compare all published baselines](results/README.md) for the cross-model table,
 decode and prefill charts, and the process for adding future results.
 
+- [Qwen3.8-Flash-Next-NVFP4, MiaAI-Lab vLLM recipe, two DGX Sparks, 1M YaRN context, 2200 MHz cap](results/2026-09-03-qwen38-flash-next-vllm-mia-yarn-1m-2200mhz.md) — same exact recipe and model as the stock baseline, with a validated GPU clock cap on both ranks
 - [Qwen3.8-Flash-Next-NVFP4, MiaAI-Lab vLLM recipe, two DGX Sparks, 1M YaRN context](results/2026-08-31-qwen38-flash-next-vllm-mia-yarn-1m.md) — served with the exact [MiaAI-Lab dual-Spark recipe](https://github.com/MiaAI-Lab/Qwen3.8-Flash-Next-Dual-DGX-Sparks/tree/169fbad266f2791335a3102f0d3d625e7c295563)
 - [Qwen3.8-Flash-Next-NVFP4, two DGX Sparks, native 262K context](results/2026-08-29-qwen38-flash-next-nvfp4-native-262k.md) — served with the [Qwen3.8 Flash Next DGX Spark recipe](https://github.com/tomrhudson/qwen38-flash-next-dgx-spark-recipe/tree/main)
 - [GLM-5.3-Flash-EXL3, two DGX Sparks, native 1M context](results/2026-08-29-glm53-flash-exl3-native-1m.md) — served with [MiaAI-Lab's original two-Spark recipe](https://github.com/MiaAI-Lab/GLM-5.3-Flash-EXL3-2x-DGX-Sparks/tree/79f10b91f84779b2b1ff2c9327b1a5847cd97f70)
