@@ -2,6 +2,88 @@
   "schema_version": 1,
   "baselines": [
     {
+      "id": "qwen38-mia-nvidia-fp8kv-native-262k",
+      "label": "Qwen3.8-Flash-Next NVIDIA NVFP4 (Mia vLLM, FP8 KV)",
+      "chart_label": "Qwen3.8 NVIDIA FP8 KV",
+      "date": "2026-09-07",
+      "report": "2026-09-07-qwen38-mia-nvidia-fp8kv-native-262k.md",
+      "hardware": "2x DGX Spark",
+      "runtime": "vLLM",
+      "context_tokens": 262144,
+      "recipe_credit": "[MiaAI-Lab updated dual-Spark recipe](https://github.com/MiaAI-Lab/Qwen3.8-Flash-Next-Dual-DGX-Sparks/tree/c2325b22602b51a5faf55fc2bebccc34f3f80b9f)",
+      "recommendation": "Concurrency 8; faster prefill, larger KV pool",
+      "decode": [
+        {
+          "concurrency": 1,
+          "output_tps": 47.34,
+          "ttft_p95_seconds": 0.4
+        },
+        {
+          "concurrency": 2,
+          "output_tps": 82.53,
+          "ttft_p95_seconds": 1.05
+        },
+        {
+          "concurrency": 4,
+          "output_tps": 133.49,
+          "ttft_p95_seconds": 1.43
+        },
+        {
+          "concurrency": 8,
+          "output_tps": 198.09,
+          "ttft_p95_seconds": 1.54
+        },
+        {
+          "concurrency": 12,
+          "output_tps": 203.52,
+          "ttft_p95_seconds": 19.81
+        },
+        {
+          "concurrency": 16,
+          "output_tps": 207.77,
+          "ttft_p95_seconds": 21.27
+        }
+      ],
+      "prefill": [
+        {
+          "input_tokens": 4096,
+          "input_tps": 1277.5,
+          "ttft_p95_seconds": 1.62
+        },
+        {
+          "input_tokens": 32768,
+          "input_tps": 2615.32,
+          "ttft_p95_seconds": 11.14
+        },
+        {
+          "input_tokens": 131072,
+          "input_tps": 2669.18,
+          "ttft_p95_seconds": 47.69
+        },
+        {
+          "input_tokens": 245760,
+          "input_tps": 2445.56,
+          "ttft_p95_seconds": 99.22
+        }
+      ],
+      "prefix": {
+        "unique_ttft_p95_seconds": 44.16,
+        "warm_ttft_p95_seconds": 5.86
+      },
+      "soak": {
+        "concurrency": 8,
+        "minutes": 20,
+        "output_tps": 197.42,
+        "ttft_p95_seconds": 1.11,
+        "requests": 468,
+        "errors": 0
+      },
+      "quality": {
+        "passed": 13,
+        "total": 13
+      }
+    },
+    {
       "id": "qwen38-flash-next-vllm-mia-yarn-1m-2200mhz",
       "label": "Qwen3.8-Flash-Next-NVFP4 (Mia vLLM, 2200 MHz)",
       "chart_label": "Qwen3.8 vLLM 2200",
