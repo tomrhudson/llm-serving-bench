@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="920" height="514" viewBox="0 0 920 514" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="576" viewBox="0 0 920 576" role="img" aria-labelledby="title desc">
   <title id="title">20-minute concurrency-8 soak throughput</title>
   <desc id="desc">Aggregate output throughput for every published baseline.</desc>
   <style>
@@ -20,35 +20,38 @@
   </style>
   <text class="title" x="220" y="28">20-minute concurrency-8 soak throughput</text>
   <text class="subtitle" x="220" y="50">Aggregate output tokens per second; all published runs completed with zero errors</text>
-  <line class="grid" x1="220.0" y1="86" x2="220.0" y2="458"/>
-  <text class="tick" x="220.0" y="482" text-anchor="middle">0</text>
-  <line class="grid" x1="352.8" y1="86" x2="352.8" y2="458"/>
-  <text class="tick" x="352.8" y="482" text-anchor="middle">50</text>
-  <line class="grid" x1="485.6" y1="86" x2="485.6" y2="458"/>
-  <text class="tick" x="485.6" y="482" text-anchor="middle">100</text>
-  <line class="grid" x1="618.4" y1="86" x2="618.4" y2="458"/>
-  <text class="tick" x="618.4" y="482" text-anchor="middle">150</text>
-  <line class="grid" x1="751.2" y1="86" x2="751.2" y2="458"/>
-  <text class="tick" x="751.2" y="482" text-anchor="middle">200</text>
-  <line class="grid" x1="884.0" y1="86" x2="884.0" y2="458"/>
-  <text class="tick" x="884.0" y="482" text-anchor="middle">250</text>
-  <text x="208" y="118" text-anchor="end">DeepSeek V4.1 EXL3</text>
-  <rect x="220" y="98" width="93.8" height="28" rx="3" fill="#2563eb"><title>35.31 output tok/s</title></rect>
-  <text x="323.8" y="118">35.31</text>
-  <text x="208" y="180" text-anchor="end">Qwen3.8 NVIDIA FP8 KV</text>
-  <rect x="220" y="160" width="524.3" height="28" rx="3" fill="#dc2626"><title>197.42 output tok/s</title></rect>
-  <text x="754.3" y="180">197.42</text>
-  <text x="208" y="242" text-anchor="end">Qwen3.8 vLLM 2200</text>
-  <rect x="220" y="222" width="535.4" height="28" rx="3" fill="#059669"><title>201.58 output tok/s</title></rect>
-  <text x="765.4" y="242">201.58</text>
-  <text x="208" y="304" text-anchor="end">Qwen3.8 vLLM</text>
-  <rect x="220" y="284" width="525.1" height="28" rx="3" fill="#9333ea"><title>197.71 output tok/s</title></rect>
-  <text x="755.1" y="304">197.71</text>
-  <text x="208" y="366" text-anchor="end">Qwen3.8 NVFP4</text>
-  <rect x="220" y="346" width="418.6" height="28" rx="3" fill="#ea580c"><title>157.61 output tok/s</title></rect>
-  <text x="648.6" y="366">157.61</text>
-  <text x="208" y="428" text-anchor="end">GLM-5.3 EXL3</text>
-  <rect x="220" y="408" width="102.3" height="28" rx="3" fill="#0891b2"><title>38.53 output tok/s</title></rect>
-  <text x="332.3" y="428">38.53</text>
-  <text x="552.0" y="502" text-anchor="middle">Aggregate output throughput (tokens/s)</text>
+  <line class="grid" x1="220.0" y1="86" x2="220.0" y2="520"/>
+  <text class="tick" x="220.0" y="544" text-anchor="middle">0</text>
+  <line class="grid" x1="352.8" y1="86" x2="352.8" y2="520"/>
+  <text class="tick" x="352.8" y="544" text-anchor="middle">50</text>
+  <line class="grid" x1="485.6" y1="86" x2="485.6" y2="520"/>
+  <text class="tick" x="485.6" y="544" text-anchor="middle">100</text>
+  <line class="grid" x1="618.4" y1="86" x2="618.4" y2="520"/>
+  <text class="tick" x="618.4" y="544" text-anchor="middle">150</text>
+  <line class="grid" x1="751.2" y1="86" x2="751.2" y2="520"/>
+  <text class="tick" x="751.2" y="544" text-anchor="middle">200</text>
+  <line class="grid" x1="884.0" y1="86" x2="884.0" y2="520"/>
+  <text class="tick" x="884.0" y="544" text-anchor="middle">250</text>
+  <text x="208" y="118" text-anchor="end">GLM-5.3 EXL3/TR3 new</text>
+  <rect x="220" y="98" width="58.1" height="28" rx="3" fill="#2563eb"><title>21.88 output tok/s</title></rect>
+  <text x="288.1" y="118">21.88</text>
+  <text x="208" y="180" text-anchor="end">DeepSeek V4.1 EXL3</text>
+  <rect x="220" y="160" width="93.8" height="28" rx="3" fill="#dc2626"><title>35.31 output tok/s</title></rect>
+  <text x="323.8" y="180">35.31</text>
+  <text x="208" y="242" text-anchor="end">Qwen3.8 NVIDIA FP8 KV</text>
+  <rect x="220" y="222" width="524.3" height="28" rx="3" fill="#059669"><title>197.42 output tok/s</title></rect>
+  <text x="754.3" y="242">197.42</text>
+  <text x="208" y="304" text-anchor="end">Qwen3.8 vLLM 2200</text>
+  <rect x="220" y="284" width="535.4" height="28" rx="3" fill="#9333ea"><title>201.58 output tok/s</title></rect>
+  <text x="765.4" y="304">201.58</text>
+  <text x="208" y="366" text-anchor="end">Qwen3.8 vLLM</text>
+  <rect x="220" y="346" width="525.1" height="28" rx="3" fill="#ea580c"><title>197.71 output tok/s</title></rect>
+  <text x="755.1" y="366">197.71</text>
+  <text x="208" y="428" text-anchor="end">Qwen3.8 NVFP4</text>
+  <rect x="220" y="408" width="418.6" height="28" rx="3" fill="#0891b2"><title>157.61 output tok/s</title></rect>
+  <text x="648.6" y="428">157.61</text>
+  <text x="208" y="490" text-anchor="end">GLM-5.3 EXL3</text>
+  <rect x="220" y="470" width="102.3" height="28" rx="3" fill="#4f46e5"><title>38.53 output tok/s</title></rect>
+  <text x="332.3" y="490">38.53</text>
+  <text x="552.0" y="564" text-anchor="middle">Aggregate output throughput (tokens/s)</text>
 </svg>

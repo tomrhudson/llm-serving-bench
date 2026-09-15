@@ -2,6 +2,35 @@
   "schema_version": 1,
   "baselines": [
     {
+      "id": "glm53-flash-exl3-tr3-4bpw-850k-a35e",
+      "label": "GLM-5.3 Flash EXL3/TR3 4 bpw (refreshed recipe)",
+      "chart_label": "GLM-5.3 EXL3/TR3 new",
+      "date": "2026-09-15",
+      "report": "2026-09-15-glm53-flash-exl3-tr3-4bpw-850k.md",
+      "hardware": "2x DGX Spark",
+      "runtime": "vLLM",
+      "context_tokens": 850000,
+      "recipe_credit": "[MiaAI-Lab refreshed GLM recipe](https://github.com/MiaAI-Lab/GLM-5.3-Flash-EXL3-2x-DGX-Sparks/tree/a35eaab128233d215b2fc9ac261eddbad23c946d)",
+      "recommendation": "Concurrency 1 interactive; 4 batch; Socket",
+      "decode": [
+        {"concurrency": 1, "output_tps": 13.96, "ttft_p95_seconds": 1.27},
+        {"concurrency": 2, "output_tps": 22.68, "ttft_p95_seconds": 15.26},
+        {"concurrency": 4, "output_tps": 30.68, "ttft_p95_seconds": 10.48},
+        {"concurrency": 8, "output_tps": 25.60, "ttft_p95_seconds": 125.72},
+        {"concurrency": 12, "output_tps": 27.61, "ttft_p95_seconds": 173.89},
+        {"concurrency": 16, "output_tps": 26.88, "ttft_p95_seconds": 267.50}
+      ],
+      "prefill": [
+        {"input_tokens": 4096, "input_tps": 420.55, "ttft_p95_seconds": 5.27},
+        {"input_tokens": 32768, "input_tps": 781.30, "ttft_p95_seconds": 37.52},
+        {"input_tokens": 131072, "input_tps": 873.52, "ttft_p95_seconds": 147.68},
+        {"input_tokens": 245760, "input_tps": 843.89, "ttft_p95_seconds": 287.63}
+      ],
+      "prefix": {"unique_ttft_p95_seconds": 163.59, "warm_ttft_p95_seconds": 11.76},
+      "soak": {"concurrency": 8, "minutes": 20, "output_tps": 21.88, "ttft_p95_seconds": 181.03, "requests": 56, "errors": 0},
+      "quality": {"passed": 13, "total": 13}
+    },
+    {
       "id": "deepseek-v41-flash-exl3-2.9bpw-600k",
       "label": "DeepSeek V4.1 Flash EXL3 2.9 bpw",
       "chart_label": "DeepSeek V4.1 EXL3",
