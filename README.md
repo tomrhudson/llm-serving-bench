@@ -88,6 +88,7 @@ it to version control.
 [Compare all published baselines](results/README.md) for the cross-model table,
 decode and prefill charts, and the process for adding future results.
 
+- [GLM-5.3 Flash EXL3/TR3 4 bpw, TensorFold v0.6.0, two DGX Sparks, native 1M context](results/2026-10-01-glm53-flash-exl3-tensorfold-v060-1m.md) — served with [MiaAI-Lab's TensorFold recipe](https://github.com/MiaAI-Lab/GLM-5.3-Flash-EXL3-2x-DGX-Sparks-TensorFold/tree/978b2252059069b3b4b84f0f7eeb73bc17f28d3f)
 - [GLM-5.3 Flash EXL3/TR3 4 bpw, refreshed recipe, two DGX Sparks, 850K context](results/2026-09-15-glm53-flash-exl3-tr3-4bpw-850k.md) — served with [MiaAI-Lab's refreshed two-Spark recipe](https://github.com/MiaAI-Lab/GLM-5.3-Flash-EXL3-2x-DGX-Sparks/tree/a35eaab128233d215b2fc9ac261eddbad23c946d)
 - [DeepSeek V4.1 Flash EXL3 2.9 bpw, two DGX Sparks, native 600K context](results/2026-09-15-deepseek-v41-flash-exl3-2.9bpw-600k.md) — served with [MiaAI-Lab's DeepSeek V4.1 EXL3 recipe](https://github.com/MiaAI-Lab/DeepSeek-v4.1-Flash-EXL3-2x-DGX-Sparks/tree/979e68a62c90b24d928f5638596e0ceed90e9f34)
 - [Qwen3.8 Flash Next, updated MiaAI recipe, NVIDIA NVFP4, FP8 KV, native 262K](results/2026-09-07-qwen38-mia-nvidia-fp8kv-native-262k.md) — recipe `c2325b2`, compatible checkpoint revision pinned
