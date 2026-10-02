@@ -23,14 +23,15 @@ DASHES = ["", "8 5", "3 4", "12 4 3 4"]
 
 def _load_catalog() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     data = json.loads(CATALOG.read_text())
-    if data.get("schema_version") != 2:
+    if data.get("schema_version") != 3:
         raise ValueError("unsupported results/catalog.json schema_version")
     models = data.get("models")
     if not isinstance(models, list) or not models:
         raise ValueError("results/catalog.json must contain at least one model")
     required_model = {
-        "id", "name", "tagline", "official_source", "tested_choice",
-        "best_for", "not_for", "selection_note", "evidence_note",
+        "id", "name", "tagline", "official_source", "dgx_spark_count",
+        "dgx_spark_memory_gb_each", "tested_choice", "best_for", "not_for",
+        "selection_note", "evidence_note",
     }
     model_ids: set[str] = set()
     for model in models:
@@ -40,6 +41,9 @@ def _load_catalog() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         if model["id"] in model_ids:
             raise ValueError(f"duplicate model id: {model['id']}")
         model_ids.add(model["id"])
+        for field in ("dgx_spark_count", "dgx_spark_memory_gb_each"):
+            if not isinstance(model[field], int) or model[field] <= 0:
+                raise ValueError(f"{model['id']} {field} must be a positive integer")
         for field in ("best_for", "not_for"):
             if not isinstance(model[field], list) or not model[field]:
                 raise ValueError(f"{model['id']} {field} must be a non-empty list")
@@ -89,6 +93,16 @@ def _fmt_context(tokens: int) -> str:
     if tokens % 1000 == 0:
         return f"{tokens / 1000:g}K"
     return f"{round(tokens / 1024):g}K"
+
+
+def _fmt_dgx_spark(model: dict[str, Any]) -> str:
+    count = model["dgx_spark_count"]
+    memory_each = model["dgx_spark_memory_gb_each"]
+    total_memory = count * memory_each
+    return (
+        f"{count} systems / {count} GPUs · {memory_each}GB each · "
+        f"{total_memory}GB aggregate across nodes"
+    )
 
 
 def _nice_ceiling(value: float, steps: int = 5) -> float:
@@ -261,7 +275,8 @@ def _model_guide_markdown(
         long_context = max(selected["prefill"], key=lambda point: point["input_tokens"])
         quality = selected["quality"]
         overview_rows.append(
-            f'| [{model["name"]}](#{model["id"]}) | {model["tagline"]} | '
+            f'| [{model["name"]}](#{model["id"]}) | {_fmt_dgx_spark(model)} | '
+            f'{model["tagline"]} | '
             f'{model["best_for"][0]} | {model["not_for"][0]} |'
         )
 
@@ -295,6 +310,7 @@ def _model_guide_markdown(
 
 | Signal from the selected local baseline | Result |
 |---|---:|
+| DGX Spark footprint | {_fmt_dgx_spark(model)} |
 | Interactive c1 | {c1["output_tps"]:.2f} output tok/s · {c1["ttft_p95_seconds"]:.2f}s TTFT p95 |
 | Peak short-prompt decode | {peak["output_tps"]:.2f} output tok/s @ c{peak["concurrency"]} |
 | 20-minute c8 soak | {selected["soak"]["output_tps"]:.2f} output tok/s · {selected["soak"]["errors"]} errors |
@@ -331,10 +347,18 @@ open the [benchmark summary](README.md).
 
 Last updated: {newest} · Model families: {len(models)} · Published configurations: {len(baselines)}
 
+## Hardware footprint
+
+Every currently published recipe uses **2× NVIDIA DGX Spark systems with 128GB
+of unified memory each**: two GPUs total and 256GB aggregate capacity across the
+two-node deployment. That is two separate 128GB systems, not one pooled 256GB
+memory space. This is the validated footprint for these exact serving recipes,
+not a claim that every possible quantization of the model requires two DGX Sparks.
+
 ## Fast decision
 
-| Model | Position | Good default for | Choose something else when |
-|---|---|---|---|
+| Model | DGX Spark requirement | Position | Good default for | Choose something else when |
+|---|---|---|---|---|
 {chr(10).join(overview_rows)}
 
 Practical default: start with **Qwen3.8-Flash-Next** for mixed interactive,

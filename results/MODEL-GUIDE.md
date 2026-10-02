@@ -6,13 +6,21 @@ open the [benchmark summary](README.md).
 
 Last updated: 2026-10-01 · Model families: 3 · Published configurations: 8
 
+## Hardware footprint
+
+Every currently published recipe uses **2× NVIDIA DGX Spark systems with 128GB
+of unified memory each**: two GPUs total and 256GB aggregate capacity across the
+two-node deployment. That is two separate 128GB systems, not one pooled 256GB
+memory space. This is the validated footprint for these exact serving recipes,
+not a claim that every possible quantization of the model requires two DGX Sparks.
+
 ## Fast decision
 
-| Model | Position | Good default for | Choose something else when |
-|---|---|---|---|
-| [Qwen3.8-Flash-Next NVFP4](#qwen38-flash-next) | Default high-throughput lane for coding, agents, chat, and RAG | Primary local lane for short- and medium-context coding, tool-using agents, chat, and RAG. | Treating a configured 1M YaRN window as validated 1M model quality; the published runs exercise context only through approximately 240K tokens. |
-| [GLM-5.3 Flash EXL3/TR3](#glm53-flash) | Long-context coding and agentic lane with a speed-versus-assurance choice | Complex coding and agentic work at low concurrency, consistent with the upstream model's stated focus. | Exact-string or deterministic transformation workloads on the TensorFold lane until the repeatable reverse-marker regression is understood; its combined result was 10/13. |
-| [DeepSeek V4.1 Flash EXL3](#deepseek-v41-flash) | Low-concurrency, input-heavy agentic lane with clean canaries | Input-heavy agentic, reasoning, and long-document work where concurrency 1-2 is sufficient. | High-throughput concurrent chat or agent fleets; c2 was the practical peak and higher concurrency mainly increased queueing. |
+| Model | DGX Spark requirement | Position | Good default for | Choose something else when |
+|---|---|---|---|---|
+| [Qwen3.8-Flash-Next NVFP4](#qwen38-flash-next) | 2 systems / 2 GPUs · 128GB each · 256GB aggregate across nodes | Default high-throughput lane for coding, agents, chat, and RAG | Primary local lane for short- and medium-context coding, tool-using agents, chat, and RAG. | Treating a configured 1M YaRN window as validated 1M model quality; the published runs exercise context only through approximately 240K tokens. |
+| [GLM-5.3 Flash EXL3/TR3](#glm53-flash) | 2 systems / 2 GPUs · 128GB each · 256GB aggregate across nodes | Long-context coding and agentic lane with a speed-versus-assurance choice | Complex coding and agentic work at low concurrency, consistent with the upstream model's stated focus. | Exact-string or deterministic transformation workloads on the TensorFold lane until the repeatable reverse-marker regression is understood; its combined result was 10/13. |
+| [DeepSeek V4.1 Flash EXL3](#deepseek-v41-flash) | 2 systems / 2 GPUs · 128GB each · 256GB aggregate across nodes | Low-concurrency, input-heavy agentic lane with clean canaries | Input-heavy agentic, reasoning, and long-document work where concurrency 1-2 is sufficient. | High-throughput concurrent chat or agent fleets; c2 was the practical peak and higher concurrency mainly increased queueing. |
 
 Practical default: start with **Qwen3.8-Flash-Next** for mixed interactive,
 coding, RAG, and agent traffic. Move to **GLM-5.3 Flash** when its long-context
@@ -41,6 +49,7 @@ production work.
 
 | Signal from the selected local baseline | Result |
 |---|---:|
+| DGX Spark footprint | 2 systems / 2 GPUs · 128GB each · 256GB aggregate across nodes |
 | Interactive c1 | 47.34 output tok/s · 0.40s TTFT p95 |
 | Peak short-prompt decode | 207.77 output tok/s @ c16 |
 | 20-minute c8 soak | 197.42 output tok/s · 0 errors |
@@ -85,6 +94,7 @@ Qwen describes the upstream model as an experimental, multimodal agentic archite
 
 | Signal from the selected local baseline | Result |
 |---|---:|
+| DGX Spark footprint | 2 systems / 2 GPUs · 128GB each · 256GB aggregate across nodes |
 | Interactive c1 | 51.49 output tok/s · 0.41s TTFT p95 |
 | Peak short-prompt decode | 96.72 output tok/s @ c12 |
 | 20-minute c8 soak | 84.90 output tok/s · 0 errors |
@@ -129,6 +139,7 @@ Z.ai positions GLM-5.3 Flash for coding, agents, multimodal input, and long cont
 
 | Signal from the selected local baseline | Result |
 |---|---:|
+| DGX Spark footprint | 2 systems / 2 GPUs · 128GB each · 256GB aggregate across nodes |
 | Interactive c1 | 27.42 output tok/s · 0.85s TTFT p95 |
 | Peak short-prompt decode | 44.49 output tok/s @ c2 |
 | 20-minute c8 soak | 35.31 output tok/s · 0 errors |

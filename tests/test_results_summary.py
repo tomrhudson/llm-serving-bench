@@ -26,9 +26,19 @@ class ResultsSummaryTests(unittest.TestCase):
         for model in catalog["models"]:
             self.assertIn(f'<a id="{model["id"]}"></a>', guide)
             self.assertIn(f'## {model["name"]}', guide)
+            hardware = (
+                f'{model["dgx_spark_count"]} systems / '
+                f'{model["dgx_spark_count"]} GPUs · '
+                f'{model["dgx_spark_memory_gb_each"]}GB each'
+            )
+            self.assertIn(hardware, guide)
             selected = baselines[model["tested_choice"]]
             self.assertEqual(selected["model_id"], model["id"])
             self.assertIn(f']({selected["report"]})', guide)
+
+    def test_summary_names_dgx_spark_memory_per_system(self) -> None:
+        summary = (ROOT / "results/README.md").read_text()
+        self.assertIn("2x NVIDIA DGX Spark (128GB each)", summary)
 
 
 if __name__ == "__main__":
