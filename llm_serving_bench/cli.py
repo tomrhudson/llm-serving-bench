@@ -10,7 +10,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from .client import OpenAIClient, RequestResult
+from .client import InsecureTransportError, OpenAIClient, RequestResult
 from .metrics import metric_delta, parse_selected_metrics
 from .monitor import HostMonitor
 from .report import markdown_report, write_report
@@ -167,7 +167,10 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--monitor-interval", type=float, default=5.0)
     args = parser.parse_args(argv)
 
-    run = execute(args)
+    try:
+        run = execute(args)
+    except InsecureTransportError as exc:
+        parser.error(str(exc))
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(run, indent=2) + "\n", encoding="utf-8")

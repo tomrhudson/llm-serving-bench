@@ -109,7 +109,7 @@ though the admission limit is eight.
 Postflight was healthy on both ranks: zero running or waiting requests, zero
 abort/error completions, zero container restarts, no OOM state, and no fatal,
 NCCL, traceback, segmentation-fault, or CUDA-OOM matches in either container log.
-The protected `production` route returned the expected model marker from the
+The protected production route returned the expected model marker from the
 direct serving backend with zero retries and zero fallbacks.
 
 ## Method notes

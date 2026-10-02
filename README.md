@@ -22,13 +22,17 @@ No third-party Python packages are required. Python 3.11 or newer is enough.
 
 ```bash
 python3 -m llm_serving_bench \
-  --base-url http://inference-host:8000/v1 \
+  --base-url https://inference-host:8000/v1 \
   --model served-model-name \
   --suite configs/qwen-native-standard.json \
   --output results/run.json \
   --label my-model-native-context \
   --server-label private-direct-endpoint
 ```
+
+Bearer credentials are accepted only with an `https://` base URL. Plain HTTP
+remains available without `--api-key-env` for isolated, trusted networks, but it
+does not protect prompts or responses from network observers.
 
 Optional host telemetry uses existing passwordless SSH access:
 
@@ -81,7 +85,8 @@ python3 -m unittest discover -s tests -v
 
 Raw results are ignored because they can contain generated text, model names,
 and operational telemetry. Review and sanitize an artifact before force-adding
-it to version control.
+it to version control. Run `python3 scripts/check_publication_hygiene.py` before
+committing a curated report; CI also scans the full reachable history.
 
 ## Published baselines
 

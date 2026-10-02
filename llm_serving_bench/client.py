@@ -3,9 +3,14 @@ from __future__ import annotations
 import json
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from dataclasses import asdict, dataclass, field
 from typing import Any
+
+
+class InsecureTransportError(ValueError):
+    """Raised when bearer authentication would use a cleartext transport."""
 
 
 @dataclass
@@ -48,6 +53,14 @@ class OpenAIClient:
         timeout: float = 900.0,
     ) -> None:
         base_url = base_url.rstrip("/")
+        parsed = urllib.parse.urlsplit(base_url)
+        if parsed.scheme.lower() not in {"http", "https"} or not parsed.hostname:
+            raise ValueError("base_url must be an absolute HTTP(S) URL")
+        if api_key and parsed.scheme.lower() != "https":
+            raise InsecureTransportError(
+                "API keys require an https:// base URL; omit --api-key-env only "
+                "when plain HTTP is confined to a trusted network"
+            )
         if base_url.endswith("/v1"):
             self.root_url = base_url[:-3]
             self.api_url = base_url
@@ -57,8 +70,28 @@ class OpenAIClient:
         self.model = model
         self.timeout = timeout
         self.headers = {"Content-Type": "application/json"}
-        if api_key:
-            self.headers["Authorization"] = f"Bearer {api_key}"
+        self.api_key = api_key
+
+    def _api_request(
+        self,
+        url: str,
+        *,
+        data: bytes | None = None,
+        method: str,
+    ) -> urllib.request.Request:
+        request = urllib.request.Request(
+            url,
+            data=data,
+            headers=self.headers,
+            method=method,
+        )
+        if self.api_key:
+            # urllib copies ordinary headers across redirects. An unredirected
+            # header authenticates only the operator-selected endpoint.
+            request.add_unredirected_header(
+                "Authorization", f"Bearer {self.api_key}"
+            )
+        return request
 
     def _json_request(
         self,
@@ -67,10 +100,9 @@ class OpenAIClient:
         timeout: float | None = None,
     ) -> Any:
         data = None if payload is None else json.dumps(payload).encode("utf-8")
-        request = urllib.request.Request(
+        request = self._api_request(
             url,
             data=data,
-            headers=self.headers,
             method="GET" if payload is None else "POST",
         )
         try:
@@ -94,10 +126,9 @@ class OpenAIClient:
         return int(response["count"])
 
     def flush_cache(self) -> bool:
-        request = urllib.request.Request(
+        request = self._api_request(
             self.root_url + "/flush_cache",
             data=b"{}",
-            headers=self.headers,
             method="POST",
         )
         try:
@@ -141,10 +172,9 @@ class OpenAIClient:
 
         started_wall = time.time()
         started = time.perf_counter()
-        request = urllib.request.Request(
+        request = self._api_request(
             self.api_url + "/chat/completions",
             data=json.dumps(payload).encode("utf-8"),
-            headers=self.headers,
             method="POST",
         )
         first_token_at: float | None = None
