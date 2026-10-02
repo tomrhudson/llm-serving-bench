@@ -15,20 +15,40 @@ ROOT = Path(__file__).resolve().parents[1]
 RESULTS = ROOT / "results"
 CATALOG = RESULTS / "catalog.json"
 SUMMARY = RESULTS / "README.md"
+MODEL_GUIDE = RESULTS / "MODEL-GUIDE.md"
 ASSETS = RESULTS / "assets"
 COLORS = ["#2563eb", "#dc2626", "#059669", "#9333ea", "#ea580c", "#0891b2", "#4f46e5", "#be123c"]
 DASHES = ["", "8 5", "3 4", "12 4 3 4"]
 
 
-def _load_catalog() -> list[dict[str, Any]]:
+def _load_catalog() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     data = json.loads(CATALOG.read_text())
-    if data.get("schema_version") != 1:
+    if data.get("schema_version") != 2:
         raise ValueError("unsupported results/catalog.json schema_version")
+    models = data.get("models")
+    if not isinstance(models, list) or not models:
+        raise ValueError("results/catalog.json must contain at least one model")
+    required_model = {
+        "id", "name", "tagline", "official_source", "tested_choice",
+        "best_for", "not_for", "selection_note", "evidence_note",
+    }
+    model_ids: set[str] = set()
+    for model in models:
+        missing = required_model - model.keys()
+        if missing:
+            raise ValueError(f"{model.get('id', '<unknown>')} missing: {sorted(missing)}")
+        if model["id"] in model_ids:
+            raise ValueError(f"duplicate model id: {model['id']}")
+        model_ids.add(model["id"])
+        for field in ("best_for", "not_for"):
+            if not isinstance(model[field], list) or not model[field]:
+                raise ValueError(f"{model['id']} {field} must be a non-empty list")
+
     baselines = data.get("baselines")
     if not isinstance(baselines, list) or not baselines:
         raise ValueError("results/catalog.json must contain at least one baseline")
     required = {
-        "id", "label", "chart_label", "date", "report", "hardware", "runtime",
+        "id", "model_id", "label", "chart_label", "date", "report", "hardware", "runtime",
         "context_tokens", "recipe_credit", "recommendation", "decode", "prefill",
         "prefix", "soak", "quality",
     }
@@ -40,14 +60,34 @@ def _load_catalog() -> list[dict[str, Any]]:
         if baseline["id"] in seen:
             raise ValueError(f"duplicate baseline id: {baseline['id']}")
         seen.add(baseline["id"])
+        if baseline["model_id"] not in model_ids:
+            raise ValueError(
+                f"{baseline['id']} references unknown model id: {baseline['model_id']}"
+            )
         if not (RESULTS / baseline["report"]).is_file():
             raise ValueError(f"missing report: {baseline['report']}")
-    return baselines
+    for model in models:
+        if model["tested_choice"] not in seen:
+            raise ValueError(
+                f"{model['id']} references unknown tested choice: {model['tested_choice']}"
+            )
+        selected = next(item for item in baselines if item["id"] == model["tested_choice"])
+        if selected["model_id"] != model["id"]:
+            raise ValueError(
+                f"{model['id']} tested choice belongs to {selected['model_id']}"
+            )
+        if not any(item["model_id"] == model["id"] for item in baselines):
+            raise ValueError(f"{model['id']} has no published baselines")
+    return models, baselines
 
 
 def _fmt_context(tokens: int) -> str:
     if tokens >= 1_000_000:
+        if tokens == 1024 * 1024:
+            return "1M"
         return f"{tokens / 1_000_000:g}M"
+    if tokens % 1000 == 0:
+        return f"{tokens / 1000:g}K"
     return f"{round(tokens / 1024):g}K"
 
 
@@ -206,6 +246,125 @@ def _bar_chart(baselines: list[dict[str, Any]]) -> str:
     return _svg_document("20-minute concurrency-8 soak throughput", "Aggregate output throughput for every published baseline.", width, height, "\n".join(parts))
 
 
+def _model_guide_markdown(
+    models: list[dict[str, Any]], baselines: list[dict[str, Any]]
+) -> str:
+    by_id = {item["id"]: item for item in baselines}
+    newest = max(item["date"] for item in baselines)
+    overview_rows = []
+    sections = []
+
+    for model in models:
+        selected = by_id[model["tested_choice"]]
+        c1 = next(point for point in selected["decode"] if point["concurrency"] == 1)
+        peak = max(selected["decode"], key=lambda point: point["output_tps"])
+        long_context = max(selected["prefill"], key=lambda point: point["input_tokens"])
+        quality = selected["quality"]
+        overview_rows.append(
+            f'| [{model["name"]}](#{model["id"]}) | {model["tagline"]} | '
+            f'{model["best_for"][0]} | {model["not_for"][0]} |'
+        )
+
+        best_for = "\n".join(f'- {item}' for item in model["best_for"])
+        not_for = "\n".join(f'- {item}' for item in model["not_for"])
+        variants = []
+        for item in (entry for entry in baselines if entry["model_id"] == model["id"]):
+            variant_c1 = next(
+                point for point in item["decode"] if point["concurrency"] == 1
+            )
+            variant_quality = item["quality"]
+            marker = " **(pick)**" if item["id"] == model["tested_choice"] else ""
+            variants.append(
+                f'| [{item["label"]}]({item["report"]}){marker} | {item["runtime"]} | '
+                f'{_fmt_context(item["context_tokens"])} | '
+                f'{variant_c1["ttft_p95_seconds"]:.2f}s | '
+                f'{item["soak"]["output_tps"]:.2f} | '
+                f'{variant_quality["passed"]}/{variant_quality["total"]} | '
+                f'{item["recommendation"]} |'
+            )
+
+        sections.append(
+            f'''<a id="{model["id"]}"></a>
+## {model["name"]}
+
+> {model["tagline"]}
+
+**Recommended tested configuration:** [{selected["label"]}]({selected["report"]})
+
+**Upstream:** {model["official_source"]}
+
+| Signal from the selected local baseline | Result |
+|---|---:|
+| Interactive c1 | {c1["output_tps"]:.2f} output tok/s · {c1["ttft_p95_seconds"]:.2f}s TTFT p95 |
+| Peak short-prompt decode | {peak["output_tps"]:.2f} output tok/s @ c{peak["concurrency"]} |
+| 20-minute c8 soak | {selected["soak"]["output_tps"]:.2f} output tok/s · {selected["soak"]["errors"]} errors |
+| Longest tested prompt | {_fmt_context(long_context["input_tokens"])} · {long_context["ttft_p95_seconds"]:.2f}s TTFT p95 |
+| Regression canaries | {quality["passed"]}/{quality["total"]} |
+
+### Good fit
+
+{best_for}
+
+### Do not choose it when
+
+{not_for}
+
+### Configuration call
+
+{model["selection_note"]}
+
+{model["evidence_note"]}
+
+### Published variants
+
+| Configuration | Runtime | Configured context | c1 TTFT p95 | Soak tok/s | Canaries | Operating posture |
+|---|---|---:|---:|---:|---:|---|
+{chr(10).join(variants)}
+'''
+        )
+
+    return f'''# Model selection dashboard
+
+Use this page to choose among the model families that have published two-DGX-Spark
+baselines in this repository. For the full cross-configuration numbers and charts,
+open the [benchmark summary](README.md).
+
+Last updated: {newest} · Model families: {len(models)} · Published configurations: {len(baselines)}
+
+## Fast decision
+
+| Model | Position | Good default for | Choose something else when |
+|---|---|---|---|
+{chr(10).join(overview_rows)}
+
+Practical default: start with **Qwen3.8-Flash-Next** for mixed interactive,
+coding, RAG, and agent traffic. Move to **GLM-5.3 Flash** when its long-context
+coding/agent profile is the better fit and choose deliberately between the fast
+TensorFold lane and the clean-canary vLLM lane. Use **DeepSeek V4.1 Flash** for
+input-heavy, low-concurrency work where its clean local canaries matter more than
+aggregate serving throughput.
+
+## Evidence boundary
+
+“Good fit” combines upstream model-card positioning with the local serving evidence.
+This repository directly measures latency, throughput, stability, a 240K retrieval
+check, and small deterministic canaries. It does **not** compare broad intelligence,
+safety, production vision quality, tool correctness, or quality at the configured
+850K/1M request limits. Validate those against the actual application before routing
+production work.
+
+{chr(10).join(sections)}
+## Reading the dashboard
+
+- “Configured context” is an accepted request limit, not proof of useful quality at
+  that entire length.
+- Soak throughput is a serving-capacity signal, not a model-quality score.
+- The canaries detect obvious serving regressions; they are intentionally small.
+- Quantization, runtime, cache behavior, and transport can change the result even
+  when the upstream model family is unchanged.
+'''
+
+
 def _summary_markdown(baselines: list[dict[str, Any]]) -> str:
     rows = []
     for item in baselines:
@@ -227,6 +386,8 @@ def _summary_markdown(baselines: list[dict[str, Any]]) -> str:
 This page compares the curated, sanitized baselines in this repository. It is
 generated from [`catalog.json`](catalog.json) so new results can extend the
 same tables and charts without hand-editing this page.
+
+Choosing a model for a workload? Open the [model selection dashboard](MODEL-GUIDE.md).
 
 Last updated: {newest} · Published baselines: {len(baselines)}
 
@@ -288,9 +449,12 @@ is current without changing files.
 '''
 
 
-def _outputs(baselines: list[dict[str, Any]]) -> dict[Path, str]:
+def _outputs(
+    models: list[dict[str, Any]], baselines: list[dict[str, Any]]
+) -> dict[Path, str]:
     return {
         SUMMARY: _summary_markdown(baselines),
+        MODEL_GUIDE: _model_guide_markdown(models, baselines),
         ASSETS / "decode-throughput.svg": _line_chart(
             baselines,
             title="Decode throughput by offered concurrency",
@@ -322,7 +486,8 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--check", action="store_true", help="fail if generated files are stale")
     args = parser.parse_args()
-    outputs = _outputs(_load_catalog())
+    models, baselines = _load_catalog()
+    outputs = _outputs(models, baselines)
     stale = [path for path, content in outputs.items() if not path.exists() or path.read_text() != content]
     if args.check:
         if stale:
