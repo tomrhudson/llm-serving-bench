@@ -9,10 +9,11 @@ used with it.
 
 ## Reporting a vulnerability
 
-Please use [GitHub private vulnerability reporting](https://github.com/tomrhudson/llm-serving-bench/security/advisories/new).
-Do not open a public issue for a suspected vulnerability or include credentials,
+When it is available, use [GitHub private vulnerability reporting](https://github.com/tomrhudson/llm-serving-bench/security/advisories/new).
+If that option is not yet enabled, open a minimal issue requesting a private
+contact channel without including vulnerability details. Do not put credentials,
 private endpoints, raw model output, or internal infrastructure details in a
-report.
+public issue.
 
 Include the affected revision, reproduction conditions, impact, and any known
 workaround. Reports about third-party models, serving runtimes, or deployment
