@@ -1,8 +1,70 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
+  "models": [
+    {
+      "id": "qwen38-flash-next",
+      "name": "Qwen3.8-Flash-Next NVFP4",
+      "tagline": "Default high-throughput lane for coding, agents, chat, and RAG",
+      "official_source": "[Official Qwen model card](https://huggingface.co/Qwen/Qwen3.8-Flash-Next)",
+      "tested_choice": "qwen38-mia-nvidia-fp8kv-native-262k",
+      "best_for": [
+        "Primary local lane for short- and medium-context coding, tool-using agents, chat, and RAG.",
+        "Concurrent interactive traffic: the selected vLLM baseline sustained 197.42 output tok/s at c8 with 1.11s TTFT p95 and zero soak errors.",
+        "Native-context work through the suite's validated approximately 240K-token prompt."
+      ],
+      "not_for": [
+        "Treating a configured 1M YaRN window as validated 1M model quality; the published runs exercise context only through approximately 240K tokens.",
+        "Strict exact-copy guarantees without task-specific checks; one supplemental marker probe missed once even though the 13/13 standard suite passed.",
+        "Assuming vision or video production readiness from this repository; the published benchmark suite is text-only."
+      ],
+      "selection_note": "Use the native-262K vLLM/FP8-KV baseline as the conservative default. The 2200 MHz YaRN baseline is slightly faster and exposes a 1M request limit, but this suite did not validate quality beyond approximately 240K.",
+      "evidence_note": "Qwen describes the upstream model as an experimental, multimodal agentic architecture. This repository independently validates serving behavior and small regression canaries, not broad capability or safety."
+    },
+    {
+      "id": "glm53-flash",
+      "name": "GLM-5.3 Flash EXL3/TR3",
+      "tagline": "Long-context coding and agentic lane with a speed-versus-assurance choice",
+      "official_source": "[Official Z.ai model card](https://huggingface.co/zai-org/GLM-5.3-Flash)",
+      "tested_choice": "glm53-flash-exl3-tensorfold-v060-1m",
+      "best_for": [
+        "Complex coding and agentic work at low concurrency, consistent with the upstream model's stated focus.",
+        "Long-context interactive or small-batch work: TensorFold delivered 51.49 output tok/s at c1 and 92.68 at c4, while the 240K passkey check passed.",
+        "Tool, thinking, or multimodal workflows after application-specific validation; the serving recipe exposes those features."
+      ],
+      "not_for": [
+        "Exact-string or deterministic transformation workloads on the TensorFold lane until the repeatable reverse-marker regression is understood; its combined result was 10/13.",
+        "Latency-sensitive traffic above concurrency 4; c8 and higher mostly added queueing.",
+        "Commercial use of the tested TensorFold recipe unless the DFlash2 licensing constraint is separately resolved.",
+        "Treating vision or tool quality as benchmarked here; the published suite is text-only."
+      ],
+      "selection_note": "Choose TensorFold when throughput is the priority and the workload tolerates its documented canary caveat. Choose a vLLM baseline when the clean 13/13 regression result matters more than serving speed.",
+      "evidence_note": "Z.ai positions GLM-5.3 Flash for coding, agents, multimodal input, and long context. The local results prove performance, stability, and a 240K retrieval check for these quantized recipes only."
+    },
+    {
+      "id": "deepseek-v41-flash",
+      "name": "DeepSeek V4.1 Flash EXL3",
+      "tagline": "Low-concurrency, input-heavy agentic lane with clean canaries",
+      "official_source": "[Official DeepSeek model card](https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash)",
+      "tested_choice": "deepseek-v41-flash-exl3-2.9bpw-600k",
+      "best_for": [
+        "Input-heavy agentic, reasoning, and long-document work where concurrency 1-2 is sufficient.",
+        "A conservative regression posture: all 13 standard-suite quality checks and the 240K passkey check passed.",
+        "A dedicated low-concurrency multimodal lane after separate vision and application validation."
+      ],
+      "not_for": [
+        "High-throughput concurrent chat or agent fleets; c2 was the practical peak and higher concurrency mainly increased queueing.",
+        "Latency-sensitive near-window prompts; the approximately 240K prompt took 408.37 seconds to first token at p95.",
+        "Colocating another GPU workload on the tested hosts; the report treats this as a dedicated serving lane because of unified-memory pressure.",
+        "Claiming 1M-context validation from this run; the served limit was 600K and the suite exercised only approximately 240K."
+      ],
+      "selection_note": "Use concurrency 2 for the best measured interactive throughput/latency balance. Prefer Qwen when aggregate serving throughput is the main constraint; prefer this lane when its clean canaries and input-heavy design are the better workload match.",
+      "evidence_note": "DeepSeek describes the upstream architecture as multimodal and optimized for input-heavy agentic workloads. This repository measures one 2.9 bpw EXL3 text-serving configuration, not the full-precision model's broad quality."
+    }
+  ],
   "baselines": [
     {
       "id": "glm53-flash-exl3-tensorfold-v060-1m",
+      "model_id": "glm53-flash",
       "label": "GLM-5.3 Flash EXL3/TR3 4 bpw (TensorFold v0.6.0)",
       "chart_label": "GLM-5.3 TensorFold",
       "date": "2026-10-01",
@@ -32,6 +94,7 @@
     },
     {
       "id": "glm53-flash-exl3-tr3-4bpw-850k-a35e",
+      "model_id": "glm53-flash",
       "label": "GLM-5.3 Flash EXL3/TR3 4 bpw (refreshed recipe)",
       "chart_label": "GLM-5.3 EXL3/TR3 new",
       "date": "2026-09-15",
@@ -61,6 +124,7 @@
     },
     {
       "id": "deepseek-v41-flash-exl3-2.9bpw-600k",
+      "model_id": "deepseek-v41-flash",
       "label": "DeepSeek V4.1 Flash EXL3 2.9 bpw",
       "chart_label": "DeepSeek V4.1 EXL3",
       "date": "2026-09-15",
@@ -90,6 +154,7 @@
     },
     {
       "id": "qwen38-mia-nvidia-fp8kv-native-262k",
+      "model_id": "qwen38-flash-next",
       "label": "Qwen3.8-Flash-Next NVIDIA NVFP4 (Mia vLLM, FP8 KV)",
       "chart_label": "Qwen3.8 NVIDIA FP8 KV",
       "date": "2026-09-07",
@@ -172,6 +237,7 @@
     },
     {
       "id": "qwen38-flash-next-vllm-mia-yarn-1m-2200mhz",
+      "model_id": "qwen38-flash-next",
       "label": "Qwen3.8-Flash-Next-NVFP4 (Mia vLLM, 2200 MHz)",
       "chart_label": "Qwen3.8 vLLM 2200",
       "date": "2026-09-03",
@@ -201,6 +267,7 @@
     },
     {
       "id": "qwen38-flash-next-vllm-mia-yarn-1m",
+      "model_id": "qwen38-flash-next",
       "label": "Qwen3.8-Flash-Next-NVFP4 (Mia vLLM)",
       "chart_label": "Qwen3.8 vLLM",
       "date": "2026-08-31",
@@ -230,6 +297,7 @@
     },
     {
       "id": "qwen38-flash-next-nvfp4-native-262k",
+      "model_id": "qwen38-flash-next",
       "label": "Qwen3.8-Flash-Next-NVFP4",
       "chart_label": "Qwen3.8 NVFP4",
       "date": "2026-08-29",
@@ -259,6 +327,7 @@
     },
     {
       "id": "glm53-flash-exl3-native-1m",
+      "model_id": "glm53-flash",
       "label": "GLM-5.3-Flash-EXL3",
       "chart_label": "GLM-5.3 EXL3",
       "date": "2026-08-29",

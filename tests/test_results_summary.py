@@ -1,3 +1,4 @@
+import json
 import subprocess
 import sys
 import unittest
@@ -16,6 +17,18 @@ class ResultsSummaryTests(unittest.TestCase):
             text=True,
         )
         self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+
+    def test_model_guide_covers_every_catalog_family(self) -> None:
+        catalog = json.loads((ROOT / "results/catalog.json").read_text())
+        guide = (ROOT / "results/MODEL-GUIDE.md").read_text()
+        baselines = {item["id"]: item for item in catalog["baselines"]}
+
+        for model in catalog["models"]:
+            self.assertIn(f'<a id="{model["id"]}"></a>', guide)
+            self.assertIn(f'## {model["name"]}', guide)
+            selected = baselines[model["tested_choice"]]
+            self.assertEqual(selected["model_id"], model["id"])
+            self.assertIn(f']({selected["report"]})', guide)
 
 
 if __name__ == "__main__":
