@@ -25,6 +25,19 @@ Peak decode throughput is useful for batch capacity; c1 TTFT is the better
 interactive-latency signal. The longest-context column uses the largest shared
 prefill scenario available in the standard suite (currently 240K tokens).
 
+## Model checkpoints
+
+These links make the standard upstream model and one uncensored/abliterated
+community alternative easy to find for each family. The alternatives are
+discovery links, not published benchmark results; review each model card,
+license, runtime requirements, and safety posture before deployment.
+
+| Model family | Standard | Uncensored / abliterated alternative | Compatibility note |
+|---|---|---|---|
+| Qwen3.8-Flash-Next NVFP4 | [Official Qwen model card](https://huggingface.co/Qwen/Qwen3.8-Flash-Next) | [Uncensored ModelOpt NVFP4 checkpoint](https://huggingface.co/jpezzulli/OrcaRouter-Qwen3.8-Flash-Next-Uncensored-ModelOpt-NVFP4) | Community uncensored/abliterated NVFP4 conversion for a Pennyroyal/SGLang runtime; not benchmarked in this repository, and its model card flags conflicting upstream license metadata. |
+| GLM-5.3 Flash EXL3/TR3 | [Official Z.ai model card](https://huggingface.co/zai-org/GLM-5.3-Flash) | [Uncensored EXL3 checkpoint, rank-sliced for two DGX Sparks](https://huggingface.co/cbert33/GLM-5.3-Flash-Uncensored-EXL3-DGX-Sliced) | Community uncensored/abliterated EXL3 checkpoint for its linked custom two-Spark vLLM runner; not benchmarked in this repository and not compatible with stock vLLM. |
+| DeepSeek V4.1 Flash EXL3 | [Official DeepSeek model card](https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash) | [Uncensored EXL3 2.9 bpw checkpoint](https://huggingface.co/dealignai/DeepSeek-V4.1-Flash-UNCENSORED-EXL3-2.9bpw) | Community uncensored/abliterated EXL3 checkpoint presented as a drop-in for the linked two-Spark recipe; not benchmarked in this repository. |
+
 ## Decode scaling
 
 ![Aggregate decode throughput by offered concurrency](assets/decode-throughput.svg)

@@ -45,7 +45,10 @@ production work.
 
 **Recommended tested configuration:** [Qwen3.8-Flash-Next NVIDIA NVFP4 (Mia vLLM, FP8 KV)](2026-09-07-qwen38-mia-nvidia-fp8kv-native-262k.md)
 
-**Upstream:** [Official Qwen model card](https://huggingface.co/Qwen/Qwen3.8-Flash-Next)
+### Checkpoint choices
+
+- **Standard:** [Official Qwen model card](https://huggingface.co/Qwen/Qwen3.8-Flash-Next)
+- **Uncensored / abliterated:** [Uncensored ModelOpt NVFP4 checkpoint](https://huggingface.co/jpezzulli/OrcaRouter-Qwen3.8-Flash-Next-Uncensored-ModelOpt-NVFP4) — Community uncensored/abliterated NVFP4 conversion for a Pennyroyal/SGLang runtime; not benchmarked in this repository, and its model card flags conflicting upstream license metadata.
 
 | Signal from the selected local baseline | Result |
 |---|---:|
@@ -90,7 +93,10 @@ Qwen describes the upstream model as an experimental, multimodal agentic archite
 
 **Recommended tested configuration:** [GLM-5.3 Flash EXL3/TR3 4 bpw (TensorFold v0.6.0)](2026-10-01-glm53-flash-exl3-tensorfold-v060-1m.md)
 
-**Upstream:** [Official Z.ai model card](https://huggingface.co/zai-org/GLM-5.3-Flash)
+### Checkpoint choices
+
+- **Standard:** [Official Z.ai model card](https://huggingface.co/zai-org/GLM-5.3-Flash)
+- **Uncensored / abliterated:** [Uncensored EXL3 checkpoint, rank-sliced for two DGX Sparks](https://huggingface.co/cbert33/GLM-5.3-Flash-Uncensored-EXL3-DGX-Sliced) — Community uncensored/abliterated EXL3 checkpoint for its linked custom two-Spark vLLM runner; not benchmarked in this repository and not compatible with stock vLLM.
 
 | Signal from the selected local baseline | Result |
 |---|---:|
@@ -135,7 +141,10 @@ Z.ai positions GLM-5.3 Flash for coding, agents, multimodal input, and long cont
 
 **Recommended tested configuration:** [DeepSeek V4.1 Flash EXL3 2.9 bpw](2026-09-15-deepseek-v41-flash-exl3-2.9bpw-600k.md)
 
-**Upstream:** [Official DeepSeek model card](https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash)
+### Checkpoint choices
+
+- **Standard:** [Official DeepSeek model card](https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash)
+- **Uncensored / abliterated:** [Uncensored EXL3 2.9 bpw checkpoint](https://huggingface.co/dealignai/DeepSeek-V4.1-Flash-UNCENSORED-EXL3-2.9bpw) — Community uncensored/abliterated EXL3 checkpoint presented as a drop-in for the linked two-Spark recipe; not benchmarked in this repository.
 
 | Signal from the selected local baseline | Result |
 |---|---:|

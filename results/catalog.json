@@ -1,11 +1,13 @@
 {
-  "schema_version": 3,
+  "schema_version": 4,
   "models": [
     {
       "id": "qwen38-flash-next",
       "name": "Qwen3.8-Flash-Next NVFP4",
       "tagline": "Default high-throughput lane for coding, agents, chat, and RAG",
       "official_source": "[Official Qwen model card](https://huggingface.co/Qwen/Qwen3.8-Flash-Next)",
+      "alternative_source": "[Uncensored ModelOpt NVFP4 checkpoint](https://huggingface.co/jpezzulli/OrcaRouter-Qwen3.8-Flash-Next-Uncensored-ModelOpt-NVFP4)",
+      "alternative_source_note": "Community uncensored/abliterated NVFP4 conversion for a Pennyroyal/SGLang runtime; not benchmarked in this repository, and its model card flags conflicting upstream license metadata.",
       "dgx_spark_count": 2,
       "dgx_spark_memory_gb_each": 128,
       "tested_choice": "qwen38-mia-nvidia-fp8kv-native-262k",
@@ -27,6 +29,8 @@
       "name": "GLM-5.3 Flash EXL3/TR3",
       "tagline": "Long-context coding and agentic lane with a speed-versus-assurance choice",
       "official_source": "[Official Z.ai model card](https://huggingface.co/zai-org/GLM-5.3-Flash)",
+      "alternative_source": "[Uncensored EXL3 checkpoint, rank-sliced for two DGX Sparks](https://huggingface.co/cbert33/GLM-5.3-Flash-Uncensored-EXL3-DGX-Sliced)",
+      "alternative_source_note": "Community uncensored/abliterated EXL3 checkpoint for its linked custom two-Spark vLLM runner; not benchmarked in this repository and not compatible with stock vLLM.",
       "dgx_spark_count": 2,
       "dgx_spark_memory_gb_each": 128,
       "tested_choice": "glm53-flash-exl3-tensorfold-v060-1m",
@@ -49,6 +53,8 @@
       "name": "DeepSeek V4.1 Flash EXL3",
       "tagline": "Low-concurrency, input-heavy agentic lane with clean canaries",
       "official_source": "[Official DeepSeek model card](https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash)",
+      "alternative_source": "[Uncensored EXL3 2.9 bpw checkpoint](https://huggingface.co/dealignai/DeepSeek-V4.1-Flash-UNCENSORED-EXL3-2.9bpw)",
+      "alternative_source_note": "Community uncensored/abliterated EXL3 checkpoint presented as a drop-in for the linked two-Spark recipe; not benchmarked in this repository.",
       "dgx_spark_count": 2,
       "dgx_spark_memory_gb_each": 128,
       "tested_choice": "deepseek-v41-flash-exl3-2.9bpw-600k",
