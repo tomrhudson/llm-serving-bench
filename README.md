@@ -103,6 +103,10 @@ the upstream base model, and one community uncensored/abliterated alternative.
 Alternative checkpoints are discovery links only unless an individual report
 explicitly benchmarks them.
 
+- [Qwen3.8 27B NVFP4, SGLang, one DGX Spark, native 262K context](results/2026-10-02-qwen38-27b-nvfp4-sglang-native-262k.md) — served with [MiaAI-Lab's single-Spark recipe](https://github.com/MiaAI-Lab/Qwen3.8-27B-SGLang-DGX-Spark/tree/5d2df792a2ca7e076cb80b8302f5349d492d6f54)
+- [Qwen3.8 27B Uncensored FP8, SGLang, one DGX Spark, native 262K context](results/2026-10-02-qwen38-27b-uncensored-fp8-sglang-native-262k.md) — derivative checkpoint on the same single-Spark recipe family
+- [DeepSeek V4 Flash 0731 EXL3/SparkInfer, one DGX Spark, 384K context](results/2026-10-02-deepseek-v4-flash-0731-sparkinfer-384k.md) — concurrency-1 lane with a documented benchmark-only dependency repair
+- [GLM-5.3 Flash NVFP4, vLLM, two DGX Sparks, native 262K context, low reasoning](results/2026-10-03-glm53-flash-nvfp4-vllm-native-262k-low-reasoning.md) — 13/13 standard checks with a documented runtime weight-scale warning
 - [GLM-5.3 Flash EXL3/TR3 4 bpw, TensorFold v0.6.0, two DGX Sparks, native 1M context](results/2026-10-01-glm53-flash-exl3-tensorfold-v060-1m.md) — served with [MiaAI-Lab's TensorFold recipe](https://github.com/MiaAI-Lab/GLM-5.3-Flash-EXL3-2x-DGX-Sparks-TensorFold/tree/978b2252059069b3b4b84f0f7eeb73bc17f28d3f)
 - [GLM-5.3 Flash EXL3/TR3 4 bpw, refreshed recipe, two DGX Sparks, 850K context](results/2026-09-15-glm53-flash-exl3-tr3-4bpw-850k.md) — served with [MiaAI-Lab's refreshed two-Spark recipe](https://github.com/MiaAI-Lab/GLM-5.3-Flash-EXL3-2x-DGX-Sparks/tree/a35eaab128233d215b2fc9ac261eddbad23c946d)
 - [DeepSeek V4.1 Flash EXL3 2.9 bpw, two DGX Sparks, native 600K context](results/2026-09-15-deepseek-v41-flash-exl3-2.9bpw-600k.md) — served with [MiaAI-Lab's DeepSeek V4.1 EXL3 recipe](https://github.com/MiaAI-Lab/DeepSeek-v4.1-Flash-EXL3-2x-DGX-Sparks/tree/979e68a62c90b24d928f5638596e0ceed90e9f34)

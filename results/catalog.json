@@ -26,9 +26,33 @@
       "evidence_note": "Qwen describes the upstream model as an experimental, multimodal agentic architecture. This repository independently validates serving behavior and small regression canaries, not broad capability or safety."
     },
     {
+      "id": "qwen38-27b",
+      "name": "Qwen3.8 27B",
+      "tagline": "Single-Spark 27B lane with official and uncensored checkpoint choices",
+      "benchmarked_source": "[RadixArk/Qwen3.8-27B-NVFP4 @ 319f741](https://huggingface.co/RadixArk/Qwen3.8-27B-NVFP4/tree/319f741cce68d7914884900c138a1fbb70a42f30)",
+      "upstream_source": "[Qwen/Qwen3.8-27B](https://huggingface.co/Qwen/Qwen3.8-27B)",
+      "alternative_source": "[orcarouter/Qwen3.8-27B-Uncensored-FP8 @ 830602f](https://huggingface.co/orcarouter/Qwen3.8-27B-Uncensored-FP8/tree/830602f9b81d083db78f60e889bca37b73b74469)",
+      "alternative_source_note": "Uncensored/abliterated FP8 derivative independently benchmarked in this repository; it passed 13/13 standard checks but was materially slower and requires explicit trust and safety review.",
+      "dgx_spark_count": 1,
+      "dgx_spark_memory_gb_each": 128,
+      "tested_choice": "qwen38-27b-nvfp4-sglang-native-262k",
+      "best_for": [
+        "A capable local text lane that fits on one DGX Spark without cross-node serving.",
+        "Concurrent interactive traffic on the selected NVFP4 baseline: its c8 soak sustained 157.80 output tok/s with 1.01s TTFT p95 and zero request errors.",
+        "Native-context retrieval work through the suite's validated approximately 240K-token prompt."
+      ],
+      "not_for": [
+        "Interactive near-window prompts; the official and uncensored baselines took 395 and 558 seconds respectively to first token on the 240K check.",
+        "Using the uncensored derivative by default in trust-sensitive workflows; it needs workload-specific safety and behavior validation.",
+        "Treating vision or tool quality as benchmarked here; the published suite is text-only."
+      ],
+      "selection_note": "Use the RadixArk NVFP4 checkpoint as the default: it is materially faster and has the cleaner upstream relationship. Choose the orcarouter uncensored derivative only when that behavior is an explicit requirement, and cap interactive concurrency at 4.",
+      "evidence_note": "The two reports share the same single-Spark SGLang runtime family but use different checkpoints and serving limits. Their performance is therefore an operational comparison, not a controlled quantization-only A/B."
+    },
+    {
       "id": "glm53-flash",
-      "name": "GLM-5.3 Flash EXL3/TR3",
-      "tagline": "Long-context coding and agentic lane with a speed-versus-assurance choice",
+      "name": "GLM-5.3 Flash",
+      "tagline": "Long-context coding and agentic lane with runtime and context tradeoffs",
       "benchmarked_source": "[Mia-AiLab/GLM-5.3-Flash-EXL3-TR3-4bpw @ 9eaebb7](https://huggingface.co/Mia-AiLab/GLM-5.3-Flash-EXL3-TR3-4bpw/tree/9eaebb7c4e96d983dcd538e18624622ba5b820a8)",
       "upstream_source": "[zai-org/GLM-5.3-Flash](https://huggingface.co/zai-org/GLM-5.3-Flash)",
       "alternative_source": "[Uncensored EXL3 checkpoint, rank-sliced for two DGX Sparks](https://huggingface.co/cbert33/GLM-5.3-Flash-Uncensored-EXL3-DGX-Sliced)",
@@ -44,11 +68,36 @@
       "not_for": [
         "Exact-string or deterministic transformation workloads on the TensorFold lane until the repeatable reverse-marker regression is understood; its combined result was 10/13.",
         "Latency-sensitive traffic above concurrency 4; c8 and higher mostly added queueing.",
+        "Treating the NVFP4 vLLM lane's 13/13 canaries as broad assurance while its runtime still reports the documented weight-scale accuracy warning.",
         "Commercial use of the tested TensorFold recipe unless the DFlash2 licensing constraint is separately resolved.",
         "Treating vision or tool quality as benchmarked here; the published suite is text-only."
       ],
-      "selection_note": "Choose TensorFold when throughput is the priority and the workload tolerates its documented canary caveat. Choose a vLLM baseline when the clean 13/13 regression result matters more than serving speed.",
+      "selection_note": "Choose TensorFold when throughput and the 1M request window are the priority and the workload tolerates its documented canary caveat. The vLLM/NVFP4 low-reasoning baseline passed 13/13 checks and has lower c8 queue latency, but its runtime weight-scale warning must be resolved before treating it as the assurance choice.",
       "evidence_note": "Z.ai positions GLM-5.3 Flash for coding, agents, multimodal input, and long context. The local results prove performance, stability, and a 240K retrieval check for these quantized recipes only."
+    },
+    {
+      "id": "deepseek-v4-flash",
+      "name": "DeepSeek V4 Flash 0731",
+      "tagline": "Single-Spark long-context lane built for one request at a time",
+      "benchmarked_source": "[0xSero/deepseek-v4-flash-0731-spark @ 22f28d3](https://huggingface.co/0xSero/deepseek-v4-flash-0731-spark/tree/22f28d32b9b29b4352eaa380ff8c2c170b2847ab)",
+      "upstream_source": "[deepseek-ai/DeepSeek-V4-Flash-0731](https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731)",
+      "alternative_source": "[Abliterated DeepSeek V4 Flash 0731 checkpoint](https://huggingface.co/lovesenko/DeepSeek-V4-Flash-0731-Abliterated)",
+      "alternative_source_note": "Community weight-space-edited uncensored checkpoint; not benchmarked in this repository, and compatibility with the measured single-Spark SparkInfer recipe is unvalidated.",
+      "dgx_spark_count": 1,
+      "dgx_spark_memory_gb_each": 128,
+      "tested_choice": "deepseek-v4-flash-0731-sparkinfer-384k",
+      "best_for": [
+        "A dedicated one-Spark lane for long, input-heavy requests where concurrency 1 is acceptable.",
+        "Native-context retrieval through the tested 240K prompt: the passkey check passed with 259.00s TTFT.",
+        "Single-request decode near 30 output tok/s with clean standard-suite canaries."
+      ],
+      "not_for": [
+        "Concurrent interactive traffic; aggregate decode stayed near 30 tok/s while c8 TTFT p95 rose to 118.29 seconds.",
+        "An unchanged operational launch until the documented xgrammar and TileLang dependency collision is repaired in the retained recipe.",
+        "Claiming quality through the full configured 384K window; this suite exercised approximately 240K."
+      ],
+      "selection_note": "Use concurrency 1. This profile is a placement and long-input option, not a throughput lane; Qwen3.8 27B is the stronger single-Spark choice when concurrent serving matters.",
+      "evidence_note": "The result uses a benchmark-only dependency pin to make the retained image's TileLang and xgrammar packages coexist. It should not be compared with DeepSeek V4.1 as a controlled model-only A/B because the model, quantization, runtime, hardware count, and request limit differ."
     },
     {
       "id": "deepseek-v41-flash",
@@ -77,6 +126,126 @@
     }
   ],
   "baselines": [
+    {
+      "id": "glm53-flash-nvfp4-vllm-native-262k-low-reasoning",
+      "model_id": "glm53-flash",
+      "label": "GLM-5.3 Flash NVFP4 (vLLM, low reasoning)",
+      "chart_label": "GLM-5.3 NVFP4 low",
+      "date": "2026-10-03",
+      "report": "2026-10-03-glm53-flash-nvfp4-vllm-native-262k-low-reasoning.md",
+      "hardware": "2x NVIDIA DGX Spark (128GB each)",
+      "runtime": "vLLM",
+      "context_tokens": 262144,
+      "recipe_credit": "[MiaAI-Lab GLM-5.3 Flash NVFP4 recipe](https://github.com/MiaAI-Lab/GLM-5.3-Flash-NVFP4-Dual-DGX-Spark/tree/aed98a13ca75140d2691cc5c651ea5817d9a3e44)",
+      "recommendation": "Concurrency 1 interactive; 8 batch; 13/13 with accuracy warning",
+      "decode": [
+        {"concurrency": 1, "output_tps": 14.20, "ttft_p95_seconds": 0.45},
+        {"concurrency": 2, "output_tps": 27.40, "ttft_p95_seconds": 0.97},
+        {"concurrency": 4, "output_tps": 40.87, "ttft_p95_seconds": 6.43},
+        {"concurrency": 8, "output_tps": 65.94, "ttft_p95_seconds": 1.88},
+        {"concurrency": 12, "output_tps": 63.04, "ttft_p95_seconds": 69.96},
+        {"concurrency": 16, "output_tps": 66.18, "ttft_p95_seconds": 63.40}
+      ],
+      "prefill": [
+        {"input_tokens": 4096, "input_tps": 560.42, "ttft_p95_seconds": 2.84},
+        {"input_tokens": 32768, "input_tps": 1096.57, "ttft_p95_seconds": 28.40},
+        {"input_tokens": 131072, "input_tps": 1252.93, "ttft_p95_seconds": 100.93},
+        {"input_tokens": 245760, "input_tps": 1288.72, "ttft_p95_seconds": 188.82}
+      ],
+      "prefix": {"unique_ttft_p95_seconds": 97.47, "warm_ttft_p95_seconds": 2.07},
+      "soak": {"concurrency": 8, "minutes": 20, "output_tps": 60.90, "ttft_p95_seconds": 4.22, "requests": 144, "errors": 0},
+      "quality": {"passed": 13, "total": 13}
+    },
+    {
+      "id": "qwen38-27b-nvfp4-sglang-native-262k",
+      "model_id": "qwen38-27b",
+      "label": "Qwen3.8 27B NVFP4 (SGLang)",
+      "chart_label": "Qwen3.8 27B NVFP4",
+      "date": "2026-10-02",
+      "report": "2026-10-02-qwen38-27b-nvfp4-sglang-native-262k.md",
+      "hardware": "1x NVIDIA DGX Spark (128GB)",
+      "runtime": "SGLang",
+      "context_tokens": 262144,
+      "recipe_credit": "[MiaAI-Lab Qwen3.8 27B SGLang recipe](https://github.com/MiaAI-Lab/Qwen3.8-27B-SGLang-DGX-Spark/tree/5d2df792a2ca7e076cb80b8302f5349d492d6f54)",
+      "recommendation": "Concurrency 8; 13/13 quality",
+      "decode": [
+        {"concurrency": 1, "output_tps": 31.83, "ttft_p95_seconds": 0.18},
+        {"concurrency": 2, "output_tps": 57.03, "ttft_p95_seconds": 0.42},
+        {"concurrency": 4, "output_tps": 98.93, "ttft_p95_seconds": 0.78},
+        {"concurrency": 8, "output_tps": 167.35, "ttft_p95_seconds": 1.63},
+        {"concurrency": 12, "output_tps": 184.12, "ttft_p95_seconds": 20.23},
+        {"concurrency": 16, "output_tps": 187.63, "ttft_p95_seconds": 23.50}
+      ],
+      "prefill": [
+        {"input_tokens": 4096, "input_tps": 968.66, "ttft_p95_seconds": 1.90},
+        {"input_tokens": 32768, "input_tps": 1402.94, "ttft_p95_seconds": 21.15},
+        {"input_tokens": 131072, "input_tps": 908.73, "ttft_p95_seconds": 141.58},
+        {"input_tokens": 245760, "input_tps": 621.28, "ttft_p95_seconds": 395.05}
+      ],
+      "prefix": {"unique_ttft_p95_seconds": 79.85, "warm_ttft_p95_seconds": 1.03},
+      "soak": {"concurrency": 8, "minutes": 20, "output_tps": 157.80, "ttft_p95_seconds": 1.01, "requests": 377, "errors": 0},
+      "quality": {"passed": 13, "total": 13}
+    },
+    {
+      "id": "qwen38-27b-uncensored-fp8-sglang-native-262k",
+      "model_id": "qwen38-27b",
+      "label": "Qwen3.8 27B Uncensored FP8 (SGLang)",
+      "chart_label": "Qwen3.8 27B Uncensored",
+      "date": "2026-10-02",
+      "report": "2026-10-02-qwen38-27b-uncensored-fp8-sglang-native-262k.md",
+      "hardware": "1x NVIDIA DGX Spark (128GB)",
+      "runtime": "SGLang",
+      "context_tokens": 262144,
+      "recipe_credit": "[MiaAI-Lab Qwen3.8 27B SGLang recipe](https://github.com/MiaAI-Lab/Qwen3.8-27B-SGLang-DGX-Spark/tree/5d2df792a2ca7e076cb80b8302f5349d492d6f54)",
+      "recommendation": "Concurrency 4; derivative checkpoint; 13/13 quality",
+      "decode": [
+        {"concurrency": 1, "output_tps": 18.60, "ttft_p95_seconds": 0.28},
+        {"concurrency": 2, "output_tps": 36.82, "ttft_p95_seconds": 0.47},
+        {"concurrency": 4, "output_tps": 72.86, "ttft_p95_seconds": 0.84},
+        {"concurrency": 8, "output_tps": 69.59, "ttft_p95_seconds": 31.51},
+        {"concurrency": 12, "output_tps": 68.50, "ttft_p95_seconds": 67.37},
+        {"concurrency": 16, "output_tps": 70.81, "ttft_p95_seconds": 88.06}
+      ],
+      "prefill": [
+        {"input_tokens": 4096, "input_tps": 547.32, "ttft_p95_seconds": 3.44},
+        {"input_tokens": 32768, "input_tps": 710.55, "ttft_p95_seconds": 41.82},
+        {"input_tokens": 131072, "input_tps": 563.45, "ttft_p95_seconds": 228.68},
+        {"input_tokens": 245760, "input_tps": 439.89, "ttft_p95_seconds": 557.96}
+      ],
+      "prefix": {"unique_ttft_p95_seconds": 168.87, "warm_ttft_p95_seconds": 1.00},
+      "soak": {"concurrency": 8, "minutes": 20, "output_tps": 63.89, "ttft_p95_seconds": 36.05, "requests": 157, "errors": 0},
+      "quality": {"passed": 13, "total": 13}
+    },
+    {
+      "id": "deepseek-v4-flash-0731-sparkinfer-384k",
+      "model_id": "deepseek-v4-flash",
+      "label": "DeepSeek V4 Flash 0731 EXL3/SparkInfer",
+      "chart_label": "DeepSeek V4 SparkInfer",
+      "date": "2026-10-02",
+      "report": "2026-10-02-deepseek-v4-flash-0731-sparkinfer-384k.md",
+      "hardware": "1x NVIDIA DGX Spark (128GB)",
+      "runtime": "vLLM + SparkInfer",
+      "context_tokens": 384000,
+      "recipe_credit": "[MiaAI-Lab DeepSeek V4 Flash single-Spark recipe](https://github.com/MiaAI-Lab/DeepSeek-v4-Flash-One-DGX-Spark/tree/d4ba142bc1d971eb73a911e207e3e963bbb3c455)",
+      "recommendation": "Concurrency 1; benchmark-only dependency repair",
+      "decode": [
+        {"concurrency": 1, "output_tps": 29.62, "ttft_p95_seconds": 0.54},
+        {"concurrency": 2, "output_tps": 31.03, "ttft_p95_seconds": 21.04},
+        {"concurrency": 4, "output_tps": 31.44, "ttft_p95_seconds": 54.29},
+        {"concurrency": 8, "output_tps": 31.08, "ttft_p95_seconds": 118.29},
+        {"concurrency": 12, "output_tps": 29.40, "ttft_p95_seconds": 195.33},
+        {"concurrency": 16, "output_tps": 29.60, "ttft_p95_seconds": 263.50}
+      ],
+      "prefill": [
+        {"input_tokens": 4096, "input_tps": 653.49, "ttft_p95_seconds": 3.95},
+        {"input_tokens": 32768, "input_tps": 1046.89, "ttft_p95_seconds": 28.94},
+        {"input_tokens": 131072, "input_tps": 1020.75, "ttft_p95_seconds": 126.73},
+        {"input_tokens": 245760, "input_tps": 947.57, "ttft_p95_seconds": 259.00}
+      ],
+      "prefix": {"unique_ttft_p95_seconds": 124.04, "warm_ttft_p95_seconds": 24.47},
+      "soak": {"concurrency": 8, "minutes": 20, "output_tps": 26.89, "ttft_p95_seconds": 150.18, "requests": 71, "errors": 0},
+      "quality": {"passed": 13, "total": 13}
+    },
     {
       "id": "glm53-flash-exl3-tensorfold-v060-1m",
       "model_id": "glm53-flash",

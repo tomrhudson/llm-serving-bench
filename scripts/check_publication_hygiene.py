@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import os
 import re
 import subprocess
 from pathlib import Path
@@ -78,8 +79,43 @@ def scan_current_tree() -> list[str]:
     return issues
 
 
+def synthetic_pull_request_merge_commits() -> set[str]:
+    """Return the current GitHub-generated PR merge commit, when present.
+
+    GitHub Actions checks out a temporary two-parent merge for pull_request
+    workflows. Its author identity is synthesized from the repository owner,
+    so it is not publication history controlled by either branch. The parents
+    and every reachable blob remain in scope; only that temporary commit's
+    author/committer identity is excluded.
+    """
+
+    if os.environ.get("GITHUB_ACTIONS") != "true":
+        return set()
+    if os.environ.get("GITHUB_EVENT_NAME") not in {"pull_request", "pull_request_target"}:
+        return set()
+
+    fields = git(
+        "show",
+        "-s",
+        "--format=%H%x00%P%x00%an%x00%ae%x00%cn%x00%ce%x00%s",
+        "HEAD",
+    ).decode("utf-8").strip().split("\0")
+    if len(fields) != 7:
+        return set()
+
+    commit, parents, _author_name, _author_email, committer_name, committer_email, subject = fields
+    if len(parents.split()) != 2:
+        return set()
+    if committer_name != "GitHub" or committer_email != "noreply@github.com":
+        return set()
+    if not re.fullmatch(r"Merge [0-9a-f]{7,40} into [0-9a-f]{7,40}", subject):
+        return set()
+    return {commit}
+
+
 def scan_history() -> list[str]:
     issues: list[str] = []
+    ignored_commit_identities = synthetic_pull_request_merge_commits()
     seen: set[str] = set()
     for entry in git("rev-list", "--objects", "--all").decode("utf-8").splitlines():
         object_id, separator, path = entry.partition(" ")
@@ -92,6 +128,8 @@ def scan_history() -> list[str]:
 
     for line in git("log", "--all", "--format=%H%x09%ae%x09%ce").decode("utf-8").splitlines():
         commit, author_email, committer_email = line.split("\t", 2)
+        if commit in ignored_commit_identities:
+            continue
         for role, email in (("author", author_email), ("committer", committer_email)):
             if digest(email) in BLOCKED_EMAIL_HASHES:
                 issues.append(f"{commit[:12]}: {role} uses a private email address")
