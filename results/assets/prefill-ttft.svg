@@ -22,40 +22,43 @@
   <text class="subtitle" x="78" y="50">Lower is better; c1 unique prompts and a 240K passkey check</text>
   <line x1="78" y1="72" x2="102" y2="72" stroke="#2563eb" stroke-width="3" stroke-dasharray=""/>
   <circle cx="90" cy="72" r="4" fill="#2563eb"/>
-  <text x="109" y="76">GLM-5.3 NVFP4 low</text>
-  <line x1="278" y1="72" x2="302" y2="72" stroke="#dc2626" stroke-width="3" stroke-dasharray=""/>
-  <circle cx="290" cy="72" r="4" fill="#dc2626"/>
-  <text x="309" y="76">Qwen3.8 27B NVFP4</text>
-  <line x1="478" y1="72" x2="502" y2="72" stroke="#059669" stroke-width="3" stroke-dasharray=""/>
-  <circle cx="490" cy="72" r="4" fill="#059669"/>
-  <text x="509" y="76">Qwen3.8 27B Uncensored</text>
+  <text x="109" y="76">Qwen3.8 NVIDIA FP8 KV 2200</text>
+  <line x1="350" y1="72" x2="374" y2="72" stroke="#dc2626" stroke-width="3" stroke-dasharray=""/>
+  <circle cx="362" cy="72" r="4" fill="#dc2626"/>
+  <text x="381" y="76">GLM-5.3 NVFP4 low</text>
+  <line x1="550" y1="72" x2="574" y2="72" stroke="#059669" stroke-width="3" stroke-dasharray=""/>
+  <circle cx="562" cy="72" r="4" fill="#059669"/>
+  <text x="581" y="76">Qwen3.8 27B NVFP4</text>
   <line x1="78" y1="96" x2="102" y2="96" stroke="#9333ea" stroke-width="3" stroke-dasharray=""/>
   <circle cx="90" cy="96" r="4" fill="#9333ea"/>
-  <text x="109" y="100">DeepSeek V4 SparkInfer</text>
+  <text x="109" y="100">Qwen3.8 27B Uncensored</text>
   <line x1="318" y1="96" x2="342" y2="96" stroke="#ea580c" stroke-width="3" stroke-dasharray=""/>
   <circle cx="330" cy="96" r="4" fill="#ea580c"/>
-  <text x="349" y="100">GLM-5.3 TensorFold</text>
-  <line x1="526" y1="96" x2="550" y2="96" stroke="#0891b2" stroke-width="3" stroke-dasharray=""/>
-  <circle cx="538" cy="96" r="4" fill="#0891b2"/>
-  <text x="557" y="100">GLM-5.3 EXL3/TR3 new</text>
+  <text x="349" y="100">DeepSeek V4 SparkInfer</text>
+  <line x1="558" y1="96" x2="582" y2="96" stroke="#0891b2" stroke-width="3" stroke-dasharray=""/>
+  <circle cx="570" cy="96" r="4" fill="#0891b2"/>
+  <text x="589" y="100">GLM-5.3 TensorFold</text>
   <line x1="78" y1="120" x2="102" y2="120" stroke="#4f46e5" stroke-width="3" stroke-dasharray=""/>
   <circle cx="90" cy="120" r="4" fill="#4f46e5"/>
-  <text x="109" y="124">DeepSeek V4.1 EXL3</text>
-  <line x1="286" y1="120" x2="310" y2="120" stroke="#be123c" stroke-width="3" stroke-dasharray=""/>
-  <circle cx="298" cy="120" r="4" fill="#be123c"/>
-  <text x="317" y="124">Qwen3.8 NVIDIA FP8 KV</text>
-  <line x1="518" y1="120" x2="542" y2="120" stroke="#2563eb" stroke-width="3" stroke-dasharray="8 5"/>
-  <circle cx="530" cy="120" r="4" fill="#2563eb"/>
-  <text x="549" y="124">Qwen3.8 vLLM 2200</text>
-  <line x1="718" y1="120" x2="742" y2="120" stroke="#dc2626" stroke-width="3" stroke-dasharray="8 5"/>
-  <circle cx="730" cy="120" r="4" fill="#dc2626"/>
-  <text x="749" y="124">Qwen3.8 vLLM</text>
-  <line x1="78" y1="144" x2="102" y2="144" stroke="#059669" stroke-width="3" stroke-dasharray="8 5"/>
-  <circle cx="90" cy="144" r="4" fill="#059669"/>
-  <text x="109" y="148">Qwen3.8 NVFP4</text>
-  <line x1="246" y1="144" x2="270" y2="144" stroke="#9333ea" stroke-width="3" stroke-dasharray="8 5"/>
-  <circle cx="258" cy="144" r="4" fill="#9333ea"/>
-  <text x="277" y="148">GLM-5.3 EXL3</text>
+  <text x="109" y="124">GLM-5.3 EXL3/TR3 new</text>
+  <line x1="302" y1="120" x2="326" y2="120" stroke="#be123c" stroke-width="3" stroke-dasharray=""/>
+  <circle cx="314" cy="120" r="4" fill="#be123c"/>
+  <text x="333" y="124">DeepSeek V4.1 EXL3</text>
+  <line x1="510" y1="120" x2="534" y2="120" stroke="#2563eb" stroke-width="3" stroke-dasharray="8 5"/>
+  <circle cx="522" cy="120" r="4" fill="#2563eb"/>
+  <text x="541" y="124">Qwen3.8 NVIDIA FP8 KV</text>
+  <line x1="78" y1="144" x2="102" y2="144" stroke="#dc2626" stroke-width="3" stroke-dasharray="8 5"/>
+  <circle cx="90" cy="144" r="4" fill="#dc2626"/>
+  <text x="109" y="148">Qwen3.8 vLLM 2200</text>
+  <line x1="278" y1="144" x2="302" y2="144" stroke="#059669" stroke-width="3" stroke-dasharray="8 5"/>
+  <circle cx="290" cy="144" r="4" fill="#059669"/>
+  <text x="309" y="148">Qwen3.8 vLLM</text>
+  <line x1="438" y1="144" x2="462" y2="144" stroke="#9333ea" stroke-width="3" stroke-dasharray="8 5"/>
+  <circle cx="450" cy="144" r="4" fill="#9333ea"/>
+  <text x="469" y="148">Qwen3.8 NVFP4</text>
+  <line x1="606" y1="144" x2="630" y2="144" stroke="#ea580c" stroke-width="3" stroke-dasharray="8 5"/>
+  <circle cx="618" cy="144" r="4" fill="#ea580c"/>
+  <text x="637" y="148">GLM-5.3 EXL3</text>
   <line class="grid" x1="78" y1="476.0" x2="892" y2="476.0"/>
   <text class="tick" x="68" y="480.0" text-anchor="end">0</text>
   <line class="grid" x1="78" y1="414.4" x2="892" y2="414.4"/>
@@ -80,64 +83,69 @@
   <line class="axis" x1="78" y1="168" x2="78" y2="476"/>
   <text x="485.0" y="526" text-anchor="middle">Prompt length (tokens, logarithmic scale)</text>
   <text transform="translate(20 322.0) rotate(-90)" text-anchor="middle">TTFT p95 (seconds)</text>
-  <path class="series" d="M 78.0 475.1 L 491.4 467.3 L 767.0 444.9 L 892.0 417.8" stroke="#2563eb" stroke-dasharray=""/>
-  <circle class="marker" cx="78.0" cy="475.1" r="5" fill="#2563eb"><title>GLM-5.3 NVFP4 low: 2.84</title></circle>
-  <circle class="marker" cx="491.4" cy="467.3" r="5" fill="#2563eb"><title>GLM-5.3 NVFP4 low: 28.4</title></circle>
-  <circle class="marker" cx="767.0" cy="444.9" r="5" fill="#2563eb"><title>GLM-5.3 NVFP4 low: 100.93</title></circle>
-  <circle class="marker" cx="892.0" cy="417.8" r="5" fill="#2563eb"><title>GLM-5.3 NVFP4 low: 188.82</title></circle>
-  <path class="series" d="M 78.0 475.4 L 491.4 469.5 L 767.0 432.4 L 892.0 354.3" stroke="#dc2626" stroke-dasharray=""/>
-  <circle class="marker" cx="78.0" cy="475.4" r="5" fill="#dc2626"><title>Qwen3.8 27B NVFP4: 1.9</title></circle>
-  <circle class="marker" cx="491.4" cy="469.5" r="5" fill="#dc2626"><title>Qwen3.8 27B NVFP4: 21.15</title></circle>
-  <circle class="marker" cx="767.0" cy="432.4" r="5" fill="#dc2626"><title>Qwen3.8 27B NVFP4: 141.58</title></circle>
-  <circle class="marker" cx="892.0" cy="354.3" r="5" fill="#dc2626"><title>Qwen3.8 27B NVFP4: 395.05</title></circle>
-  <path class="series" d="M 78.0 474.9 L 491.4 463.1 L 767.0 405.6 L 892.0 304.1" stroke="#059669" stroke-dasharray=""/>
-  <circle class="marker" cx="78.0" cy="474.9" r="5" fill="#059669"><title>Qwen3.8 27B Uncensored: 3.44</title></circle>
-  <circle class="marker" cx="491.4" cy="463.1" r="5" fill="#059669"><title>Qwen3.8 27B Uncensored: 41.82</title></circle>
-  <circle class="marker" cx="767.0" cy="405.6" r="5" fill="#059669"><title>Qwen3.8 27B Uncensored: 228.68</title></circle>
-  <circle class="marker" cx="892.0" cy="304.1" r="5" fill="#059669"><title>Qwen3.8 27B Uncensored: 557.96</title></circle>
-  <path class="series" d="M 78.0 474.8 L 491.4 467.1 L 767.0 437.0 L 892.0 396.2" stroke="#9333ea" stroke-dasharray=""/>
-  <circle class="marker" cx="78.0" cy="474.8" r="5" fill="#9333ea"><title>DeepSeek V4 SparkInfer: 3.95</title></circle>
-  <circle class="marker" cx="491.4" cy="467.1" r="5" fill="#9333ea"><title>DeepSeek V4 SparkInfer: 28.94</title></circle>
-  <circle class="marker" cx="767.0" cy="437.0" r="5" fill="#9333ea"><title>DeepSeek V4 SparkInfer: 126.73</title></circle>
-  <circle class="marker" cx="892.0" cy="396.2" r="5" fill="#9333ea"><title>DeepSeek V4 SparkInfer: 259</title></circle>
-  <path class="series" d="M 78.0 474.8 L 491.4 470.4 L 767.0 451.6 L 892.0 425.5" stroke="#ea580c" stroke-dasharray=""/>
-  <circle class="marker" cx="78.0" cy="474.8" r="5" fill="#ea580c"><title>GLM-5.3 TensorFold: 3.91</title></circle>
-  <circle class="marker" cx="491.4" cy="470.4" r="5" fill="#ea580c"><title>GLM-5.3 TensorFold: 18.25</title></circle>
-  <circle class="marker" cx="767.0" cy="451.6" r="5" fill="#ea580c"><title>GLM-5.3 TensorFold: 79.3</title></circle>
-  <circle class="marker" cx="892.0" cy="425.5" r="5" fill="#ea580c"><title>GLM-5.3 TensorFold: 163.89</title></circle>
-  <path class="series" d="M 78.0 474.4 L 491.4 464.4 L 767.0 430.5 L 892.0 387.4" stroke="#0891b2" stroke-dasharray=""/>
-  <circle class="marker" cx="78.0" cy="474.4" r="5" fill="#0891b2"><title>GLM-5.3 EXL3/TR3 new: 5.27</title></circle>
-  <circle class="marker" cx="491.4" cy="464.4" r="5" fill="#0891b2"><title>GLM-5.3 EXL3/TR3 new: 37.52</title></circle>
-  <circle class="marker" cx="767.0" cy="430.5" r="5" fill="#0891b2"><title>GLM-5.3 EXL3/TR3 new: 147.68</title></circle>
-  <circle class="marker" cx="892.0" cy="387.4" r="5" fill="#0891b2"><title>GLM-5.3 EXL3/TR3 new: 287.63</title></circle>
-  <path class="series" d="M 78.0 473.5 L 491.4 458.4 L 767.0 405.6 L 892.0 350.2" stroke="#4f46e5" stroke-dasharray=""/>
-  <circle class="marker" cx="78.0" cy="473.5" r="5" fill="#4f46e5"><title>DeepSeek V4.1 EXL3: 8.22</title></circle>
-  <circle class="marker" cx="491.4" cy="458.4" r="5" fill="#4f46e5"><title>DeepSeek V4.1 EXL3: 57.14</title></circle>
-  <circle class="marker" cx="767.0" cy="405.6" r="5" fill="#4f46e5"><title>DeepSeek V4.1 EXL3: 228.63</title></circle>
-  <circle class="marker" cx="892.0" cy="350.2" r="5" fill="#4f46e5"><title>DeepSeek V4.1 EXL3: 408.37</title></circle>
-  <path class="series" d="M 78.0 475.5 L 491.4 472.6 L 767.0 461.3 L 892.0 445.4" stroke="#be123c" stroke-dasharray=""/>
-  <circle class="marker" cx="78.0" cy="475.5" r="5" fill="#be123c"><title>Qwen3.8 NVIDIA FP8 KV: 1.62</title></circle>
-  <circle class="marker" cx="491.4" cy="472.6" r="5" fill="#be123c"><title>Qwen3.8 NVIDIA FP8 KV: 11.14</title></circle>
-  <circle class="marker" cx="767.0" cy="461.3" r="5" fill="#be123c"><title>Qwen3.8 NVIDIA FP8 KV: 47.69</title></circle>
-  <circle class="marker" cx="892.0" cy="445.4" r="5" fill="#be123c"><title>Qwen3.8 NVIDIA FP8 KV: 99.22</title></circle>
-  <path class="series" d="M 78.0 475.4 L 491.4 472.1 L 767.0 459.3 L 892.0 441.1" stroke="#2563eb" stroke-dasharray="8 5"/>
-  <circle class="marker" cx="78.0" cy="475.4" r="5" fill="#2563eb"><title>Qwen3.8 vLLM 2200: 1.96</title></circle>
-  <circle class="marker" cx="491.4" cy="472.1" r="5" fill="#2563eb"><title>Qwen3.8 vLLM 2200: 12.64</title></circle>
-  <circle class="marker" cx="767.0" cy="459.3" r="5" fill="#2563eb"><title>Qwen3.8 vLLM 2200: 54.38</title></circle>
-  <circle class="marker" cx="892.0" cy="441.1" r="5" fill="#2563eb"><title>Qwen3.8 vLLM 2200: 113.18</title></circle>
-  <path class="series" d="M 78.0 475.4 L 491.4 472.1 L 767.0 459.4 L 892.0 439.9" stroke="#dc2626" stroke-dasharray="8 5"/>
-  <circle class="marker" cx="78.0" cy="475.4" r="5" fill="#dc2626"><title>Qwen3.8 vLLM: 1.88</title></circle>
-  <circle class="marker" cx="491.4" cy="472.1" r="5" fill="#dc2626"><title>Qwen3.8 vLLM: 12.5</title></circle>
-  <circle class="marker" cx="767.0" cy="459.4" r="5" fill="#dc2626"><title>Qwen3.8 vLLM: 53.85</title></circle>
-  <circle class="marker" cx="892.0" cy="439.9" r="5" fill="#dc2626"><title>Qwen3.8 vLLM: 117.3</title></circle>
-  <path class="series" d="M 78.0 475.2 L 491.4 470.0 L 767.0 450.3 L 892.0 291.6" stroke="#059669" stroke-dasharray="8 5"/>
-  <circle class="marker" cx="78.0" cy="475.2" r="5" fill="#059669"><title>Qwen3.8 NVFP4: 2.55</title></circle>
-  <circle class="marker" cx="491.4" cy="470.0" r="5" fill="#059669"><title>Qwen3.8 NVFP4: 19.36</title></circle>
-  <circle class="marker" cx="767.0" cy="450.3" r="5" fill="#059669"><title>Qwen3.8 NVFP4: 83.49</title></circle>
-  <circle class="marker" cx="892.0" cy="291.6" r="5" fill="#059669"><title>Qwen3.8 NVFP4: 598.56</title></circle>
-  <path class="series" d="M 78.0 474.5 L 491.4 464.7 L 767.0 430.7 L 892.0 389.8" stroke="#9333ea" stroke-dasharray="8 5"/>
-  <circle class="marker" cx="78.0" cy="474.5" r="5" fill="#9333ea"><title>GLM-5.3 EXL3: 5</title></circle>
-  <circle class="marker" cx="491.4" cy="464.7" r="5" fill="#9333ea"><title>GLM-5.3 EXL3: 36.85</title></circle>
-  <circle class="marker" cx="767.0" cy="430.7" r="5" fill="#9333ea"><title>GLM-5.3 EXL3: 147</title></circle>
-  <circle class="marker" cx="892.0" cy="389.8" r="5" fill="#9333ea"><title>GLM-5.3 EXL3: 279.8</title></circle>
+  <path class="series" d="M 78.0 475.3 L 491.4 472.4 L 767.0 460.8 L 892.0 444.5" stroke="#2563eb" stroke-dasharray=""/>
+  <circle class="marker" cx="78.0" cy="475.3" r="5" fill="#2563eb"><title>Qwen3.8 NVIDIA FP8 KV 2200: 2.41</title></circle>
+  <circle class="marker" cx="491.4" cy="472.4" r="5" fill="#2563eb"><title>Qwen3.8 NVIDIA FP8 KV 2200: 11.85</title></circle>
+  <circle class="marker" cx="767.0" cy="460.8" r="5" fill="#2563eb"><title>Qwen3.8 NVIDIA FP8 KV 2200: 49.41</title></circle>
+  <circle class="marker" cx="892.0" cy="444.5" r="5" fill="#2563eb"><title>Qwen3.8 NVIDIA FP8 KV 2200: 102.36</title></circle>
+  <path class="series" d="M 78.0 475.1 L 491.4 467.3 L 767.0 444.9 L 892.0 417.8" stroke="#dc2626" stroke-dasharray=""/>
+  <circle class="marker" cx="78.0" cy="475.1" r="5" fill="#dc2626"><title>GLM-5.3 NVFP4 low: 2.84</title></circle>
+  <circle class="marker" cx="491.4" cy="467.3" r="5" fill="#dc2626"><title>GLM-5.3 NVFP4 low: 28.4</title></circle>
+  <circle class="marker" cx="767.0" cy="444.9" r="5" fill="#dc2626"><title>GLM-5.3 NVFP4 low: 100.93</title></circle>
+  <circle class="marker" cx="892.0" cy="417.8" r="5" fill="#dc2626"><title>GLM-5.3 NVFP4 low: 188.82</title></circle>
+  <path class="series" d="M 78.0 475.4 L 491.4 469.5 L 767.0 432.4 L 892.0 354.3" stroke="#059669" stroke-dasharray=""/>
+  <circle class="marker" cx="78.0" cy="475.4" r="5" fill="#059669"><title>Qwen3.8 27B NVFP4: 1.9</title></circle>
+  <circle class="marker" cx="491.4" cy="469.5" r="5" fill="#059669"><title>Qwen3.8 27B NVFP4: 21.15</title></circle>
+  <circle class="marker" cx="767.0" cy="432.4" r="5" fill="#059669"><title>Qwen3.8 27B NVFP4: 141.58</title></circle>
+  <circle class="marker" cx="892.0" cy="354.3" r="5" fill="#059669"><title>Qwen3.8 27B NVFP4: 395.05</title></circle>
+  <path class="series" d="M 78.0 474.9 L 491.4 463.1 L 767.0 405.6 L 892.0 304.1" stroke="#9333ea" stroke-dasharray=""/>
+  <circle class="marker" cx="78.0" cy="474.9" r="5" fill="#9333ea"><title>Qwen3.8 27B Uncensored: 3.44</title></circle>
+  <circle class="marker" cx="491.4" cy="463.1" r="5" fill="#9333ea"><title>Qwen3.8 27B Uncensored: 41.82</title></circle>
+  <circle class="marker" cx="767.0" cy="405.6" r="5" fill="#9333ea"><title>Qwen3.8 27B Uncensored: 228.68</title></circle>
+  <circle class="marker" cx="892.0" cy="304.1" r="5" fill="#9333ea"><title>Qwen3.8 27B Uncensored: 557.96</title></circle>
+  <path class="series" d="M 78.0 474.8 L 491.4 467.1 L 767.0 437.0 L 892.0 396.2" stroke="#ea580c" stroke-dasharray=""/>
+  <circle class="marker" cx="78.0" cy="474.8" r="5" fill="#ea580c"><title>DeepSeek V4 SparkInfer: 3.95</title></circle>
+  <circle class="marker" cx="491.4" cy="467.1" r="5" fill="#ea580c"><title>DeepSeek V4 SparkInfer: 28.94</title></circle>
+  <circle class="marker" cx="767.0" cy="437.0" r="5" fill="#ea580c"><title>DeepSeek V4 SparkInfer: 126.73</title></circle>
+  <circle class="marker" cx="892.0" cy="396.2" r="5" fill="#ea580c"><title>DeepSeek V4 SparkInfer: 259</title></circle>
+  <path class="series" d="M 78.0 474.8 L 491.4 470.4 L 767.0 451.6 L 892.0 425.5" stroke="#0891b2" stroke-dasharray=""/>
+  <circle class="marker" cx="78.0" cy="474.8" r="5" fill="#0891b2"><title>GLM-5.3 TensorFold: 3.91</title></circle>
+  <circle class="marker" cx="491.4" cy="470.4" r="5" fill="#0891b2"><title>GLM-5.3 TensorFold: 18.25</title></circle>
+  <circle class="marker" cx="767.0" cy="451.6" r="5" fill="#0891b2"><title>GLM-5.3 TensorFold: 79.3</title></circle>
+  <circle class="marker" cx="892.0" cy="425.5" r="5" fill="#0891b2"><title>GLM-5.3 TensorFold: 163.89</title></circle>
+  <path class="series" d="M 78.0 474.4 L 491.4 464.4 L 767.0 430.5 L 892.0 387.4" stroke="#4f46e5" stroke-dasharray=""/>
+  <circle class="marker" cx="78.0" cy="474.4" r="5" fill="#4f46e5"><title>GLM-5.3 EXL3/TR3 new: 5.27</title></circle>
+  <circle class="marker" cx="491.4" cy="464.4" r="5" fill="#4f46e5"><title>GLM-5.3 EXL3/TR3 new: 37.52</title></circle>
+  <circle class="marker" cx="767.0" cy="430.5" r="5" fill="#4f46e5"><title>GLM-5.3 EXL3/TR3 new: 147.68</title></circle>
+  <circle class="marker" cx="892.0" cy="387.4" r="5" fill="#4f46e5"><title>GLM-5.3 EXL3/TR3 new: 287.63</title></circle>
+  <path class="series" d="M 78.0 473.5 L 491.4 458.4 L 767.0 405.6 L 892.0 350.2" stroke="#be123c" stroke-dasharray=""/>
+  <circle class="marker" cx="78.0" cy="473.5" r="5" fill="#be123c"><title>DeepSeek V4.1 EXL3: 8.22</title></circle>
+  <circle class="marker" cx="491.4" cy="458.4" r="5" fill="#be123c"><title>DeepSeek V4.1 EXL3: 57.14</title></circle>
+  <circle class="marker" cx="767.0" cy="405.6" r="5" fill="#be123c"><title>DeepSeek V4.1 EXL3: 228.63</title></circle>
+  <circle class="marker" cx="892.0" cy="350.2" r="5" fill="#be123c"><title>DeepSeek V4.1 EXL3: 408.37</title></circle>
+  <path class="series" d="M 78.0 475.5 L 491.4 472.6 L 767.0 461.3 L 892.0 445.4" stroke="#2563eb" stroke-dasharray="8 5"/>
+  <circle class="marker" cx="78.0" cy="475.5" r="5" fill="#2563eb"><title>Qwen3.8 NVIDIA FP8 KV: 1.62</title></circle>
+  <circle class="marker" cx="491.4" cy="472.6" r="5" fill="#2563eb"><title>Qwen3.8 NVIDIA FP8 KV: 11.14</title></circle>
+  <circle class="marker" cx="767.0" cy="461.3" r="5" fill="#2563eb"><title>Qwen3.8 NVIDIA FP8 KV: 47.69</title></circle>
+  <circle class="marker" cx="892.0" cy="445.4" r="5" fill="#2563eb"><title>Qwen3.8 NVIDIA FP8 KV: 99.22</title></circle>
+  <path class="series" d="M 78.0 475.4 L 491.4 472.1 L 767.0 459.3 L 892.0 441.1" stroke="#dc2626" stroke-dasharray="8 5"/>
+  <circle class="marker" cx="78.0" cy="475.4" r="5" fill="#dc2626"><title>Qwen3.8 vLLM 2200: 1.96</title></circle>
+  <circle class="marker" cx="491.4" cy="472.1" r="5" fill="#dc2626"><title>Qwen3.8 vLLM 2200: 12.64</title></circle>
+  <circle class="marker" cx="767.0" cy="459.3" r="5" fill="#dc2626"><title>Qwen3.8 vLLM 2200: 54.38</title></circle>
+  <circle class="marker" cx="892.0" cy="441.1" r="5" fill="#dc2626"><title>Qwen3.8 vLLM 2200: 113.18</title></circle>
+  <path class="series" d="M 78.0 475.4 L 491.4 472.1 L 767.0 459.4 L 892.0 439.9" stroke="#059669" stroke-dasharray="8 5"/>
+  <circle class="marker" cx="78.0" cy="475.4" r="5" fill="#059669"><title>Qwen3.8 vLLM: 1.88</title></circle>
+  <circle class="marker" cx="491.4" cy="472.1" r="5" fill="#059669"><title>Qwen3.8 vLLM: 12.5</title></circle>
+  <circle class="marker" cx="767.0" cy="459.4" r="5" fill="#059669"><title>Qwen3.8 vLLM: 53.85</title></circle>
+  <circle class="marker" cx="892.0" cy="439.9" r="5" fill="#059669"><title>Qwen3.8 vLLM: 117.3</title></circle>
+  <path class="series" d="M 78.0 475.2 L 491.4 470.0 L 767.0 450.3 L 892.0 291.6" stroke="#9333ea" stroke-dasharray="8 5"/>
+  <circle class="marker" cx="78.0" cy="475.2" r="5" fill="#9333ea"><title>Qwen3.8 NVFP4: 2.55</title></circle>
+  <circle class="marker" cx="491.4" cy="470.0" r="5" fill="#9333ea"><title>Qwen3.8 NVFP4: 19.36</title></circle>
+  <circle class="marker" cx="767.0" cy="450.3" r="5" fill="#9333ea"><title>Qwen3.8 NVFP4: 83.49</title></circle>
+  <circle class="marker" cx="892.0" cy="291.6" r="5" fill="#9333ea"><title>Qwen3.8 NVFP4: 598.56</title></circle>
+  <path class="series" d="M 78.0 474.5 L 491.4 464.7 L 767.0 430.7 L 892.0 389.8" stroke="#ea580c" stroke-dasharray="8 5"/>
+  <circle class="marker" cx="78.0" cy="474.5" r="5" fill="#ea580c"><title>GLM-5.3 EXL3: 5</title></circle>
+  <circle class="marker" cx="491.4" cy="464.7" r="5" fill="#ea580c"><title>GLM-5.3 EXL3: 36.85</title></circle>
+  <circle class="marker" cx="767.0" cy="430.7" r="5" fill="#ea580c"><title>GLM-5.3 EXL3: 147</title></circle>
+  <circle class="marker" cx="892.0" cy="389.8" r="5" fill="#ea580c"><title>GLM-5.3 EXL3: 279.8</title></circle>
 </svg>

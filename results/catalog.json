@@ -11,10 +11,10 @@
       "alternative_source_note": "Community uncensored/abliterated NVFP4 conversion for a Pennyroyal/SGLang runtime; not benchmarked in this repository, and its model card flags conflicting upstream license metadata.",
       "dgx_spark_count": 2,
       "dgx_spark_memory_gb_each": 128,
-      "tested_choice": "qwen38-mia-nvidia-fp8kv-native-262k",
+      "tested_choice": "qwen38-mia-nvidia-fp8kv-native-262k-2200mhz",
       "best_for": [
         "Primary local lane for short- and medium-context coding, tool-using agents, chat, and RAG.",
-        "Concurrent interactive traffic: the selected vLLM baseline sustained 197.42 output tok/s at c8 with 1.11s TTFT p95 and zero soak errors.",
+        "Concurrent interactive traffic: the selected capped vLLM baseline sustained 196.70 output tok/s at c8 with 1.16s TTFT p95 and zero soak errors.",
         "Native-context work through the suite's validated approximately 240K-token prompt."
       ],
       "not_for": [
@@ -22,7 +22,7 @@
         "Strict exact-copy guarantees without task-specific checks; one supplemental marker probe missed once even though the 13/13 standard suite passed.",
         "Assuming vision or video production readiness from this repository; the published benchmark suite is text-only."
       ],
-      "selection_note": "Use the native-262K vLLM/FP8-KV baseline as the conservative default. The 2200 MHz YaRN baseline is slightly faster and exposes a 1M request limit, but this suite did not validate quality beyond approximately 240K.",
+      "selection_note": "Use the capped native-262K vLLM/FP8-KV baseline when sustained throughput, power, and thermals matter. Remove the cap when single-request decode or cold short-prefill latency is the priority, and use an upstream timeout above 120 seconds for near-window prompts under contention.",
       "evidence_note": "Qwen describes the upstream model as an experimental, multimodal agentic architecture. This repository independently validates serving behavior and small regression canaries, not broad capability or safety."
     },
     {
@@ -126,6 +126,36 @@
     }
   ],
   "baselines": [
+    {
+      "id": "qwen38-mia-nvidia-fp8kv-native-262k-2200mhz",
+      "model_id": "qwen38-flash-next",
+      "label": "Qwen3.8-Flash-Next NVIDIA NVFP4 (Mia vLLM, FP8 KV, 2200 MHz)",
+      "chart_label": "Qwen3.8 NVIDIA FP8 KV 2200",
+      "date": "2026-10-03",
+      "report": "2026-10-03-qwen38-mia-nvidia-fp8kv-native-262k-2200mhz.md",
+      "hardware": "2x NVIDIA DGX Spark (128GB each)",
+      "runtime": "vLLM",
+      "context_tokens": 262144,
+      "recipe_credit": "[MiaAI-Lab updated dual-Spark recipe](https://github.com/MiaAI-Lab/Qwen3.8-Flash-Next-Dual-DGX-Sparks/tree/c2325b22602b51a5faf55fc2bebccc34f3f80b9f)",
+      "recommendation": "2200 MHz; concurrency 8; longer timeout near 240K",
+      "decode": [
+        {"concurrency": 1, "output_tps": 44.62, "ttft_p95_seconds": 0.42},
+        {"concurrency": 2, "output_tps": 80.92, "ttft_p95_seconds": 1.09},
+        {"concurrency": 4, "output_tps": 123.95, "ttft_p95_seconds": 1.55},
+        {"concurrency": 8, "output_tps": 202.95, "ttft_p95_seconds": 1.30},
+        {"concurrency": 12, "output_tps": 205.06, "ttft_p95_seconds": 19.42},
+        {"concurrency": 16, "output_tps": 200.09, "ttft_p95_seconds": 21.76}
+      ],
+      "prefill": [
+        {"input_tokens": 4096, "input_tps": 1118.26, "ttft_p95_seconds": 2.41},
+        {"input_tokens": 32768, "input_tps": 2527.51, "ttft_p95_seconds": 11.85},
+        {"input_tokens": 131072, "input_tps": 2559.04, "ttft_p95_seconds": 49.41},
+        {"input_tokens": 245760, "input_tps": 2375.88, "ttft_p95_seconds": 102.36}
+      ],
+      "prefix": {"unique_ttft_p95_seconds": 45.11, "warm_ttft_p95_seconds": 6.06},
+      "soak": {"concurrency": 8, "minutes": 20, "output_tps": 196.70, "ttft_p95_seconds": 1.16, "requests": 466, "errors": 0},
+      "quality": {"passed": 13, "total": 13}
+    },
     {
       "id": "glm53-flash-nvfp4-vllm-native-262k-low-reasoning",
       "model_id": "glm53-flash",

@@ -19,17 +19,22 @@ BLOCKED_IDENTIFIER_HASHES = {
 BLOCKED_EMAIL_HASHES = {
     "e6af86b867c529609ba5fa9fb7ae8efbd4c0118530613f47c2acc1e39aa17ef6"
 }
-# This GitHub-created squash commit was already public before the history check
-# first ran on main. Removing its author identity would require rewriting public
-# history, so accept only the exact immutable commit/role/email combination. A
-# future commit using the same address (including another squash merge) remains
-# blocked.
+# These GitHub-created commits were already public before the history check
+# encountered them on main. Removing their author identities would require
+# rewriting public history, so accept only each exact immutable
+# commit/role/email combination. A future commit using the same address
+# remains blocked.
 KNOWN_PUBLISHED_COMMIT_IDENTITY_EXCEPTIONS = {
     (
         "39c95e272cb9d8d7ecba2100a44cc1ed4f4d26cd",
         "author",
         "e6af86b867c529609ba5fa9fb7ae8efbd4c0118530613f47c2acc1e39aa17ef6",
-    )
+    ),
+    (
+        "bc94f2a8e65227a4088c5cb7c80be04768bfe19a",
+        "author",
+        "e6af86b867c529609ba5fa9fb7ae8efbd4c0118530613f47c2acc1e39aa17ef6",
+    ),
 }
 TOKEN = re.compile(r"[A-Za-z][A-Za-z0-9_-]{2,}")
 EMAIL = re.compile(r"[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9.-]+")

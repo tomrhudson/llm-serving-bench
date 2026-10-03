@@ -4,7 +4,7 @@ Use this page to choose among the model families with published DGX Spark
 baselines in this repository. For the full cross-configuration numbers and charts,
 open the [benchmark summary](README.md).
 
-Last updated: 2026-10-03 · Model families: 5 · Published configurations: 12
+Last updated: 2026-10-03 · Model families: 5 · Published configurations: 13
 
 ## Hardware footprint
 
@@ -44,7 +44,7 @@ production work.
 
 > Default high-throughput lane for coding, agents, chat, and RAG
 
-**Recommended tested configuration:** [Qwen3.8-Flash-Next NVIDIA NVFP4 (Mia vLLM, FP8 KV)](2026-09-07-qwen38-mia-nvidia-fp8kv-native-262k.md)
+**Recommended tested configuration:** [Qwen3.8-Flash-Next NVIDIA NVFP4 (Mia vLLM, FP8 KV, 2200 MHz)](2026-10-03-qwen38-mia-nvidia-fp8kv-native-262k-2200mhz.md)
 
 ### Checkpoint choices
 
@@ -55,16 +55,16 @@ production work.
 | Signal from the selected local baseline | Result |
 |---|---:|
 | DGX Spark footprint | 2 systems / 2 GPUs · 128GB each · 256GB aggregate across nodes |
-| Interactive c1 | 47.34 output tok/s · 0.40s TTFT p95 |
-| Peak short-prompt decode | 207.77 output tok/s @ c16 |
-| 20-minute c8 soak | 197.42 output tok/s · 0 errors |
-| Longest tested prompt | 240K · 99.22s TTFT p95 |
+| Interactive c1 | 44.62 output tok/s · 0.42s TTFT p95 |
+| Peak short-prompt decode | 205.06 output tok/s @ c12 |
+| 20-minute c8 soak | 196.70 output tok/s · 0 errors |
+| Longest tested prompt | 240K · 102.36s TTFT p95 |
 | Regression canaries | 13/13 |
 
 ### Good fit
 
 - Primary local lane for short- and medium-context coding, tool-using agents, chat, and RAG.
-- Concurrent interactive traffic: the selected vLLM baseline sustained 197.42 output tok/s at c8 with 1.11s TTFT p95 and zero soak errors.
+- Concurrent interactive traffic: the selected capped vLLM baseline sustained 196.70 output tok/s at c8 with 1.16s TTFT p95 and zero soak errors.
 - Native-context work through the suite's validated approximately 240K-token prompt.
 
 ### Do not choose it when
@@ -75,7 +75,7 @@ production work.
 
 ### Configuration call
 
-Use the native-262K vLLM/FP8-KV baseline as the conservative default. The 2200 MHz YaRN baseline is slightly faster and exposes a 1M request limit, but this suite did not validate quality beyond approximately 240K.
+Use the capped native-262K vLLM/FP8-KV baseline when sustained throughput, power, and thermals matter. Remove the cap when single-request decode or cold short-prefill latency is the priority, and use an upstream timeout above 120 seconds for near-window prompts under contention.
 
 Qwen describes the upstream model as an experimental, multimodal agentic architecture. This repository independently validates serving behavior and small regression canaries, not broad capability or safety.
 
@@ -83,7 +83,8 @@ Qwen describes the upstream model as an experimental, multimodal agentic archite
 
 | Configuration | Runtime | Configured context | c1 TTFT p95 | Soak tok/s | Canaries | Operating posture |
 |---|---|---:|---:|---:|---:|---|
-| [Qwen3.8-Flash-Next NVIDIA NVFP4 (Mia vLLM, FP8 KV)](2026-09-07-qwen38-mia-nvidia-fp8kv-native-262k.md) **(pick)** | vLLM | 256K | 0.40s | 197.42 | 13/13 | Concurrency 8; faster prefill, larger KV pool |
+| [Qwen3.8-Flash-Next NVIDIA NVFP4 (Mia vLLM, FP8 KV, 2200 MHz)](2026-10-03-qwen38-mia-nvidia-fp8kv-native-262k-2200mhz.md) **(pick)** | vLLM | 256K | 0.42s | 196.70 | 13/13 | 2200 MHz; concurrency 8; longer timeout near 240K |
+| [Qwen3.8-Flash-Next NVIDIA NVFP4 (Mia vLLM, FP8 KV)](2026-09-07-qwen38-mia-nvidia-fp8kv-native-262k.md) | vLLM | 256K | 0.40s | 197.42 | 13/13 | Concurrency 8; faster prefill, larger KV pool |
 | [Qwen3.8-Flash-Next-NVFP4 (Mia vLLM, 2200 MHz)](2026-09-03-qwen38-flash-next-vllm-mia-yarn-1m-2200mhz.md) | vLLM | 1M | 0.36s | 201.58 | 13/13 | 2200 MHz; concurrency 8 |
 | [Qwen3.8-Flash-Next-NVFP4 (Mia vLLM)](2026-08-31-qwen38-flash-next-vllm-mia-yarn-1m.md) | vLLM | 1M | 0.43s | 197.71 | 13/13 | Concurrency 8 |
 | [Qwen3.8-Flash-Next-NVFP4](2026-08-29-qwen38-flash-next-nvfp4-native-262k.md) | SGLang | 256K | 0.41s | 157.61 | 13/13 | Concurrency 8 |
