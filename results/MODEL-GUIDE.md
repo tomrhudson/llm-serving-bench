@@ -47,7 +47,8 @@ production work.
 
 ### Checkpoint choices
 
-- **Standard:** [Official Qwen model card](https://huggingface.co/Qwen/Qwen3.8-Flash-Next)
+- **Benchmarked checkpoint:** [nvidia/Qwen3.8-Flash-Next-NVFP4 @ fab0aec](https://huggingface.co/nvidia/Qwen3.8-Flash-Next-NVFP4/tree/fab0aecb760cec45227f6656abcaafa11abca87a)
+- **Upstream base model:** [Qwen/Qwen3.8-Flash-Next](https://huggingface.co/Qwen/Qwen3.8-Flash-Next)
 - **Uncensored / abliterated:** [Uncensored ModelOpt NVFP4 checkpoint](https://huggingface.co/jpezzulli/OrcaRouter-Qwen3.8-Flash-Next-Uncensored-ModelOpt-NVFP4) — Community uncensored/abliterated NVFP4 conversion for a Pennyroyal/SGLang runtime; not benchmarked in this repository, and its model card flags conflicting upstream license metadata.
 
 | Signal from the selected local baseline | Result |
@@ -95,7 +96,8 @@ Qwen describes the upstream model as an experimental, multimodal agentic archite
 
 ### Checkpoint choices
 
-- **Standard:** [Official Z.ai model card](https://huggingface.co/zai-org/GLM-5.3-Flash)
+- **Benchmarked checkpoint:** [Mia-AiLab/GLM-5.3-Flash-EXL3-TR3-4bpw @ 9eaebb7](https://huggingface.co/Mia-AiLab/GLM-5.3-Flash-EXL3-TR3-4bpw/tree/9eaebb7c4e96d983dcd538e18624622ba5b820a8)
+- **Upstream base model:** [zai-org/GLM-5.3-Flash](https://huggingface.co/zai-org/GLM-5.3-Flash)
 - **Uncensored / abliterated:** [Uncensored EXL3 checkpoint, rank-sliced for two DGX Sparks](https://huggingface.co/cbert33/GLM-5.3-Flash-Uncensored-EXL3-DGX-Sliced) — Community uncensored/abliterated EXL3 checkpoint for its linked custom two-Spark vLLM runner; not benchmarked in this repository and not compatible with stock vLLM.
 
 | Signal from the selected local baseline | Result |
@@ -143,7 +145,8 @@ Z.ai positions GLM-5.3 Flash for coding, agents, multimodal input, and long cont
 
 ### Checkpoint choices
 
-- **Standard:** [Official DeepSeek model card](https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash)
+- **Benchmarked checkpoint:** [Mia-AiLab/DeepSeek-V4.1-Flash-EXL3-2.9bpw @ 64ba41b](https://huggingface.co/Mia-AiLab/DeepSeek-V4.1-Flash-EXL3-2.9bpw/tree/64ba41b6c916a587db06eae2e19b7845f7be6e6b)
+- **Upstream base model:** [deepseek-ai/DeepSeek-V4.1-Flash](https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash)
 - **Uncensored / abliterated:** [Uncensored EXL3 2.9 bpw checkpoint](https://huggingface.co/dealignai/DeepSeek-V4.1-Flash-UNCENSORED-EXL3-2.9bpw) — Community uncensored/abliterated EXL3 checkpoint presented as a drop-in for the linked two-Spark recipe; not benchmarked in this repository.
 
 | Signal from the selected local baseline | Result |

@@ -98,9 +98,10 @@ view of what each model family is good at, when not to use it, and which tested
 configuration to choose.
 
 The [results comparison](results/README.md#model-checkpoints) and model dashboard
-also provide direct links to the standard upstream checkpoint and one community
-uncensored/abliterated alternative for each family. Alternative checkpoints are
-discovery links only unless an individual report explicitly benchmarks them.
+also identify the exact pinned checkpoint used by each recommended benchmark,
+the upstream base model, and one community uncensored/abliterated alternative.
+Alternative checkpoints are discovery links only unless an individual report
+explicitly benchmarks them.
 
 - [GLM-5.3 Flash EXL3/TR3 4 bpw, TensorFold v0.6.0, two DGX Sparks, native 1M context](results/2026-10-01-glm53-flash-exl3-tensorfold-v060-1m.md) — served with [MiaAI-Lab's TensorFold recipe](https://github.com/MiaAI-Lab/GLM-5.3-Flash-EXL3-2x-DGX-Sparks-TensorFold/tree/978b2252059069b3b4b84f0f7eeb73bc17f28d3f)
 - [GLM-5.3 Flash EXL3/TR3 4 bpw, refreshed recipe, two DGX Sparks, 850K context](results/2026-09-15-glm53-flash-exl3-tr3-4bpw-850k.md) — served with [MiaAI-Lab's refreshed two-Spark recipe](https://github.com/MiaAI-Lab/GLM-5.3-Flash-EXL3-2x-DGX-Sparks/tree/a35eaab128233d215b2fc9ac261eddbad23c946d)

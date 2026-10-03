@@ -23,14 +23,14 @@ DASHES = ["", "8 5", "3 4", "12 4 3 4"]
 
 def _load_catalog() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     data = json.loads(CATALOG.read_text())
-    if data.get("schema_version") != 4:
+    if data.get("schema_version") != 5:
         raise ValueError("unsupported results/catalog.json schema_version")
     models = data.get("models")
     if not isinstance(models, list) or not models:
         raise ValueError("results/catalog.json must contain at least one model")
     required_model = {
-        "id", "name", "tagline", "official_source", "alternative_source",
-        "alternative_source_note", "dgx_spark_count",
+        "id", "name", "tagline", "benchmarked_source", "upstream_source",
+        "alternative_source", "alternative_source_note", "dgx_spark_count",
         "dgx_spark_memory_gb_each", "tested_choice", "best_for", "not_for",
         "selection_note", "evidence_note",
     }
@@ -309,7 +309,8 @@ def _model_guide_markdown(
 
 ### Checkpoint choices
 
-- **Standard:** {model["official_source"]}
+- **Benchmarked checkpoint:** {model["benchmarked_source"]}
+- **Upstream base model:** {model["upstream_source"]}
 - **Uncensored / abliterated:** {model["alternative_source"]} — {model["alternative_source_note"]}
 
 | Signal from the selected local baseline | Result |
@@ -411,7 +412,8 @@ def _summary_markdown(
         )
 
     model_source_rows = [
-        f'| {model["name"]} | {model["official_source"]} | '
+        f'| {model["name"]} | {model["benchmarked_source"]} | '
+        f'{model["upstream_source"]} | '
         f'{model["alternative_source"]} | {model["alternative_source_note"]} |'
         for model in models
     ]
@@ -438,13 +440,13 @@ prefill scenario available in the standard suite (currently 240K tokens).
 
 ## Model checkpoints
 
-These links make the standard upstream model and one uncensored/abliterated
-community alternative easy to find for each family. The alternatives are
-discovery links, not published benchmark results; review each model card,
-license, runtime requirements, and safety posture before deployment.
+Each family lists the exact pinned checkpoint used by its recommended benchmark,
+the upstream base model, and one uncensored/abliterated community alternative.
+The alternatives are discovery links, not published benchmark results; review
+each model card, license, runtime requirements, and safety posture before deployment.
 
-| Model family | Standard | Uncensored / abliterated alternative | Compatibility note |
-|---|---|---|---|
+| Model family | Benchmarked checkpoint | Upstream base model | Uncensored / abliterated alternative | Compatibility note |
+|---|---|---|---|---|
 {chr(10).join(model_source_rows)}
 
 ## Decode scaling

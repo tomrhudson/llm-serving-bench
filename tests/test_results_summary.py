@@ -35,7 +35,8 @@ class ResultsSummaryTests(unittest.TestCase):
             selected = baselines[model["tested_choice"]]
             self.assertEqual(selected["model_id"], model["id"])
             self.assertIn(f']({selected["report"]})', guide)
-            self.assertIn(model["official_source"], guide)
+            self.assertIn(model["benchmarked_source"], guide)
+            self.assertIn(model["upstream_source"], guide)
             self.assertIn(model["alternative_source"], guide)
 
     def test_checkpoint_sources_cover_every_catalog_family(self) -> None:
@@ -45,7 +46,8 @@ class ResultsSummaryTests(unittest.TestCase):
         self.assertIn("## Model checkpoints", summary)
         self.assertIn("not published benchmark results", summary)
         for model in catalog["models"]:
-            self.assertIn(model["official_source"], summary)
+            self.assertIn(model["benchmarked_source"], summary)
+            self.assertIn(model["upstream_source"], summary)
             self.assertIn(model["alternative_source"], summary)
 
     def test_summary_names_dgx_spark_memory_per_system(self) -> None:
