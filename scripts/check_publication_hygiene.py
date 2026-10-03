@@ -19,6 +19,18 @@ BLOCKED_IDENTIFIER_HASHES = {
 BLOCKED_EMAIL_HASHES = {
     "e6af86b867c529609ba5fa9fb7ae8efbd4c0118530613f47c2acc1e39aa17ef6"
 }
+# This GitHub-created squash commit was already public before the history check
+# first ran on main. Removing its author identity would require rewriting public
+# history, so accept only the exact immutable commit/role/email combination. A
+# future commit using the same address (including another squash merge) remains
+# blocked.
+KNOWN_PUBLISHED_COMMIT_IDENTITY_EXCEPTIONS = {
+    (
+        "39c95e272cb9d8d7ecba2100a44cc1ed4f4d26cd",
+        "author",
+        "e6af86b867c529609ba5fa9fb7ae8efbd4c0118530613f47c2acc1e39aa17ef6",
+    )
+}
 TOKEN = re.compile(r"[A-Za-z][A-Za-z0-9_-]{2,}")
 EMAIL = re.compile(r"[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9.-]+")
 RULES = [
@@ -131,8 +143,13 @@ def scan_history() -> list[str]:
         if commit in ignored_commit_identities:
             continue
         for role, email in (("author", author_email), ("committer", committer_email)):
-            if digest(email) in BLOCKED_EMAIL_HASHES:
-                issues.append(f"{commit[:12]}: {role} uses a private email address")
+            email_hash = digest(email)
+            if email_hash not in BLOCKED_EMAIL_HASHES:
+                continue
+            identity = (commit, role, email_hash)
+            if identity in KNOWN_PUBLISHED_COMMIT_IDENTITY_EXCEPTIONS:
+                continue
+            issues.append(f"{commit[:12]}: {role} uses a private email address")
     return issues
 
 
