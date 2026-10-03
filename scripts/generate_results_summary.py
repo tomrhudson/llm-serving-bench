@@ -99,9 +99,30 @@ def _fmt_dgx_spark(model: dict[str, Any]) -> str:
     count = model["dgx_spark_count"]
     memory_each = model["dgx_spark_memory_gb_each"]
     total_memory = count * memory_each
+    systems = "system" if count == 1 else "systems"
+    gpus = "GPU" if count == 1 else "GPUs"
+    footprint = (
+        f"{count} {systems} / {count} {gpus} · {memory_each}GB each · "
+        f"{total_memory}GB aggregate"
+    )
+    if count > 1:
+        footprint += " across nodes"
+    return footprint
+
+
+def _hardware_footprint_markdown(models: list[dict[str, Any]]) -> str:
+    counts = sorted({model["dgx_spark_count"] for model in models})
+    memory_sizes = sorted({model["dgx_spark_memory_gb_each"] for model in models})
+    footprints = ", ".join(
+        f"{count}× DGX Spark" for count in counts
+    )
+    memory = ", ".join(f"{size}GB" for size in memory_sizes)
     return (
-        f"{count} systems / {count} GPUs · {memory_each}GB each · "
-        f"{total_memory}GB aggregate across nodes"
+        f"Published recipes use {footprints} configurations with {memory} of "
+        "unified memory per system. Multi-node capacity is aggregate capacity "
+        "across separate systems, not one pooled memory space. Each footprint "
+        "describes the exact tested serving recipe rather than a universal model "
+        "requirement."
     )
 
 
@@ -341,7 +362,7 @@ def _model_guide_markdown(
 
     return f'''# Model selection dashboard
 
-Use this page to choose among the model families that have published two-DGX-Spark
+Use this page to choose among the model families with published DGX Spark
 baselines in this repository. For the full cross-configuration numbers and charts,
 open the [benchmark summary](README.md).
 
@@ -349,11 +370,7 @@ Last updated: {newest} · Model families: {len(models)} · Published configurati
 
 ## Hardware footprint
 
-Every currently published recipe uses **2× NVIDIA DGX Spark systems with 128GB
-of unified memory each**: two GPUs total and 256GB aggregate capacity across the
-two-node deployment. That is two separate 128GB systems, not one pooled 256GB
-memory space. This is the validated footprint for these exact serving recipes,
-not a claim that every possible quantization of the model requires two DGX Sparks.
+{_hardware_footprint_markdown(models)}
 
 ## Fast decision
 
@@ -362,11 +379,14 @@ not a claim that every possible quantization of the model requires two DGX Spark
 {chr(10).join(overview_rows)}
 
 Practical default: start with **Qwen3.8-Flash-Next** for mixed interactive,
-coding, RAG, and agent traffic. Move to **GLM-5.3 Flash** when its long-context
-coding/agent profile is the better fit and choose deliberately between the fast
-TensorFold lane and the clean-canary vLLM lane. Use **DeepSeek V4.1 Flash** for
-input-heavy, low-concurrency work where its clean local canaries matter more than
-aggregate serving throughput.
+coding, RAG, and agent traffic. When only one Spark is available, use
+**Qwen3.8 27B NVFP4** for concurrent serving; reserve **DeepSeek V4 Flash** for
+one-request-at-a-time long-input work after repairing its documented launch
+dependency. Move to **GLM-5.3 Flash** when its long-context coding/agent profile
+is the better fit and choose deliberately between the fast TensorFold lane and
+the vLLM baselines with their documented quality boundaries. Use **DeepSeek
+V4.1 Flash** for input-heavy, low-concurrency work where its clean local
+canaries matter more than aggregate serving throughput.
 
 ## Evidence boundary
 

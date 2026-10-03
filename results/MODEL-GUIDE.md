@@ -1,33 +1,34 @@
 # Model selection dashboard
 
-Use this page to choose among the model families that have published two-DGX-Spark
+Use this page to choose among the model families with published DGX Spark
 baselines in this repository. For the full cross-configuration numbers and charts,
 open the [benchmark summary](README.md).
 
-Last updated: 2026-10-01 · Model families: 3 · Published configurations: 8
+Last updated: 2026-10-03 · Model families: 5 · Published configurations: 12
 
 ## Hardware footprint
 
-Every currently published recipe uses **2× NVIDIA DGX Spark systems with 128GB
-of unified memory each**: two GPUs total and 256GB aggregate capacity across the
-two-node deployment. That is two separate 128GB systems, not one pooled 256GB
-memory space. This is the validated footprint for these exact serving recipes,
-not a claim that every possible quantization of the model requires two DGX Sparks.
+Published recipes use 1× DGX Spark, 2× DGX Spark configurations with 128GB of unified memory per system. Multi-node capacity is aggregate capacity across separate systems, not one pooled memory space. Each footprint describes the exact tested serving recipe rather than a universal model requirement.
 
 ## Fast decision
 
 | Model | DGX Spark requirement | Position | Good default for | Choose something else when |
 |---|---|---|---|---|
 | [Qwen3.8-Flash-Next NVFP4](#qwen38-flash-next) | 2 systems / 2 GPUs · 128GB each · 256GB aggregate across nodes | Default high-throughput lane for coding, agents, chat, and RAG | Primary local lane for short- and medium-context coding, tool-using agents, chat, and RAG. | Treating a configured 1M YaRN window as validated 1M model quality; the published runs exercise context only through approximately 240K tokens. |
-| [GLM-5.3 Flash EXL3/TR3](#glm53-flash) | 2 systems / 2 GPUs · 128GB each · 256GB aggregate across nodes | Long-context coding and agentic lane with a speed-versus-assurance choice | Complex coding and agentic work at low concurrency, consistent with the upstream model's stated focus. | Exact-string or deterministic transformation workloads on the TensorFold lane until the repeatable reverse-marker regression is understood; its combined result was 10/13. |
+| [Qwen3.8 27B](#qwen38-27b) | 1 system / 1 GPU · 128GB each · 128GB aggregate | Single-Spark 27B lane with official and uncensored checkpoint choices | A capable local text lane that fits on one DGX Spark without cross-node serving. | Interactive near-window prompts; the official and uncensored baselines took 395 and 558 seconds respectively to first token on the 240K check. |
+| [GLM-5.3 Flash](#glm53-flash) | 2 systems / 2 GPUs · 128GB each · 256GB aggregate across nodes | Long-context coding and agentic lane with runtime and context tradeoffs | Complex coding and agentic work at low concurrency, consistent with the upstream model's stated focus. | Exact-string or deterministic transformation workloads on the TensorFold lane until the repeatable reverse-marker regression is understood; its combined result was 10/13. |
+| [DeepSeek V4 Flash 0731](#deepseek-v4-flash) | 1 system / 1 GPU · 128GB each · 128GB aggregate | Single-Spark long-context lane built for one request at a time | A dedicated one-Spark lane for long, input-heavy requests where concurrency 1 is acceptable. | Concurrent interactive traffic; aggregate decode stayed near 30 tok/s while c8 TTFT p95 rose to 118.29 seconds. |
 | [DeepSeek V4.1 Flash EXL3](#deepseek-v41-flash) | 2 systems / 2 GPUs · 128GB each · 256GB aggregate across nodes | Low-concurrency, input-heavy agentic lane with clean canaries | Input-heavy agentic, reasoning, and long-document work where concurrency 1-2 is sufficient. | High-throughput concurrent chat or agent fleets; c2 was the practical peak and higher concurrency mainly increased queueing. |
 
 Practical default: start with **Qwen3.8-Flash-Next** for mixed interactive,
-coding, RAG, and agent traffic. Move to **GLM-5.3 Flash** when its long-context
-coding/agent profile is the better fit and choose deliberately between the fast
-TensorFold lane and the clean-canary vLLM lane. Use **DeepSeek V4.1 Flash** for
-input-heavy, low-concurrency work where its clean local canaries matter more than
-aggregate serving throughput.
+coding, RAG, and agent traffic. When only one Spark is available, use
+**Qwen3.8 27B NVFP4** for concurrent serving; reserve **DeepSeek V4 Flash** for
+one-request-at-a-time long-input work after repairing its documented launch
+dependency. Move to **GLM-5.3 Flash** when its long-context coding/agent profile
+is the better fit and choose deliberately between the fast TensorFold lane and
+the vLLM baselines with their documented quality boundaries. Use **DeepSeek
+V4.1 Flash** for input-heavy, low-concurrency work where its clean local
+canaries matter more than aggregate serving throughput.
 
 ## Evidence boundary
 
@@ -83,10 +84,53 @@ Qwen describes the upstream model as an experimental, multimodal agentic archite
 | [Qwen3.8-Flash-Next-NVFP4 (Mia vLLM)](2026-08-31-qwen38-flash-next-vllm-mia-yarn-1m.md) | vLLM | 1M | 0.43s | 197.71 | 13/13 | Concurrency 8 |
 | [Qwen3.8-Flash-Next-NVFP4](2026-08-29-qwen38-flash-next-nvfp4-native-262k.md) | SGLang | 256K | 0.41s | 157.61 | 13/13 | Concurrency 8 |
 
-<a id="glm53-flash"></a>
-## GLM-5.3 Flash EXL3/TR3
+<a id="qwen38-27b"></a>
+## Qwen3.8 27B
 
-> Long-context coding and agentic lane with a speed-versus-assurance choice
+> Single-Spark 27B lane with official and uncensored checkpoint choices
+
+**Recommended tested configuration:** [Qwen3.8 27B NVFP4 (SGLang)](2026-10-02-qwen38-27b-nvfp4-sglang-native-262k.md)
+
+**Upstream:** [Official Qwen model card](https://huggingface.co/Qwen/Qwen3.8-27B)
+
+| Signal from the selected local baseline | Result |
+|---|---:|
+| DGX Spark footprint | 1 system / 1 GPU · 128GB each · 128GB aggregate |
+| Interactive c1 | 31.83 output tok/s · 0.18s TTFT p95 |
+| Peak short-prompt decode | 187.63 output tok/s @ c16 |
+| 20-minute c8 soak | 157.80 output tok/s · 0 errors |
+| Longest tested prompt | 240K · 395.05s TTFT p95 |
+| Regression canaries | 13/13 |
+
+### Good fit
+
+- A capable local text lane that fits on one DGX Spark without cross-node serving.
+- Concurrent interactive traffic on the selected NVFP4 baseline: its c8 soak sustained 157.80 output tok/s with 1.01s TTFT p95 and zero request errors.
+- Native-context retrieval work through the suite's validated approximately 240K-token prompt.
+
+### Do not choose it when
+
+- Interactive near-window prompts; the official and uncensored baselines took 395 and 558 seconds respectively to first token on the 240K check.
+- Using the uncensored derivative by default in trust-sensitive workflows; it needs workload-specific safety and behavior validation.
+- Treating vision or tool quality as benchmarked here; the published suite is text-only.
+
+### Configuration call
+
+Use the RadixArk NVFP4 checkpoint as the default: it is materially faster and has the cleaner upstream relationship. Choose the orcarouter uncensored derivative only when that behavior is an explicit requirement, and cap interactive concurrency at 4.
+
+The two reports share the same single-Spark SGLang runtime family but use different checkpoints and serving limits. Their performance is therefore an operational comparison, not a controlled quantization-only A/B.
+
+### Published variants
+
+| Configuration | Runtime | Configured context | c1 TTFT p95 | Soak tok/s | Canaries | Operating posture |
+|---|---|---:|---:|---:|---:|---|
+| [Qwen3.8 27B NVFP4 (SGLang)](2026-10-02-qwen38-27b-nvfp4-sglang-native-262k.md) **(pick)** | SGLang | 256K | 0.18s | 157.80 | 13/13 | Concurrency 8; 13/13 quality |
+| [Qwen3.8 27B Uncensored FP8 (SGLang)](2026-10-02-qwen38-27b-uncensored-fp8-sglang-native-262k.md) | SGLang | 256K | 0.28s | 63.89 | 13/13 | Concurrency 4; derivative checkpoint; 13/13 quality |
+
+<a id="glm53-flash"></a>
+## GLM-5.3 Flash
+
+> Long-context coding and agentic lane with runtime and context tradeoffs
 
 **Recommended tested configuration:** [GLM-5.3 Flash EXL3/TR3 4 bpw (TensorFold v0.6.0)](2026-10-01-glm53-flash-exl3-tensorfold-v060-1m.md)
 
@@ -111,12 +155,13 @@ Qwen describes the upstream model as an experimental, multimodal agentic archite
 
 - Exact-string or deterministic transformation workloads on the TensorFold lane until the repeatable reverse-marker regression is understood; its combined result was 10/13.
 - Latency-sensitive traffic above concurrency 4; c8 and higher mostly added queueing.
+- Treating the NVFP4 vLLM lane's 13/13 canaries as broad assurance while its runtime still reports the documented weight-scale accuracy warning.
 - Commercial use of the tested TensorFold recipe unless the DFlash2 licensing constraint is separately resolved.
 - Treating vision or tool quality as benchmarked here; the published suite is text-only.
 
 ### Configuration call
 
-Choose TensorFold when throughput is the priority and the workload tolerates its documented canary caveat. Choose a vLLM baseline when the clean 13/13 regression result matters more than serving speed.
+Choose TensorFold when throughput and the 1M request window are the priority and the workload tolerates its documented canary caveat. The vLLM/NVFP4 low-reasoning baseline passed 13/13 checks and has lower c8 queue latency, but its runtime weight-scale warning must be resolved before treating it as the assurance choice.
 
 Z.ai positions GLM-5.3 Flash for coding, agents, multimodal input, and long context. The local results prove performance, stability, and a 240K retrieval check for these quantized recipes only.
 
@@ -124,9 +169,52 @@ Z.ai positions GLM-5.3 Flash for coding, agents, multimodal input, and long cont
 
 | Configuration | Runtime | Configured context | c1 TTFT p95 | Soak tok/s | Canaries | Operating posture |
 |---|---|---:|---:|---:|---:|---|
+| [GLM-5.3 Flash NVFP4 (vLLM, low reasoning)](2026-10-03-glm53-flash-nvfp4-vllm-native-262k-low-reasoning.md) | vLLM | 256K | 0.45s | 60.90 | 13/13 | Concurrency 1 interactive; 8 batch; 13/13 with accuracy warning |
 | [GLM-5.3 Flash EXL3/TR3 4 bpw (TensorFold v0.6.0)](2026-10-01-glm53-flash-exl3-tensorfold-v060-1m.md) **(pick)** | TensorFold | 1M | 0.41s | 84.90 | 10/13 | Concurrency 1 interactive; 4 batch; 10/13 quality |
 | [GLM-5.3 Flash EXL3/TR3 4 bpw (refreshed recipe)](2026-09-15-glm53-flash-exl3-tr3-4bpw-850k.md) | vLLM | 850K | 1.27s | 21.88 | 13/13 | Concurrency 1 interactive; 4 batch; Socket |
 | [GLM-5.3-Flash-EXL3](2026-08-29-glm53-flash-exl3-native-1m.md) | vLLM | 1M | 0.95s | 38.53 | 13/13 | Concurrency 1 interactive; 4 batch |
+
+<a id="deepseek-v4-flash"></a>
+## DeepSeek V4 Flash 0731
+
+> Single-Spark long-context lane built for one request at a time
+
+**Recommended tested configuration:** [DeepSeek V4 Flash 0731 EXL3/SparkInfer](2026-10-02-deepseek-v4-flash-0731-sparkinfer-384k.md)
+
+**Upstream:** [Official DeepSeek model card](https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731)
+
+| Signal from the selected local baseline | Result |
+|---|---:|
+| DGX Spark footprint | 1 system / 1 GPU · 128GB each · 128GB aggregate |
+| Interactive c1 | 29.62 output tok/s · 0.54s TTFT p95 |
+| Peak short-prompt decode | 31.44 output tok/s @ c4 |
+| 20-minute c8 soak | 26.89 output tok/s · 0 errors |
+| Longest tested prompt | 240K · 259.00s TTFT p95 |
+| Regression canaries | 13/13 |
+
+### Good fit
+
+- A dedicated one-Spark lane for long, input-heavy requests where concurrency 1 is acceptable.
+- Native-context retrieval through the tested 240K prompt: the passkey check passed with 259.00s TTFT.
+- Single-request decode near 30 output tok/s with clean standard-suite canaries.
+
+### Do not choose it when
+
+- Concurrent interactive traffic; aggregate decode stayed near 30 tok/s while c8 TTFT p95 rose to 118.29 seconds.
+- An unchanged operational launch until the documented xgrammar and TileLang dependency collision is repaired in the retained recipe.
+- Claiming quality through the full configured 384K window; this suite exercised approximately 240K.
+
+### Configuration call
+
+Use concurrency 1. This profile is a placement and long-input option, not a throughput lane; Qwen3.8 27B is the stronger single-Spark choice when concurrent serving matters.
+
+The result uses a benchmark-only dependency pin to make the retained image's TileLang and xgrammar packages coexist. It should not be compared with DeepSeek V4.1 as a controlled model-only A/B because the model, quantization, runtime, hardware count, and request limit differ.
+
+### Published variants
+
+| Configuration | Runtime | Configured context | c1 TTFT p95 | Soak tok/s | Canaries | Operating posture |
+|---|---|---:|---:|---:|---:|---|
+| [DeepSeek V4 Flash 0731 EXL3/SparkInfer](2026-10-02-deepseek-v4-flash-0731-sparkinfer-384k.md) **(pick)** | vLLM + SparkInfer | 384K | 0.54s | 26.89 | 13/13 | Concurrency 1; benchmark-only dependency repair |
 
 <a id="deepseek-v41-flash"></a>
 ## DeepSeek V4.1 Flash EXL3
