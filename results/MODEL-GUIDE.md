@@ -46,7 +46,11 @@ production work.
 
 **Recommended tested configuration:** [Qwen3.8-Flash-Next NVIDIA NVFP4 (Mia vLLM, FP8 KV)](2026-09-07-qwen38-mia-nvidia-fp8kv-native-262k.md)
 
-**Upstream:** [Official Qwen model card](https://huggingface.co/Qwen/Qwen3.8-Flash-Next)
+### Checkpoint choices
+
+- **Benchmarked checkpoint:** [nvidia/Qwen3.8-Flash-Next-NVFP4 @ fab0aec](https://huggingface.co/nvidia/Qwen3.8-Flash-Next-NVFP4/tree/fab0aecb760cec45227f6656abcaafa11abca87a)
+- **Upstream base model:** [Qwen/Qwen3.8-Flash-Next](https://huggingface.co/Qwen/Qwen3.8-Flash-Next)
+- **Uncensored / abliterated:** [Uncensored ModelOpt NVFP4 checkpoint](https://huggingface.co/jpezzulli/OrcaRouter-Qwen3.8-Flash-Next-Uncensored-ModelOpt-NVFP4) — Community uncensored/abliterated NVFP4 conversion for a Pennyroyal/SGLang runtime; not benchmarked in this repository, and its model card flags conflicting upstream license metadata.
 
 | Signal from the selected local baseline | Result |
 |---|---:|
@@ -91,7 +95,11 @@ Qwen describes the upstream model as an experimental, multimodal agentic archite
 
 **Recommended tested configuration:** [Qwen3.8 27B NVFP4 (SGLang)](2026-10-02-qwen38-27b-nvfp4-sglang-native-262k.md)
 
-**Upstream:** [Official Qwen model card](https://huggingface.co/Qwen/Qwen3.8-27B)
+### Checkpoint choices
+
+- **Benchmarked checkpoint:** [RadixArk/Qwen3.8-27B-NVFP4 @ 319f741](https://huggingface.co/RadixArk/Qwen3.8-27B-NVFP4/tree/319f741cce68d7914884900c138a1fbb70a42f30)
+- **Upstream base model:** [Qwen/Qwen3.8-27B](https://huggingface.co/Qwen/Qwen3.8-27B)
+- **Uncensored / abliterated:** [orcarouter/Qwen3.8-27B-Uncensored-FP8 @ 830602f](https://huggingface.co/orcarouter/Qwen3.8-27B-Uncensored-FP8/tree/830602f9b81d083db78f60e889bca37b73b74469) — Uncensored/abliterated FP8 derivative independently benchmarked in this repository; it passed 13/13 standard checks but was materially slower and requires explicit trust and safety review.
 
 | Signal from the selected local baseline | Result |
 |---|---:|
@@ -134,7 +142,11 @@ The two reports share the same single-Spark SGLang runtime family but use differ
 
 **Recommended tested configuration:** [GLM-5.3 Flash EXL3/TR3 4 bpw (TensorFold v0.6.0)](2026-10-01-glm53-flash-exl3-tensorfold-v060-1m.md)
 
-**Upstream:** [Official Z.ai model card](https://huggingface.co/zai-org/GLM-5.3-Flash)
+### Checkpoint choices
+
+- **Benchmarked checkpoint:** [Mia-AiLab/GLM-5.3-Flash-EXL3-TR3-4bpw @ 9eaebb7](https://huggingface.co/Mia-AiLab/GLM-5.3-Flash-EXL3-TR3-4bpw/tree/9eaebb7c4e96d983dcd538e18624622ba5b820a8)
+- **Upstream base model:** [zai-org/GLM-5.3-Flash](https://huggingface.co/zai-org/GLM-5.3-Flash)
+- **Uncensored / abliterated:** [Uncensored EXL3 checkpoint, rank-sliced for two DGX Sparks](https://huggingface.co/cbert33/GLM-5.3-Flash-Uncensored-EXL3-DGX-Sliced) — Community uncensored/abliterated EXL3 checkpoint for its linked custom two-Spark vLLM runner; not benchmarked in this repository and not compatible with stock vLLM.
 
 | Signal from the selected local baseline | Result |
 |---|---:|
@@ -181,7 +193,11 @@ Z.ai positions GLM-5.3 Flash for coding, agents, multimodal input, and long cont
 
 **Recommended tested configuration:** [DeepSeek V4 Flash 0731 EXL3/SparkInfer](2026-10-02-deepseek-v4-flash-0731-sparkinfer-384k.md)
 
-**Upstream:** [Official DeepSeek model card](https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731)
+### Checkpoint choices
+
+- **Benchmarked checkpoint:** [0xSero/deepseek-v4-flash-0731-spark @ 22f28d3](https://huggingface.co/0xSero/deepseek-v4-flash-0731-spark/tree/22f28d32b9b29b4352eaa380ff8c2c170b2847ab)
+- **Upstream base model:** [deepseek-ai/DeepSeek-V4-Flash-0731](https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731)
+- **Uncensored / abliterated:** [Abliterated DeepSeek V4 Flash 0731 checkpoint](https://huggingface.co/lovesenko/DeepSeek-V4-Flash-0731-Abliterated) — Community weight-space-edited uncensored checkpoint; not benchmarked in this repository, and compatibility with the measured single-Spark SparkInfer recipe is unvalidated.
 
 | Signal from the selected local baseline | Result |
 |---|---:|
@@ -223,7 +239,11 @@ The result uses a benchmark-only dependency pin to make the retained image's Til
 
 **Recommended tested configuration:** [DeepSeek V4.1 Flash EXL3 2.9 bpw](2026-09-15-deepseek-v41-flash-exl3-2.9bpw-600k.md)
 
-**Upstream:** [Official DeepSeek model card](https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash)
+### Checkpoint choices
+
+- **Benchmarked checkpoint:** [Mia-AiLab/DeepSeek-V4.1-Flash-EXL3-2.9bpw @ 64ba41b](https://huggingface.co/Mia-AiLab/DeepSeek-V4.1-Flash-EXL3-2.9bpw/tree/64ba41b6c916a587db06eae2e19b7845f7be6e6b)
+- **Upstream base model:** [deepseek-ai/DeepSeek-V4.1-Flash](https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash)
+- **Uncensored / abliterated:** [Uncensored EXL3 2.9 bpw checkpoint](https://huggingface.co/dealignai/DeepSeek-V4.1-Flash-UNCENSORED-EXL3-2.9bpw) — Community uncensored/abliterated EXL3 checkpoint presented as a drop-in for the linked two-Spark recipe; not benchmarked in this repository.
 
 | Signal from the selected local baseline | Result |
 |---|---:|

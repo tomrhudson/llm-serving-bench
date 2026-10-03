@@ -9,6 +9,7 @@ Status: **PASS; use concurrency 2 for the best interactive throughput/latency ba
 ## Configuration
 
 - Model: `DeepSeek-v4.1-Flash-EXL3`
+- Checkpoint: [`Mia-AiLab/DeepSeek-V4.1-Flash-EXL3-2.9bpw` at revision `64ba41b6c916a587db06eae2e19b7845f7be6e6b`](https://huggingface.co/Mia-AiLab/DeepSeek-V4.1-Flash-EXL3-2.9bpw/tree/64ba41b6c916a587db06eae2e19b7845f7be6e6b)
 - Weights: EXL3 2.9 bpw mul1, 39 shards
 - Serving topology: two DGX Sparks, tensor parallelism 2 over RoCEv2
 - Runtime recipe commit: `979e68a62c90b24d928f5638596e0ceed90e9f34`
@@ -134,4 +135,3 @@ changing the production deployment.
 ```bash
 python3 -m unittest discover -s tests -v
 ```
-

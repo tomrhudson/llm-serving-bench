@@ -97,6 +97,12 @@ decode and prefill charts, and the process for adding future results.
 view of what each model family is good at, when not to use it, and which tested
 configuration to choose.
 
+The [results comparison](results/README.md#model-checkpoints) and model dashboard
+also identify the exact pinned checkpoint used by each recommended benchmark,
+the upstream base model, and one community uncensored/abliterated alternative.
+Alternative checkpoints are discovery links only unless an individual report
+explicitly benchmarks them.
+
 - [Qwen3.8 27B NVFP4, SGLang, one DGX Spark, native 262K context](results/2026-10-02-qwen38-27b-nvfp4-sglang-native-262k.md) — served with [MiaAI-Lab's single-Spark recipe](https://github.com/MiaAI-Lab/Qwen3.8-27B-SGLang-DGX-Spark/tree/5d2df792a2ca7e076cb80b8302f5349d492d6f54)
 - [Qwen3.8 27B Uncensored FP8, SGLang, one DGX Spark, native 262K context](results/2026-10-02-qwen38-27b-uncensored-fp8-sglang-native-262k.md) — derivative checkpoint on the same single-Spark recipe family
 - [DeepSeek V4 Flash 0731 EXL3/SparkInfer, one DGX Spark, 384K context](results/2026-10-02-deepseek-v4-flash-0731-sparkinfer-384k.md) — concurrency-1 lane with a documented benchmark-only dependency repair

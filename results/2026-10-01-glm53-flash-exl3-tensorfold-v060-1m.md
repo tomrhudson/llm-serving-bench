@@ -12,6 +12,7 @@ Status: **PERFORMANCE, STABILITY, AND LONG-CONTEXT PASS; 10/13 total quality che
 ## Configuration
 
 - Model: `GLM-5.3-Flash-EXL3`
+- Checkpoint: [`Mia-AiLab/GLM-5.3-Flash-EXL3-TR3-4bpw` at revision `9eaebb7c4e96d983dcd538e18624622ba5b820a8`](https://huggingface.co/Mia-AiLab/GLM-5.3-Flash-EXL3-TR3-4bpw/tree/9eaebb7c4e96d983dcd538e18624622ba5b820a8)
 - Weights: EXL3/TR3 4 bpw routed experts; q4 dense projections at runtime
 - Serving topology: two DGX Sparks, tensor parallelism 2
 - Runtime recipe commit: `978b2252059069b3b4b84f0f7eeb73bc17f28d3f`
