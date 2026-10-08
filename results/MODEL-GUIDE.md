@@ -4,7 +4,7 @@ Use this page to choose among the model families with published DGX Spark
 baselines in this repository. For the full cross-configuration numbers and charts,
 open the [benchmark summary](README.md).
 
-Last updated: 2026-10-03 · Model families: 5 · Published configurations: 13
+Last updated: 2026-10-08 · Model families: 5 · Published configurations: 14
 
 ## Hardware footprint
 
@@ -44,38 +44,38 @@ production work.
 
 > Default high-throughput lane for coding, agents, chat, and RAG
 
-**Recommended tested configuration:** [Qwen3.8-Flash-Next NVIDIA NVFP4 (Mia vLLM, FP8 KV, 2200 MHz)](2026-10-03-qwen38-mia-nvidia-fp8kv-native-262k-2200mhz.md)
+**Recommended tested configuration:** [Qwen3.8-Flash-Next NVIDIA NVFP4 (TensorFold, 1M YaRN)](2026-10-08-qwen38-flash-next-nvfp4-tensorfold-1m.md)
 
 ### Checkpoint choices
 
-- **Benchmarked checkpoint:** [nvidia/Qwen3.8-Flash-Next-NVFP4 @ fab0aec](https://huggingface.co/nvidia/Qwen3.8-Flash-Next-NVFP4/tree/fab0aecb760cec45227f6656abcaafa11abca87a)
+- **Benchmarked checkpoint:** [nvidia/Qwen3.8-Flash-Next-NVFP4 @ fc694b5](https://huggingface.co/nvidia/Qwen3.8-Flash-Next-NVFP4/tree/fc694b54fb0174e0913e6adf86691ef85a4ead47)
 - **Upstream base model:** [Qwen/Qwen3.8-Flash-Next](https://huggingface.co/Qwen/Qwen3.8-Flash-Next)
 - **Uncensored / abliterated:** [Uncensored ModelOpt NVFP4 checkpoint](https://huggingface.co/jpezzulli/OrcaRouter-Qwen3.8-Flash-Next-Uncensored-ModelOpt-NVFP4) — Community uncensored/abliterated NVFP4 conversion for a Pennyroyal/SGLang runtime; not benchmarked in this repository, and its model card flags conflicting upstream license metadata.
 
 | Signal from the selected local baseline | Result |
 |---|---:|
 | DGX Spark footprint | 2 systems / 2 GPUs · 128GB each · 256GB aggregate across nodes |
-| Interactive c1 | 44.62 output tok/s · 0.42s TTFT p95 |
-| Peak short-prompt decode | 205.06 output tok/s @ c12 |
-| 20-minute c8 soak | 196.70 output tok/s · 0 errors |
-| Longest tested prompt | 240K · 102.36s TTFT p95 |
+| Interactive c1 | 83.45 output tok/s · 0.23s TTFT p95 |
+| Peak short-prompt decode | 417.63 output tok/s @ c16 |
+| 20-minute c8 soak | 432.90 output tok/s · 0 errors |
+| Longest tested prompt | 240K · 98.98s TTFT p95 |
 | Regression canaries | 13/13 |
 
 ### Good fit
 
 - Primary local lane for short- and medium-context coding, tool-using agents, chat, and RAG.
-- Concurrent interactive traffic: the selected capped vLLM baseline sustained 196.70 output tok/s at c8 with 1.16s TTFT p95 and zero soak errors.
+- Concurrent interactive traffic: the selected TensorFold baseline sustained 432.90 output tok/s at c8 with 1.00s TTFT p95 and zero soak errors.
 - Native-context work through the suite's validated approximately 240K-token prompt.
 
 ### Do not choose it when
 
 - Treating a configured 1M YaRN window as validated 1M model quality; the published runs exercise context only through approximately 240K tokens.
-- Strict exact-copy guarantees without task-specific checks; one supplemental marker probe missed once even though the 13/13 standard suite passed.
+- Assuming broad model quality from the 13/13 regression canaries; they cover retrieval and small deterministic checks only.
 - Assuming vision or video production readiness from this repository; the published benchmark suite is text-only.
 
 ### Configuration call
 
-Use the capped native-262K vLLM/FP8-KV baseline when sustained throughput, power, and thermals matter. Remove the cap when single-request decode or cold short-prefill latency is the priority, and use an upstream timeout above 120 seconds for near-window prompts under contention.
+Use TensorFold at concurrency 8 for interactive service and up to 16 for throughput-heavy work. Keep the native-262K vLLM baseline as the more mature fallback when runtime conservatism or established routing compatibility matters.
 
 Qwen describes the upstream model as an experimental, multimodal agentic architecture. This repository independently validates serving behavior and small regression canaries, not broad capability or safety.
 
@@ -83,7 +83,8 @@ Qwen describes the upstream model as an experimental, multimodal agentic archite
 
 | Configuration | Runtime | Configured context | c1 TTFT p95 | Soak tok/s | Canaries | Operating posture |
 |---|---|---:|---:|---:|---:|---|
-| [Qwen3.8-Flash-Next NVIDIA NVFP4 (Mia vLLM, FP8 KV, 2200 MHz)](2026-10-03-qwen38-mia-nvidia-fp8kv-native-262k-2200mhz.md) **(pick)** | vLLM | 256K | 0.42s | 196.70 | 13/13 | 2200 MHz; concurrency 8; longer timeout near 240K |
+| [Qwen3.8-Flash-Next NVIDIA NVFP4 (TensorFold, 1M YaRN)](2026-10-08-qwen38-flash-next-nvfp4-tensorfold-1m.md) **(pick)** | TensorFold | 1M | 0.23s | 432.90 | 13/13 | Concurrency 8 interactive; up to 16 batch; 13/13 quality |
+| [Qwen3.8-Flash-Next NVIDIA NVFP4 (Mia vLLM, FP8 KV, 2200 MHz)](2026-10-03-qwen38-mia-nvidia-fp8kv-native-262k-2200mhz.md) | vLLM | 256K | 0.42s | 196.70 | 13/13 | 2200 MHz; concurrency 8; longer timeout near 240K |
 | [Qwen3.8-Flash-Next NVIDIA NVFP4 (Mia vLLM, FP8 KV)](2026-09-07-qwen38-mia-nvidia-fp8kv-native-262k.md) | vLLM | 256K | 0.40s | 197.42 | 13/13 | Concurrency 8; faster prefill, larger KV pool |
 | [Qwen3.8-Flash-Next-NVFP4 (Mia vLLM, 2200 MHz)](2026-09-03-qwen38-flash-next-vllm-mia-yarn-1m-2200mhz.md) | vLLM | 1M | 0.36s | 201.58 | 13/13 | 2200 MHz; concurrency 8 |
 | [Qwen3.8-Flash-Next-NVFP4 (Mia vLLM)](2026-08-31-qwen38-flash-next-vllm-mia-yarn-1m.md) | vLLM | 1M | 0.43s | 197.71 | 13/13 | Concurrency 8 |
