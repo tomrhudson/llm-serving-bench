@@ -5,24 +5,24 @@
       "id": "qwen38-flash-next",
       "name": "Qwen3.8-Flash-Next NVFP4",
       "tagline": "Default high-throughput lane for coding, agents, chat, and RAG",
-      "benchmarked_source": "[nvidia/Qwen3.8-Flash-Next-NVFP4 @ fab0aec](https://huggingface.co/nvidia/Qwen3.8-Flash-Next-NVFP4/tree/fab0aecb760cec45227f6656abcaafa11abca87a)",
+      "benchmarked_source": "[nvidia/Qwen3.8-Flash-Next-NVFP4 @ fc694b5](https://huggingface.co/nvidia/Qwen3.8-Flash-Next-NVFP4/tree/fc694b54fb0174e0913e6adf86691ef85a4ead47)",
       "upstream_source": "[Qwen/Qwen3.8-Flash-Next](https://huggingface.co/Qwen/Qwen3.8-Flash-Next)",
       "alternative_source": "[Uncensored ModelOpt NVFP4 checkpoint](https://huggingface.co/jpezzulli/OrcaRouter-Qwen3.8-Flash-Next-Uncensored-ModelOpt-NVFP4)",
       "alternative_source_note": "Community uncensored/abliterated NVFP4 conversion for a Pennyroyal/SGLang runtime; not benchmarked in this repository, and its model card flags conflicting upstream license metadata.",
       "dgx_spark_count": 2,
       "dgx_spark_memory_gb_each": 128,
-      "tested_choice": "qwen38-mia-nvidia-fp8kv-native-262k-2200mhz",
+      "tested_choice": "qwen38-flash-next-nvfp4-tensorfold-1m",
       "best_for": [
         "Primary local lane for short- and medium-context coding, tool-using agents, chat, and RAG.",
-        "Concurrent interactive traffic: the selected capped vLLM baseline sustained 196.70 output tok/s at c8 with 1.16s TTFT p95 and zero soak errors.",
+        "Concurrent interactive traffic: the selected TensorFold baseline sustained 432.90 output tok/s at c8 with 1.00s TTFT p95 and zero soak errors.",
         "Native-context work through the suite's validated approximately 240K-token prompt."
       ],
       "not_for": [
         "Treating a configured 1M YaRN window as validated 1M model quality; the published runs exercise context only through approximately 240K tokens.",
-        "Strict exact-copy guarantees without task-specific checks; one supplemental marker probe missed once even though the 13/13 standard suite passed.",
+        "Assuming broad model quality from the 13/13 regression canaries; they cover retrieval and small deterministic checks only.",
         "Assuming vision or video production readiness from this repository; the published benchmark suite is text-only."
       ],
-      "selection_note": "Use the capped native-262K vLLM/FP8-KV baseline when sustained throughput, power, and thermals matter. Remove the cap when single-request decode or cold short-prefill latency is the priority, and use an upstream timeout above 120 seconds for near-window prompts under contention.",
+      "selection_note": "Use TensorFold at concurrency 8 for interactive service and up to 16 for throughput-heavy work. Keep the native-262K vLLM baseline as the more mature fallback when runtime conservatism or established routing compatibility matters.",
       "evidence_note": "Qwen describes the upstream model as an experimental, multimodal agentic architecture. This repository independently validates serving behavior and small regression canaries, not broad capability or safety."
     },
     {
@@ -126,6 +126,36 @@
     }
   ],
   "baselines": [
+    {
+      "id": "qwen38-flash-next-nvfp4-tensorfold-1m",
+      "model_id": "qwen38-flash-next",
+      "label": "Qwen3.8-Flash-Next NVIDIA NVFP4 (TensorFold, 1M YaRN)",
+      "chart_label": "Qwen3.8 TensorFold",
+      "date": "2026-10-08",
+      "report": "2026-10-08-qwen38-flash-next-nvfp4-tensorfold-1m.md",
+      "hardware": "2x NVIDIA DGX Spark (128GB each)",
+      "runtime": "TensorFold",
+      "context_tokens": 1048576,
+      "recipe_credit": "[MiaAI-Lab TensorFold recipe](https://github.com/MiaAI-Lab/Qwen3.8-Flash-Dual-DGX-Sparks-TensorFold/tree/be3ed857ab1055ca47b36134d22691f00f2bb94a)",
+      "recommendation": "Concurrency 8 interactive; up to 16 batch; 13/13 quality",
+      "decode": [
+        {"concurrency": 1, "output_tps": 83.45, "ttft_p95_seconds": 0.23},
+        {"concurrency": 2, "output_tps": 129.24, "ttft_p95_seconds": 0.43},
+        {"concurrency": 4, "output_tps": 195.56, "ttft_p95_seconds": 0.68},
+        {"concurrency": 8, "output_tps": 282.69, "ttft_p95_seconds": 1.02},
+        {"concurrency": 12, "output_tps": 362.59, "ttft_p95_seconds": 1.44},
+        {"concurrency": 16, "output_tps": 417.63, "ttft_p95_seconds": 2.11}
+      ],
+      "prefill": [
+        {"input_tokens": 4096, "input_tps": 2010.45, "ttft_p95_seconds": 1.51},
+        {"input_tokens": 32768, "input_tps": 2673.36, "ttft_p95_seconds": 11.24},
+        {"input_tokens": 131072, "input_tps": 2614.74, "ttft_p95_seconds": 48.97},
+        {"input_tokens": 245760, "input_tps": 2436.01, "ttft_p95_seconds": 98.98}
+      ],
+      "prefix": {"unique_ttft_p95_seconds": 43.37, "warm_ttft_p95_seconds": 0.33},
+      "soak": {"concurrency": 8, "minutes": 20, "output_tps": 432.90, "ttft_p95_seconds": 1.00, "requests": 1019, "errors": 0},
+      "quality": {"passed": 13, "total": 13}
+    },
     {
       "id": "qwen38-mia-nvidia-fp8kv-native-262k-2200mhz",
       "model_id": "qwen38-flash-next",
