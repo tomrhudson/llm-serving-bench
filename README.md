@@ -45,6 +45,51 @@ The JSON result contains per-request measurements, server metric snapshots,
 and host samples. A Markdown summary is written beside it. The endpoint URL
 and SSH targets are deliberately omitted from persisted output.
 
+## Combined serving and tool-use run
+
+New published baselines should run the serving suite first and the pinned
+`tool-eval-bench` profile second:
+
+```bash
+python3 scripts/run_combined_benchmark.py \
+  --base-url https://inference-host:8000/v1 \
+  --model served-model-name \
+  --baseline-id matching-catalog-id \
+  --suite configs/qwen-native-standard.json \
+  --label my-model-native-context \
+  --server-label private-direct-endpoint
+```
+
+The runner verifies the requested model, keeps the core package dependency-free,
+and installs the exact tool-eval commit into an isolated cache on first use. Use
+`--api-key-env NAME` for authenticated HTTPS endpoints; credentials are passed to
+both runners through the environment and never placed in command arguments.
+
+Raw serving output, tool conversations, SQLite data, and setup logs stay under
+the ignored `.bench-runs/` directory. After review, create the allowlisted public
+tool report and catalog entry with:
+
+```bash
+python3 scripts/import_tool_eval_result.py \
+  --raw-dir .bench-runs/RUN_ID \
+  --baseline-id matching-catalog-id \
+  --report YYYY-MM-DD-matching-catalog-id-tool-eval.md
+python3 scripts/generate_results_summary.py
+```
+
+The standard tool profile runs a 15-scenario smoke test followed by 69 scenarios
+across three trials. Ordinary model failures remain findings and do not stop the
+run. Infrastructure failures or an incomplete smoke test stop safely. Tool-use
+scores measure the exact model/runtime/chat-template stack against public mock
+tools; they are not general intelligence or safety certification.
+
+A completed comparative result requires all 69 scenarios to be graded in all
+three trials. A full run with missing grades is retained as explicitly
+`incomplete` pilot evidence and must not be compared as if it were complete.
+After correcting a wrapper-only failure, `--resume-raw-dir` may reuse serving and
+smoke artifacts only when their private manifest and zero-error gates still
+match every requested run identity field.
+
 ## Standard suite
 
 `configs/qwen-native-standard.json` contains the initial reusable matrix:

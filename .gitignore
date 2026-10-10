@@ -4,6 +4,7 @@ __pycache__/
 build/
 dist/
 *.egg-info/
+.bench-runs/
 
 # Raw output can contain topology and generated text. Curated, sanitized
 # reports may be force-added deliberately.
