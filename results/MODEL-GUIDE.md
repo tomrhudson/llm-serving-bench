@@ -34,10 +34,11 @@ canaries matter more than aggregate serving throughput.
 
 “Good fit” combines upstream model-card positioning with the local serving evidence.
 This repository directly measures latency, throughput, stability, a 240K retrieval
-check, and small deterministic canaries. It does **not** compare broad intelligence,
-safety, production vision quality, tool correctness, or quality at the configured
-850K/1M request limits. Validate those against the actual application before routing
-production work.
+check, and small deterministic canaries. A linked tool-use report additionally
+measures one serving stack against deterministic mock-tool scenarios. Baselines
+marked “Not run” have no tool-use evidence. None of these results establish broad
+intelligence, production vision quality, or quality at configured 850K/1M request
+limits. Validate those against the actual application before routing production work.
 
 <a id="qwen38-flash-next"></a>
 ## Qwen3.8-Flash-Next NVFP4
@@ -60,6 +61,7 @@ production work.
 | 20-minute c8 soak | 432.90 output tok/s · 0 errors |
 | Longest tested prompt | 240K · 98.98s TTFT p95 |
 | Regression canaries | 13/13 |
+| Tool-use evaluation | [Incomplete (98.1%) · 88.0 mean · Pass^3 79.4%](2026-10-10-qwen38-flash-next-nvfp4-tensorfold-tool-eval.md) |
 
 ### Good fit
 
@@ -81,14 +83,14 @@ Qwen describes the upstream model as an experimental, multimodal agentic archite
 
 ### Published variants
 
-| Configuration | Runtime | Configured context | c1 TTFT p95 | Soak tok/s | Canaries | Operating posture |
-|---|---|---:|---:|---:|---:|---|
-| [Qwen3.8-Flash-Next NVIDIA NVFP4 (TensorFold, 1M YaRN)](2026-10-08-qwen38-flash-next-nvfp4-tensorfold-1m.md) **(pick)** | TensorFold | 1M | 0.23s | 432.90 | 13/13 | Concurrency 8 interactive; up to 16 batch; 13/13 quality |
-| [Qwen3.8-Flash-Next NVIDIA NVFP4 (Mia vLLM, FP8 KV, 2200 MHz)](2026-10-03-qwen38-mia-nvidia-fp8kv-native-262k-2200mhz.md) | vLLM | 256K | 0.42s | 196.70 | 13/13 | 2200 MHz; concurrency 8; longer timeout near 240K |
-| [Qwen3.8-Flash-Next NVIDIA NVFP4 (Mia vLLM, FP8 KV)](2026-09-07-qwen38-mia-nvidia-fp8kv-native-262k.md) | vLLM | 256K | 0.40s | 197.42 | 13/13 | Concurrency 8; faster prefill, larger KV pool |
-| [Qwen3.8-Flash-Next-NVFP4 (Mia vLLM, 2200 MHz)](2026-09-03-qwen38-flash-next-vllm-mia-yarn-1m-2200mhz.md) | vLLM | 1M | 0.36s | 201.58 | 13/13 | 2200 MHz; concurrency 8 |
-| [Qwen3.8-Flash-Next-NVFP4 (Mia vLLM)](2026-08-31-qwen38-flash-next-vllm-mia-yarn-1m.md) | vLLM | 1M | 0.43s | 197.71 | 13/13 | Concurrency 8 |
-| [Qwen3.8-Flash-Next-NVFP4](2026-08-29-qwen38-flash-next-nvfp4-native-262k.md) | SGLang | 256K | 0.41s | 157.61 | 13/13 | Concurrency 8 |
+| Configuration | Runtime | Configured context | c1 TTFT p95 | Soak tok/s | Canaries | Tool use | Operating posture |
+|---|---|---:|---:|---:|---:|---|---|
+| [Qwen3.8-Flash-Next NVIDIA NVFP4 (TensorFold, 1M YaRN)](2026-10-08-qwen38-flash-next-nvfp4-tensorfold-1m.md) **(pick)** | TensorFold | 1M | 0.23s | 432.90 | 13/13 | [Incomplete (98.1%) · 88.0 mean · Pass^3 79.4%](2026-10-10-qwen38-flash-next-nvfp4-tensorfold-tool-eval.md) | Concurrency 8 interactive; up to 16 batch; 13/13 quality |
+| [Qwen3.8-Flash-Next NVIDIA NVFP4 (Mia vLLM, FP8 KV, 2200 MHz)](2026-10-03-qwen38-mia-nvidia-fp8kv-native-262k-2200mhz.md) | vLLM | 256K | 0.42s | 196.70 | 13/13 | Not run | 2200 MHz; concurrency 8; longer timeout near 240K |
+| [Qwen3.8-Flash-Next NVIDIA NVFP4 (Mia vLLM, FP8 KV)](2026-09-07-qwen38-mia-nvidia-fp8kv-native-262k.md) | vLLM | 256K | 0.40s | 197.42 | 13/13 | Not run | Concurrency 8; faster prefill, larger KV pool |
+| [Qwen3.8-Flash-Next-NVFP4 (Mia vLLM, 2200 MHz)](2026-09-03-qwen38-flash-next-vllm-mia-yarn-1m-2200mhz.md) | vLLM | 1M | 0.36s | 201.58 | 13/13 | Not run | 2200 MHz; concurrency 8 |
+| [Qwen3.8-Flash-Next-NVFP4 (Mia vLLM)](2026-08-31-qwen38-flash-next-vllm-mia-yarn-1m.md) | vLLM | 1M | 0.43s | 197.71 | 13/13 | Not run | Concurrency 8 |
+| [Qwen3.8-Flash-Next-NVFP4](2026-08-29-qwen38-flash-next-nvfp4-native-262k.md) | SGLang | 256K | 0.41s | 157.61 | 13/13 | Not run | Concurrency 8 |
 
 <a id="qwen38-27b"></a>
 ## Qwen3.8 27B
@@ -111,6 +113,7 @@ Qwen describes the upstream model as an experimental, multimodal agentic archite
 | 20-minute c8 soak | 157.80 output tok/s · 0 errors |
 | Longest tested prompt | 240K · 395.05s TTFT p95 |
 | Regression canaries | 13/13 |
+| Tool-use evaluation | Not run |
 
 ### Good fit
 
@@ -132,10 +135,10 @@ The two reports share the same single-Spark SGLang runtime family but use differ
 
 ### Published variants
 
-| Configuration | Runtime | Configured context | c1 TTFT p95 | Soak tok/s | Canaries | Operating posture |
-|---|---|---:|---:|---:|---:|---|
-| [Qwen3.8 27B NVFP4 (SGLang)](2026-10-02-qwen38-27b-nvfp4-sglang-native-262k.md) **(pick)** | SGLang | 256K | 0.18s | 157.80 | 13/13 | Concurrency 8; 13/13 quality |
-| [Qwen3.8 27B Uncensored FP8 (SGLang)](2026-10-02-qwen38-27b-uncensored-fp8-sglang-native-262k.md) | SGLang | 256K | 0.28s | 63.89 | 13/13 | Concurrency 4; derivative checkpoint; 13/13 quality |
+| Configuration | Runtime | Configured context | c1 TTFT p95 | Soak tok/s | Canaries | Tool use | Operating posture |
+|---|---|---:|---:|---:|---:|---|---|
+| [Qwen3.8 27B NVFP4 (SGLang)](2026-10-02-qwen38-27b-nvfp4-sglang-native-262k.md) **(pick)** | SGLang | 256K | 0.18s | 157.80 | 13/13 | Not run | Concurrency 8; 13/13 quality |
+| [Qwen3.8 27B Uncensored FP8 (SGLang)](2026-10-02-qwen38-27b-uncensored-fp8-sglang-native-262k.md) | SGLang | 256K | 0.28s | 63.89 | 13/13 | Not run | Concurrency 4; derivative checkpoint; 13/13 quality |
 
 <a id="glm53-flash"></a>
 ## GLM-5.3 Flash
@@ -158,6 +161,7 @@ The two reports share the same single-Spark SGLang runtime family but use differ
 | 20-minute c8 soak | 84.90 output tok/s · 0 errors |
 | Longest tested prompt | 240K · 163.89s TTFT p95 |
 | Regression canaries | 10/13 |
+| Tool-use evaluation | Not run |
 
 ### Good fit
 
@@ -181,12 +185,12 @@ Z.ai positions GLM-5.3 Flash for coding, agents, multimodal input, and long cont
 
 ### Published variants
 
-| Configuration | Runtime | Configured context | c1 TTFT p95 | Soak tok/s | Canaries | Operating posture |
-|---|---|---:|---:|---:|---:|---|
-| [GLM-5.3 Flash NVFP4 (vLLM, low reasoning)](2026-10-03-glm53-flash-nvfp4-vllm-native-262k-low-reasoning.md) | vLLM | 256K | 0.45s | 60.90 | 13/13 | Concurrency 1 interactive; 8 batch; 13/13 with accuracy warning |
-| [GLM-5.3 Flash EXL3/TR3 4 bpw (TensorFold v0.6.0)](2026-10-01-glm53-flash-exl3-tensorfold-v060-1m.md) **(pick)** | TensorFold | 1M | 0.41s | 84.90 | 10/13 | Concurrency 1 interactive; 4 batch; 10/13 quality |
-| [GLM-5.3 Flash EXL3/TR3 4 bpw (refreshed recipe)](2026-09-15-glm53-flash-exl3-tr3-4bpw-850k.md) | vLLM | 850K | 1.27s | 21.88 | 13/13 | Concurrency 1 interactive; 4 batch; Socket |
-| [GLM-5.3-Flash-EXL3](2026-08-29-glm53-flash-exl3-native-1m.md) | vLLM | 1M | 0.95s | 38.53 | 13/13 | Concurrency 1 interactive; 4 batch |
+| Configuration | Runtime | Configured context | c1 TTFT p95 | Soak tok/s | Canaries | Tool use | Operating posture |
+|---|---|---:|---:|---:|---:|---|---|
+| [GLM-5.3 Flash NVFP4 (vLLM, low reasoning)](2026-10-03-glm53-flash-nvfp4-vllm-native-262k-low-reasoning.md) | vLLM | 256K | 0.45s | 60.90 | 13/13 | Not run | Concurrency 1 interactive; 8 batch; 13/13 with accuracy warning |
+| [GLM-5.3 Flash EXL3/TR3 4 bpw (TensorFold v0.6.0)](2026-10-01-glm53-flash-exl3-tensorfold-v060-1m.md) **(pick)** | TensorFold | 1M | 0.41s | 84.90 | 10/13 | Not run | Concurrency 1 interactive; 4 batch; 10/13 quality |
+| [GLM-5.3 Flash EXL3/TR3 4 bpw (refreshed recipe)](2026-09-15-glm53-flash-exl3-tr3-4bpw-850k.md) | vLLM | 850K | 1.27s | 21.88 | 13/13 | Not run | Concurrency 1 interactive; 4 batch; Socket |
+| [GLM-5.3-Flash-EXL3](2026-08-29-glm53-flash-exl3-native-1m.md) | vLLM | 1M | 0.95s | 38.53 | 13/13 | Not run | Concurrency 1 interactive; 4 batch |
 
 <a id="deepseek-v4-flash"></a>
 ## DeepSeek V4 Flash 0731
@@ -209,6 +213,7 @@ Z.ai positions GLM-5.3 Flash for coding, agents, multimodal input, and long cont
 | 20-minute c8 soak | 26.89 output tok/s · 0 errors |
 | Longest tested prompt | 240K · 259.00s TTFT p95 |
 | Regression canaries | 13/13 |
+| Tool-use evaluation | Not run |
 
 ### Good fit
 
@@ -230,9 +235,9 @@ The result uses a benchmark-only dependency pin to make the retained image's Til
 
 ### Published variants
 
-| Configuration | Runtime | Configured context | c1 TTFT p95 | Soak tok/s | Canaries | Operating posture |
-|---|---|---:|---:|---:|---:|---|
-| [DeepSeek V4 Flash 0731 EXL3/SparkInfer](2026-10-02-deepseek-v4-flash-0731-sparkinfer-384k.md) **(pick)** | vLLM + SparkInfer | 384K | 0.54s | 26.89 | 13/13 | Concurrency 1; benchmark-only dependency repair |
+| Configuration | Runtime | Configured context | c1 TTFT p95 | Soak tok/s | Canaries | Tool use | Operating posture |
+|---|---|---:|---:|---:|---:|---|---|
+| [DeepSeek V4 Flash 0731 EXL3/SparkInfer](2026-10-02-deepseek-v4-flash-0731-sparkinfer-384k.md) **(pick)** | vLLM + SparkInfer | 384K | 0.54s | 26.89 | 13/13 | Not run | Concurrency 1; benchmark-only dependency repair |
 
 <a id="deepseek-v41-flash"></a>
 ## DeepSeek V4.1 Flash EXL3
@@ -255,6 +260,7 @@ The result uses a benchmark-only dependency pin to make the retained image's Til
 | 20-minute c8 soak | 35.31 output tok/s · 0 errors |
 | Longest tested prompt | 240K · 408.37s TTFT p95 |
 | Regression canaries | 13/13 |
+| Tool-use evaluation | Not run |
 
 ### Good fit
 
@@ -277,9 +283,9 @@ DeepSeek describes the upstream architecture as multimodal and optimized for inp
 
 ### Published variants
 
-| Configuration | Runtime | Configured context | c1 TTFT p95 | Soak tok/s | Canaries | Operating posture |
-|---|---|---:|---:|---:|---:|---|
-| [DeepSeek V4.1 Flash EXL3 2.9 bpw](2026-09-15-deepseek-v41-flash-exl3-2.9bpw-600k.md) **(pick)** | vLLM | 600K | 0.85s | 35.31 | 13/13 | Concurrency 2; unpacked Engram |
+| Configuration | Runtime | Configured context | c1 TTFT p95 | Soak tok/s | Canaries | Tool use | Operating posture |
+|---|---|---:|---:|---:|---:|---|---|
+| [DeepSeek V4.1 Flash EXL3 2.9 bpw](2026-09-15-deepseek-v41-flash-exl3-2.9bpw-600k.md) **(pick)** | vLLM | 600K | 0.85s | 35.31 | 13/13 | Not run | Concurrency 2; unpacked Engram |
 
 ## Reading the dashboard
 

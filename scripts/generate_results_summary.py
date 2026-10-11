@@ -7,6 +7,7 @@ import argparse
 import html
 import json
 import math
+import re
 from pathlib import Path
 from typing import Any, Callable
 
@@ -23,7 +24,7 @@ DASHES = ["", "8 5", "3 4", "12 4 3 4"]
 
 def _load_catalog() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     data = json.loads(CATALOG.read_text())
-    if data.get("schema_version") != 5:
+    if data.get("schema_version") != 6:
         raise ValueError("unsupported results/catalog.json schema_version")
     models = data.get("models")
     if not isinstance(models, list) or not models:
@@ -71,6 +72,7 @@ def _load_catalog() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
             )
         if not (RESULTS / baseline["report"]).is_file():
             raise ValueError(f"missing report: {baseline['report']}")
+        _validate_tool_eval(baseline)
     for model in models:
         if model["tested_choice"] not in seen:
             raise ValueError(
@@ -84,6 +86,55 @@ def _load_catalog() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         if not any(item["model_id"] == model["id"] for item in baselines):
             raise ValueError(f"{model['id']} has no published baselines")
     return models, baselines
+
+
+def _validate_tool_eval(baseline: dict[str, Any]) -> None:
+    tool_eval = baseline.get("tool_eval")
+    if tool_eval is None:
+        return
+    if not isinstance(tool_eval, dict):
+        raise ValueError(f"{baseline['id']} tool_eval must be an object")
+    required = {
+        "protocol_id", "upstream_commit", "version", "run_id",
+        "config_fingerprint", "status", "trials", "scenarios_per_trial",
+        "completion_rate", "score_mean", "score_median", "score_stddev",
+        "score_ci95", "pass_at_3", "pass_hat_3", "reliability_gap",
+        "safety_passed", "category_scores", "report",
+    }
+    missing = required - tool_eval.keys()
+    if missing:
+        raise ValueError(
+            f"{baseline['id']} tool_eval missing: {sorted(missing)}"
+        )
+    if tool_eval["status"] not in {"complete", "incomplete", "unsupported"}:
+        raise ValueError(f"{baseline['id']} has invalid tool_eval status")
+    if not isinstance(tool_eval["safety_passed"], bool):
+        raise ValueError(f"{baseline['id']} tool_eval safety_passed must be boolean")
+    if not isinstance(tool_eval["category_scores"], list):
+        raise ValueError(f"{baseline['id']} tool_eval category_scores must be a list")
+    if not isinstance(tool_eval["score_ci95"], list) or len(tool_eval["score_ci95"]) != 2:
+        raise ValueError(f"{baseline['id']} tool_eval score_ci95 must have two values")
+    if tool_eval["status"] == "complete" and float(tool_eval["completion_rate"]) != 100.0:
+        raise ValueError(f"{baseline['id']} complete tool_eval must be 100% complete")
+    if not re.fullmatch(r"[0-9a-f]{40}", str(tool_eval["upstream_commit"])):
+        raise ValueError(f"{baseline['id']} tool_eval commit must be a full SHA")
+    if not (RESULTS / str(tool_eval["report"])).is_file():
+        raise ValueError(f"missing tool-eval report: {tool_eval['report']}")
+
+
+def _tool_eval_signal(baseline: dict[str, Any]) -> str:
+    tool_eval = baseline.get("tool_eval")
+    if not tool_eval:
+        return "Not run"
+    label = f'{float(tool_eval["score_mean"]):.1f} mean · Pass^3 {float(tool_eval["pass_hat_3"]):.1f}%'
+    if tool_eval["status"] != "complete":
+        label = (
+            f'{tool_eval["status"].title()} ({float(tool_eval["completion_rate"]):.1f}%) · '
+            f'{label}'
+        )
+    if not tool_eval["safety_passed"]:
+        label = f'⚠ safety · {label}'
+    return f'[{label}]({tool_eval["report"]})'
 
 
 def _fmt_context(tokens: int) -> str:
@@ -296,6 +347,7 @@ def _model_guide_markdown(
         peak = max(selected["decode"], key=lambda point: point["output_tps"])
         long_context = max(selected["prefill"], key=lambda point: point["input_tokens"])
         quality = selected["quality"]
+        tool_signal = _tool_eval_signal(selected)
         overview_rows.append(
             f'| [{model["name"]}](#{model["id"]}) | {_fmt_dgx_spark(model)} | '
             f'{model["tagline"]} | '
@@ -310,6 +362,7 @@ def _model_guide_markdown(
                 point for point in item["decode"] if point["concurrency"] == 1
             )
             variant_quality = item["quality"]
+            variant_tool = _tool_eval_signal(item)
             marker = " **(pick)**" if item["id"] == model["tested_choice"] else ""
             variants.append(
                 f'| [{item["label"]}]({item["report"]}){marker} | {item["runtime"]} | '
@@ -317,6 +370,7 @@ def _model_guide_markdown(
                 f'{variant_c1["ttft_p95_seconds"]:.2f}s | '
                 f'{item["soak"]["output_tps"]:.2f} | '
                 f'{variant_quality["passed"]}/{variant_quality["total"]} | '
+                f'{variant_tool} | '
                 f'{item["recommendation"]} |'
             )
 
@@ -342,6 +396,7 @@ def _model_guide_markdown(
 | 20-minute c8 soak | {selected["soak"]["output_tps"]:.2f} output tok/s · {selected["soak"]["errors"]} errors |
 | Longest tested prompt | {_fmt_context(long_context["input_tokens"])} · {long_context["ttft_p95_seconds"]:.2f}s TTFT p95 |
 | Regression canaries | {quality["passed"]}/{quality["total"]} |
+| Tool-use evaluation | {tool_signal} |
 
 ### Good fit
 
@@ -359,8 +414,8 @@ def _model_guide_markdown(
 
 ### Published variants
 
-| Configuration | Runtime | Configured context | c1 TTFT p95 | Soak tok/s | Canaries | Operating posture |
-|---|---|---:|---:|---:|---:|---|
+| Configuration | Runtime | Configured context | c1 TTFT p95 | Soak tok/s | Canaries | Tool use | Operating posture |
+|---|---|---:|---:|---:|---:|---|---|
 {chr(10).join(variants)}
 '''
         )
@@ -397,10 +452,11 @@ canaries matter more than aggregate serving throughput.
 
 “Good fit” combines upstream model-card positioning with the local serving evidence.
 This repository directly measures latency, throughput, stability, a 240K retrieval
-check, and small deterministic canaries. It does **not** compare broad intelligence,
-safety, production vision quality, tool correctness, or quality at the configured
-850K/1M request limits. Validate those against the actual application before routing
-production work.
+check, and small deterministic canaries. A linked tool-use report additionally
+measures one serving stack against deterministic mock-tool scenarios. Baselines
+marked “Not run” have no tool-use evidence. None of these results establish broad
+intelligence, production vision quality, or quality at configured 850K/1M request
+limits. Validate those against the actual application before routing production work.
 
 {chr(10).join(sections)}
 ## Reading the dashboard
@@ -423,12 +479,32 @@ def _summary_markdown(
         c1 = next(point for point in item["decode"] if point["concurrency"] == 1)
         long_context = max(item["prefill"], key=lambda point: point["input_tokens"])
         quality = item["quality"]
+        tool_signal = _tool_eval_signal(item)
         rows.append(
             f'| [{item["label"]}]({item["report"]}) | {item["hardware"]} / {item["runtime"]} | '
             f'{_fmt_context(item["context_tokens"])} | {peak["output_tps"]:.2f} @ c{peak["concurrency"]} | '
             f'{c1["ttft_p95_seconds"]:.2f}s | {long_context["ttft_p95_seconds"]:.2f}s | '
             f'{item["soak"]["output_tps"]:.2f} | {quality["passed"]}/{quality["total"]} | '
+            f'{tool_signal} | '
             f'{item["recommendation"]} | {item["recipe_credit"]} |'
+        )
+
+    tool_rows = []
+    for item in baselines:
+        tool_eval = item.get("tool_eval")
+        if not tool_eval:
+            tool_rows.append(
+                f'| {item["label"]} | — | Not run | — | — | — | — | — |'
+            )
+            continue
+        safety = "pass" if tool_eval["safety_passed"] else "**FAILED**"
+        tool_rows.append(
+            f'| [{item["label"]}]({tool_eval["report"]}) | '
+            f'`{tool_eval["protocol_id"]}` | {tool_eval["status"]} | '
+            f'{float(tool_eval["completion_rate"]):.1f}% | '
+            f'{float(tool_eval["score_mean"]):.1f} | '
+            f'{float(tool_eval["pass_at_3"]):.1f}% | '
+            f'{float(tool_eval["pass_hat_3"]):.1f}% | {safety} |'
         )
 
     model_source_rows = [
@@ -450,8 +526,8 @@ Last updated: {newest} · Published baselines: {len(baselines)}
 
 ## At a glance
 
-| Model | Hardware / runtime | Configured context | Peak decode tok/s | c1 TTFT p95 | Longest-context TTFT p95 | Soak tok/s | Quality | Recommended concurrency | Recipe credit |
-|---|---|---:|---:|---:|---:|---:|---:|---|---|
+| Model | Hardware / runtime | Configured context | Peak decode tok/s | c1 TTFT p95 | Longest-context TTFT p95 | Soak tok/s | Canaries | Tool use | Recommended concurrency | Recipe credit |
+|---|---|---:|---:|---:|---:|---:|---:|---|---|---|
 {chr(10).join(rows)}
 
 Peak decode throughput is useful for batch capacity; c1 TTFT is the better
@@ -491,14 +567,27 @@ The soak comparison uses the standard 20-minute concurrency-8 workload. Consult
 the linked baseline report for TTFT tails, request counts, and model-specific
 operational interpretation.
 
+## Tool-use quality
+
+Tool-use results come from deterministic mock-tool conversations and remain
+separate from serving throughput and regression canaries. Pass@3 means a scenario
+passed at least once; Pass^3 means it passed in every trial. Compare scores only
+within the same protocol ID because evaluator code and settings define the cohort.
+Only `complete` results with 100% completion are comparative; incomplete rows are
+retained as explicitly qualified pilot evidence.
+
+| Serving baseline | Protocol | Status | Completion | Mean score | Pass@3 | Pass^3 | Safety gate |
+|---|---|---|---:|---:|---:|---:|---|
+{chr(10).join(tool_rows)}
+
 ## Adding another baseline
 
-1. Run the standard suite under comparable hardware, prompt, sampling, and
-   token-budget conditions.
-2. Review and sanitize the generated output into a curated Markdown report;
-   keep raw JSON and generated reasoning private.
-3. Add one structured entry to `results/catalog.json`, including any recipe
-   credit and the metrics used here.
+1. Run `scripts/run_combined_benchmark.py` against an already-live direct endpoint
+   with the matching serving suite and catalog baseline ID.
+2. Import the allowlisted tool summary with `scripts/import_tool_eval_result.py`;
+   keep `.bench-runs/`, raw JSON, SQLite data, traces, and generated text private.
+3. Review the separate serving and tool-use reports and update any workload guidance
+   warranted by the observed evidence.
 4. Run `python3 scripts/generate_results_summary.py`, then
    `python3 -m unittest discover -s tests -v`.
 
@@ -513,6 +602,8 @@ is current without changing files.
   materially change throughput and latency.
 - Quality canaries catch obvious serving regressions; they are not a broad
   capability evaluation.
+- Tool-use scores measure one model/runtime/chat-template stack against public
+  mock-tool scenarios; they are not a general intelligence or safety certification.
 - Read the individual report before drawing conclusions from a single chart.
 '''
 

@@ -48,6 +48,13 @@ class ResultsSummaryTests(unittest.TestCase):
             self.assertIn(model["upstream_source"], summary)
             self.assertIn(model["alternative_source"], summary)
 
+    def test_legacy_baselines_show_tool_eval_as_not_run(self) -> None:
+        summary = (ROOT / "results/README.md").read_text()
+        guide = (ROOT / "results/MODEL-GUIDE.md").read_text()
+        self.assertIn("## Tool-use quality", summary)
+        self.assertIn("Not run", summary)
+        self.assertIn("| Tool-use evaluation | Not run |", guide)
+
     def test_summary_names_dgx_spark_memory_per_system(self) -> None:
         summary = (ROOT / "results/README.md").read_text()
         self.assertIn("2x NVIDIA DGX Spark (128GB each)", summary)

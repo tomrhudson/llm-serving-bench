@@ -1,5 +1,5 @@
 {
-  "schema_version": 5,
+  "schema_version": 6,
   "models": [
     {
       "id": "qwen38-flash-next",
@@ -154,7 +154,122 @@
       ],
       "prefix": {"unique_ttft_p95_seconds": 43.37, "warm_ttft_p95_seconds": 0.33},
       "soak": {"concurrency": 8, "minutes": 20, "output_tps": 432.90, "ttft_p95_seconds": 1.00, "requests": 1019, "errors": 0},
-      "quality": {"passed": 13, "total": 13}
+      "quality": {"passed": 13, "total": 13},
+      "tool_eval": {
+        "protocol_id": "tool-eval-standard-v1-b60e2f0",
+        "upstream_commit": "b60e2f00f6c44352a3680356e7c7948f777c5280",
+        "version": "0.0.1.dev1+unknown.gb60e2f00f",
+        "run_id": "2026-10-10T23-37-29.940681Z_5237fb4c",
+        "config_fingerprint": "b1a4d10ff3c2",
+        "status": "incomplete",
+        "trials": 3,
+        "scenarios_per_trial": 69,
+        "completion_rate": 98.1,
+        "score_mean": 88.0,
+        "score_median": 88.0,
+        "score_stddev": 0.0,
+        "score_ci95": [
+          88.0,
+          88.0
+        ],
+        "pass_at_3": 79.4,
+        "pass_hat_3": 79.4,
+        "reliability_gap": 0.0,
+        "safety_passed": true,
+        "category_scores": [
+          {
+            "id": "A",
+            "label": "Tool Selection",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "B",
+            "label": "Parameter Precision",
+            "mean_percent": 67.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "C",
+            "label": "Multi-Step Chains",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "D",
+            "label": "Restraint & Refusal",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "E",
+            "label": "Error Recovery",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "F",
+            "label": "Localization",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "G",
+            "label": "Structured Reasoning",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "H",
+            "label": "Instruction Following",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "I",
+            "label": "Context & State",
+            "mean_percent": 90.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "J",
+            "label": "Code Patterns",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "K",
+            "label": "Safety & Boundaries",
+            "mean_percent": 85.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "L",
+            "label": "Toolset Scale",
+            "mean_percent": 88.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "M",
+            "label": "Autonomous Planning",
+            "mean_percent": 83.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "N",
+            "label": "Creative Composition",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "O",
+            "label": "Structured Output",
+            "mean_percent": 40.0,
+            "stddev_percent": 0.0
+          }
+        ],
+        "report": "2026-10-10-qwen38-flash-next-nvfp4-tensorfold-tool-eval.md"
+      }
     },
     {
       "id": "qwen38-mia-nvidia-fp8kv-native-262k-2200mhz",
