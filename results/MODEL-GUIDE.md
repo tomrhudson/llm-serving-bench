@@ -4,7 +4,7 @@ Use this page to choose among the model families with published DGX Spark
 baselines in this repository. For the full cross-configuration numbers and charts,
 open the [benchmark summary](README.md).
 
-Last updated: 2026-10-18 · Model families: 8 · Published configurations: 18
+Last updated: 2026-10-18 · Model families: 8 · Published configurations: 19
 
 ## Hardware footprint
 
@@ -71,6 +71,7 @@ limits. Validate those against the actual application before routing production 
 - Primary local lane for short- and medium-context coding, tool-using agents, chat, and RAG.
 - Concurrent interactive traffic: the selected TensorFold baseline sustained 432.90 output tok/s at c8 with 1.00s TTFT p95 and zero soak errors.
 - Native-context work through the suite's validated approximately 240K-token prompt.
+- A one-Spark option with a clean safety gate: NVIDIA's FP4-Local QAD checkpoint on MiaAI-Lab's single-Spark TensorFold recipe passed the tool-eval safety gate (86.0 mean, incomplete at 98.6%), decoded 34.29 tok/s at c1, and sustained 85.72 tok/s on the c8 soak.
 
 ### Do not choose it when
 
@@ -88,6 +89,7 @@ Qwen describes the upstream model as an experimental, multimodal agentic archite
 
 | Configuration | Runtime | Configured context | c1 TTFT p95 | Soak tok/s | Canaries | Tool use | Operating posture |
 |---|---|---:|---:|---:|---:|---|---|
+| [Qwen3.8-Flash-Next FP4-Local QAD (TensorFold, 1 Spark, native 262K, thinking off)](2026-10-18-qwen38-flash-next-fp4-local-tensorfold-1spark-262k.md) | TensorFold | 256K | 0.48s | 85.72 | 13/13 | [Incomplete (98.6%) · 86.0 mean · Pass^3 76.5%](2026-10-18-qwen38-flash-next-fp4-local-tensorfold-1spark-262k-tool-eval.md) | Concurrency 4-5 (recipe 5 streams); thinking off; 13/13 quality |
 | [Qwen3.8-Flash-Next NVIDIA NVFP4 (TensorFold, 1M YaRN)](2026-10-08-qwen38-flash-next-nvfp4-tensorfold-1m.md) **(pick)** | TensorFold | 1M | 0.23s | 432.90 | 13/13 | [Incomplete (98.1%) · 88.0 mean · Pass^3 79.4%](2026-10-10-qwen38-flash-next-nvfp4-tensorfold-tool-eval.md) | Concurrency 8 interactive; up to 16 batch; 13/13 quality |
 | [Qwen3.8-Flash-Next NVIDIA NVFP4 (Mia vLLM, FP8 KV, 2200 MHz)](2026-10-03-qwen38-mia-nvidia-fp8kv-native-262k-2200mhz.md) | vLLM | 256K | 0.42s | 196.70 | 13/13 | Not run | 2200 MHz; concurrency 8; longer timeout near 240K |
 | [Qwen3.8-Flash-Next NVIDIA NVFP4 (Mia vLLM, FP8 KV)](2026-09-07-qwen38-mia-nvidia-fp8kv-native-262k.md) | vLLM | 256K | 0.40s | 197.42 | 13/13 | Not run | Concurrency 8; faster prefill, larger KV pool |
