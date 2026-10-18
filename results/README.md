@@ -6,12 +6,13 @@ same tables and charts without hand-editing this page.
 
 Choosing a model for a workload? Open the [model selection dashboard](MODEL-GUIDE.md).
 
-Last updated: 2026-10-17 · Published baselines: 16
+Last updated: 2026-10-18 · Published baselines: 17
 
 ## At a glance
 
 | Model | Hardware / runtime | Configured context | Peak decode tok/s | c1 TTFT p95 | Longest-context TTFT p95 | Soak tok/s | Canaries | Tool use | Recommended concurrency | Recipe credit |
 |---|---|---:|---:|---:|---:|---:|---:|---|---|---|
+| [MiniCPM-V 4.7 35B-A3B EXL3 6.08bpw (ExLlamaV3, native 262K, thinking off)](2026-10-18-minicpm-v47-exl3-262k.md) | 1x NVIDIA DGX Spark (128GB) / ExLlamaV3 | 256K | 52.74 @ c16 | 2.74s | 226.64s | 51.35 | 13/13 | [⚠ safety · Incomplete (98.6%) · 86.0 mean · Pass^3 79.4%](2026-10-18-minicpm-v47-exl3-262k-tool-eval.md) | Concurrency 1 (one request at a time); thinking off; 13/13 quality | [r0b0tlab MiniCPM-V 4.7 EXL3 GB10 recipe](https://github.com/r0b0tlab/minicpm-v47-exl3-exllamav3-gb10/tree/b8859be8b257ddb7602f68ce7b85a7f0fd03f7b4) |
 | [Qwen3.8 27B MLX 4-bit (TensorFold, native 262K, thinking off)](2026-10-17-qwen38-27b-tensorfold-262k.md) | 1x NVIDIA DGX Spark (128GB) / TensorFold | 256K | 201.49 @ c16 | 0.44s | 311.47s | 160.59 | 13/13 | [⚠ safety · Incomplete (98.6%) · 90.0 mean · Pass^3 85.3%](2026-10-17-qwen38-27b-tensorfold-262k-tool-eval.md) | Concurrency 8 (recipe PARALLEL=8); thinking off; 13/13 quality | [MiaAI-Lab Qwen3.8 27B TensorFold recipe](https://github.com/MiaAI-Lab/Qwen3.8-27B-DGX-Spark-TensorFold/tree/c11ff138871cf43d12898d79dbfa4dc952d17ca4) |
 | [Nemotron 3.5 Bolt 74B-A9B 24GB (TensorFold, native 262K)](2026-10-17-nemotron35-bolt-tensorfold-262k.md) | 1x NVIDIA DGX Spark (128GB) / TensorFold | 256K | 234.45 @ c16 | 0.44s | 294.65s | 145.52 | 13/13 | [⚠ safety · 90.3 mean · Pass^3 85.5%](2026-10-17-nemotron35-bolt-tensorfold-262k-tool-eval.md) | Concurrency 8 interactive; 16 batch; 13/13 quality | [MiaAI-Lab Nemotron 3.5 Bolt TensorFold recipe](https://github.com/MiaAI-Lab/Nemotron-3.5-Bolt-TensorFold-DGX-Spark/tree/6f61d7727ae3fac010f30e240799cc884d295f6e) |
 | [Qwen3.8-Flash-Next NVIDIA NVFP4 (TensorFold, 1M YaRN)](2026-10-08-qwen38-flash-next-nvfp4-tensorfold-1m.md) | 2x NVIDIA DGX Spark (128GB each) / TensorFold | 1M | 417.63 @ c16 | 0.23s | 98.98s | 432.90 | 13/13 | [Incomplete (98.1%) · 88.0 mean · Pass^3 79.4%](2026-10-10-qwen38-flash-next-nvfp4-tensorfold-tool-eval.md) | Concurrency 8 interactive; up to 16 batch; 13/13 quality | [MiaAI-Lab TensorFold recipe](https://github.com/MiaAI-Lab/Qwen3.8-Flash-Dual-DGX-Sparks-TensorFold/tree/be3ed857ab1055ca47b36134d22691f00f2bb94a) |
@@ -48,6 +49,7 @@ each model card, license, runtime requirements, and safety posture before deploy
 | DeepSeek V4 Flash 0731 | [0xSero/deepseek-v4-flash-0731-spark @ 22f28d3](https://huggingface.co/0xSero/deepseek-v4-flash-0731-spark/tree/22f28d32b9b29b4352eaa380ff8c2c170b2847ab) | [deepseek-ai/DeepSeek-V4-Flash-0731](https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731) | [Abliterated DeepSeek V4 Flash 0731 checkpoint](https://huggingface.co/lovesenko/DeepSeek-V4-Flash-0731-Abliterated) | Community weight-space-edited uncensored checkpoint; not benchmarked in this repository, and compatibility with the measured single-Spark SparkInfer recipe is unvalidated. |
 | DeepSeek V4.1 Flash EXL3 | [Mia-AiLab/DeepSeek-V4.1-Flash-EXL3-2.9bpw @ 64ba41b](https://huggingface.co/Mia-AiLab/DeepSeek-V4.1-Flash-EXL3-2.9bpw/tree/64ba41b6c916a587db06eae2e19b7845f7be6e6b) | [deepseek-ai/DeepSeek-V4.1-Flash](https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash) | [Uncensored EXL3 2.9 bpw checkpoint](https://huggingface.co/dealignai/DeepSeek-V4.1-Flash-UNCENSORED-EXL3-2.9bpw) | Community uncensored/abliterated EXL3 checkpoint presented as a drop-in for the linked two-Spark recipe; not benchmarked in this repository. |
 | NVIDIA Nemotron 3.5 Bolt 74B-A9B | [nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB @ a326822](https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB/tree/a326822af111290f2af5ac59ef4b5040347dabc4) | [nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB](https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB) | None identified | No community uncensored/abliterated Bolt checkpoint was identified when this baseline was published; none is benchmarked in this repository. |
+| MiniCPM-V 4.7 35B-A3B | [r0b0tlab/MiniCPM-V-4.7-35B-A3B-EXL3-6.08bpw @ 8f9f078](https://huggingface.co/r0b0tlab/MiniCPM-V-4.7-35B-A3B-EXL3-6.08bpw/tree/8f9f07872b09) | [openbmb/MiniCPM-V-4.7-35B-A3B](https://huggingface.co/openbmb/MiniCPM-V-4.7-35B-A3B) | None identified | No community uncensored/abliterated MiniCPM-V 4.7 checkpoint was identified when this baseline was published; none is benchmarked in this repository. |
 
 ## Decode scaling
 
@@ -82,6 +84,7 @@ retained as explicitly qualified pilot evidence.
 
 | Serving baseline | Protocol | Status | Completion | Mean score | Pass@3 | Pass^3 | Safety gate |
 |---|---|---|---:|---:|---:|---:|---|
+| [MiniCPM-V 4.7 35B-A3B EXL3 6.08bpw (ExLlamaV3, native 262K, thinking off)](2026-10-18-minicpm-v47-exl3-262k-tool-eval.md) | `tool-eval-standard-v1-b60e2f0` | incomplete | 98.6% | 86.0 | 79.4% | 79.4% | **FAILED** |
 | [Qwen3.8 27B MLX 4-bit (TensorFold, native 262K, thinking off)](2026-10-17-qwen38-27b-tensorfold-262k-tool-eval.md) | `tool-eval-standard-v1-b60e2f0` | incomplete | 98.6% | 90.0 | 85.3% | 85.3% | **FAILED** |
 | [Nemotron 3.5 Bolt 74B-A9B 24GB (TensorFold, native 262K)](2026-10-17-nemotron35-bolt-tensorfold-262k-tool-eval.md) | `tool-eval-standard-v1-b60e2f0` | complete | 100.0% | 90.3 | 85.5% | 85.5% | **FAILED** |
 | [Qwen3.8-Flash-Next NVIDIA NVFP4 (TensorFold, 1M YaRN)](2026-10-10-qwen38-flash-next-nvfp4-tensorfold-tool-eval.md) | `tool-eval-standard-v1-b60e2f0` | incomplete | 98.1% | 88.0 | 79.4% | 79.4% | pass |
