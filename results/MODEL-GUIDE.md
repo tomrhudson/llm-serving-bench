@@ -4,7 +4,7 @@ Use this page to choose among the model families with published DGX Spark
 baselines in this repository. For the full cross-configuration numbers and charts,
 open the [benchmark summary](README.md).
 
-Last updated: 2026-10-18 · Model families: 7 · Published configurations: 17
+Last updated: 2026-10-18 · Model families: 8 · Published configurations: 18
 
 ## Hardware footprint
 
@@ -21,6 +21,7 @@ Published recipes use 1× DGX Spark, 2× DGX Spark configurations with 128GB of 
 | [DeepSeek V4.1 Flash EXL3](#deepseek-v41-flash) | 2 systems / 2 GPUs · 128GB each · 256GB aggregate across nodes | Low-concurrency, input-heavy agentic lane with clean canaries | Input-heavy agentic, reasoning, and long-document work where concurrency 1-2 is sufficient. | High-throughput concurrent chat or agent fleets; c2 was the practical peak and higher concurrency mainly increased queueing. |
 | [NVIDIA Nemotron 3.5 Bolt 74B-A9B](#nemotron35-bolt) | 1 system / 1 GPU · 128GB each · 128GB aggregate | Small-footprint single-Spark hybrid Mamba/MoE lane with strong tool use | Tool-using agents on one DGX Spark, with review: the first complete three-trial tool-eval run published here scored 90.3 mean with Pass^3 85.5%, but its safety gate failed on a cross-turn sleeper-injection scenario. | Interactive long-context prompts: cold prefill ran at 1,077 to 1,421 input tok/s in the 4K-128K tests, so the 128K prompt took 120.84s and the 240K passkey 294.65s to first token. |
 | [MiniCPM-V 4.7 35B-A3B](#minicpm-v47) | 1 system / 1 GPU · 128GB each · 128GB aggregate | Small-footprint single-Spark text lane on ExLlamaV3 (one request at a time) | A single-user text lane that leaves most of a Spark free: the server held about 31 GiB of GPU memory and host MemAvailable never fell below 80.8 GiB. | Concurrent traffic: the qualified profile serves one request at a time, so aggregate decode stays at 52-53 tok/s from c2 to c16 while TTFT p95 grows to 145.74s at c16. |
+| [DeepSeek V4 Flash Vision-Exp](#deepseek-v4-flash-vision-exp) | 2 systems / 2 GPUs · 128GB each · 256GB aggregate across nodes | Two-Spark 1M-context DeepSeek lane with the strongest published tool-eval mean | Tool-using agents with review: the complete three-trial tool-eval run scored 91.7 mean (Pass@3 94.2%, Pass^3 84.1%), the highest mean published here, but its safety gate failed (TC-60 and TC-51). | Fast single-stream decode: c1 measured 25.93 output tok/s on this suite's forced-length synthetic prompts (per-request p50 34.87), well below the publisher's 56-83 tok/s. |
 
 Practical default: start with **Qwen3.8-Flash-Next** for mixed interactive,
 coding, RAG, and agent traffic. When only one Spark is available, use
@@ -388,6 +389,54 @@ The benchmarked checkpoint is r0b0tlab's 6.08 bpw EXL3 pack served by a patched 
 | Configuration | Runtime | Configured context | c1 TTFT p95 | Soak tok/s | Canaries | Tool use | Operating posture |
 |---|---|---:|---:|---:|---:|---|---|
 | [MiniCPM-V 4.7 35B-A3B EXL3 6.08bpw (ExLlamaV3, native 262K, thinking off)](2026-10-18-minicpm-v47-exl3-262k.md) **(pick)** | ExLlamaV3 | 256K | 2.74s | 51.35 | 13/13 | [⚠ safety · Incomplete (98.6%) · 86.0 mean · Pass^3 79.4%](2026-10-18-minicpm-v47-exl3-262k-tool-eval.md) | Concurrency 1 (one request at a time); thinking off; 13/13 quality |
+
+<a id="deepseek-v4-flash-vision-exp"></a>
+## DeepSeek V4 Flash Vision-Exp
+
+> Two-Spark 1M-context DeepSeek lane with the strongest published tool-eval mean
+
+**Recommended tested configuration:** [DeepSeek V4 Flash Vision-Exp (Anemll vLLM DSpark, TP=2, 1M, thinking off)](2026-10-18-deepseek-v4-flash-vision-exp-dspark-2x-1m.md)
+
+### Checkpoint choices
+
+- **Benchmarked checkpoint:** [deepseek-ai/DeepSeek-V4-Flash-Vision-Exp @ 86f746b](https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-Vision-Exp/tree/86f746b36186f0e567729a5c06a8c918caba82a9)
+- **Upstream base model:** [deepseek-ai/DeepSeek-V4-Flash-Vision-Exp](https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-Vision-Exp)
+- **Uncensored / abliterated:** Gated abliterated derivative (recipe ABLITERATED=1) — The recipe can serve a gated community abliterated checkpoint that needs an access token; it was not accessed or benchmarked in this repository.
+
+| Signal from the selected local baseline | Result |
+|---|---:|
+| DGX Spark footprint | 2 systems / 2 GPUs · 128GB each · 256GB aggregate across nodes |
+| Interactive c1 | 25.93 output tok/s · 0.69s TTFT p95 |
+| Peak short-prompt decode | 79.91 output tok/s @ c8 |
+| 20-minute c8 soak | 84.53 output tok/s · 0 errors |
+| Longest tested prompt | 240K · 185.15s TTFT p95 |
+| Regression canaries | 13/13 |
+| Tool-use evaluation | [⚠ safety · 91.7 mean · Pass^3 84.1%](2026-10-18-deepseek-v4-flash-vision-exp-dspark-2x-1m-tool-eval.md) |
+
+### Good fit
+
+- Tool-using agents with review: the complete three-trial tool-eval run scored 91.7 mean (Pass@3 94.2%, Pass^3 84.1%), the highest mean published here, but its safety gate failed (TC-60 and TC-51).
+- Long-input work on two Sparks: the 240K passkey passed with 185.15s TTFT p95, and warm 32K prefix reuse cut TTFT p95 from 80.50s to 11.49s.
+- Moderate concurrency up to the recipe's six streams: c4 reached 65.24 output tok/s with 1.01s TTFT p95, and the c8 soak ran 205 requests with zero errors at 84.53 tok/s.
+
+### Do not choose it when
+
+- Fast single-stream decode: c1 measured 25.93 output tok/s on this suite's forced-length synthetic prompts (per-request p50 34.87), well below the publisher's 56-83 tok/s.
+- Concurrency above 6: requests queue for a stream, so c8-c16 aggregate stays at 75-80 tok/s while TTFT p95 rises to 26-81s.
+- Sharing either Spark: both nodes held about 101 GiB of GPU memory, host MemAvailable fell to about 7.4 GiB, and up to 4.1 GiB of swap was in use.
+- Untrusted tool output or email-sending agents without guardrails: TC-60 (cross-turn sleeper injection) failed in two of three trials and TC-51 (goal-level planning) in all three.
+
+### Configuration call
+
+Use the MiaAI-Lab DSpark 2x recipe at concurrency 4-6 with Atlantis-style head and Columbia-style worker over the QSFP link. Choose it when tool-use quality matters more than per-stream speed and both Sparks can be dedicated.
+
+The run used a local build of the recipe's Anemll vLLM 0.1.1 runtime (vLLM 752a3a504). The build's version string was relabelled to the date the recipe's hotfixes pin; code is identical (hotfix target-file sha256 checks passed). It is a different checkpoint and runtime from the single-Spark DeepSeek V4 Flash 0731 baseline, so the two are not a controlled A/B.
+
+### Published variants
+
+| Configuration | Runtime | Configured context | c1 TTFT p95 | Soak tok/s | Canaries | Tool use | Operating posture |
+|---|---|---:|---:|---:|---:|---|---|
+| [DeepSeek V4 Flash Vision-Exp (Anemll vLLM DSpark, TP=2, 1M, thinking off)](2026-10-18-deepseek-v4-flash-vision-exp-dspark-2x-1m.md) **(pick)** | vLLM (Anemll DSpark 0.1.1) | 1M | 0.69s | 84.53 | 13/13 | [⚠ safety · 91.7 mean · Pass^3 84.1%](2026-10-18-deepseek-v4-flash-vision-exp-dspark-2x-1m-tool-eval.md) | Concurrency 4-6 (recipe max-num-seqs 6); thinking off; 13/13 quality |
 
 ## Reading the dashboard
 
