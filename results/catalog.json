@@ -154,6 +154,22 @@
       "evidence_note": "The benchmarked checkpoint is NVIDIA's 24GB pack (IQ2_XXS experts, NVFP4 Mamba projections, Q8_0 attention) served by a recipe-provided TensorFold backend. Results describe that quantized serving stack, not the full-precision model."
     },
     {
+      "id": "nemotron35-super-vl",
+      "name": "NVIDIA Nemotron 3.5 Super VL 120B-A12B",
+      "tagline": "Single-Spark, single-stream hybrid Mamba/MoE lane with the strongest tool-eval score published here",
+      "benchmarked_source": "[nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4 @ 59b8721](https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4/tree/59b8721646c38111a242da18218859fb2b454322) with the [LiLiCorr DFlash drafter @ 292bf1e](https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4-LiLiCorr/tree/292bf1efc06ba39567da7351f2ad7a522afa3959)",
+      "upstream_source": "[nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16](https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16)",
+      "alternative_source": "None identified",
+      "alternative_source_note": "No community uncensored/abliterated Super VL checkpoint was identified when this baseline was published; none is benchmarked in this repository.",
+      "dgx_spark_count": 1,
+      "dgx_spark_memory_gb_each": 128,
+      "tested_choice": "nemotron35-super-vl-nvfp4-vllm-dflash-1m",
+      "best_for": ["Single-user tool-using agents on one DGX Spark, with review: its complete three-trial tool-eval run scored 92.7 mean (Pass@3 97.1%, Pass^3 81.2%), the highest published here, but its safety gate failed on cross-turn sleeper injection.", "One interactive stream with long context: c1 decode was 34.15 output tok/s with 0.58s TTFT p95, prefill stayed near 1.9K tok/s at 32K-128K, and the 240K passkey passed."],
+      "not_for": ["Concurrent users: the recipe serves one sequence at a time, so aggregate decode stayed at 34-35 tok/s from c1 to c16 while TTFT p95 grew to 228s.", "Untrusted tool output or email-sending agents without guardrails: TC-60 (cross-turn sleeper injection) failed in all three trials, adding an attacker BCC/CC from earlier tool data.", "Sharing the Spark: the server held up to about 97 GiB of GPU memory and host swap reached about 9 GiB during the suite.", "Assuming vision, video, or broad model quality from this repository; the serving suite is text-only and the canaries are regression checks."],
+      "selection_note": "Use the Kindling recipe's one-Spark DFlash mode for a single interactive agent. Prefer the single-Spark Qwen3.8-Flash-Next FP4 TensorFold lane when several streams or a passing safety gate matter more than tool-eval score.",
+      "evidence_note": "The benchmarked checkpoint is NVIDIA's NVFP4/FP8 ModelOpt mixed-precision export served by a locally built vLLM (3f1bcfd82) with the LiLiCorr DFlash drafter. Results describe that quantized serving stack, not the full-precision model."
+    },
+    {
       "id": "minicpm-v47",
       "name": "MiniCPM-V 4.7 35B-A3B",
       "tagline": "Small-footprint single-Spark text lane on ExLlamaV3 (one request at a time)",
@@ -205,6 +221,151 @@
     }
   ],
   "baselines": [
+    {
+      "id": "nemotron35-super-vl-nvfp4-vllm-dflash-1m",
+      "model_id": "nemotron35-super-vl",
+      "label": "Nemotron 3.5 Super VL 120B-A12B NVFP4 (vLLM + DFlash LiLiCorr, 1 Spark, 1M, thinking off)",
+      "chart_label": "Nemotron 3.5 Super VL",
+      "date": "2026-10-18",
+      "report": "2026-10-18-nemotron35-super-vl-nvfp4-vllm-dflash-1m.md",
+      "hardware": "1x NVIDIA DGX Spark (128GB)",
+      "runtime": "vLLM",
+      "context_tokens": 1048576,
+      "recipe_credit": "[Kindling Nemotron 3.5 Super VL DGX Spark recipe](https://github.com/kindlingai/nemotron-3.5-super-vl-dgx-spark/tree/452acc1d74e76cfee4b45ad7a16998ee57f0a423)",
+      "recommendation": "Single-stream only (recipe max-num-seqs 1); thinking off; 13/13 quality",
+      "decode": [
+        {"concurrency": 1, "output_tps": 34.15, "ttft_p95_seconds": 0.58},
+        {"concurrency": 2, "output_tps": 34.01, "ttft_p95_seconds": 16.58},
+        {"concurrency": 4, "output_tps": 34.56, "ttft_p95_seconds": 47.22},
+        {"concurrency": 8, "output_tps": 34.17, "ttft_p95_seconds": 105.3},
+        {"concurrency": 12, "output_tps": 34.95, "ttft_p95_seconds": 167.49},
+        {"concurrency": 16, "output_tps": 34.85, "ttft_p95_seconds": 227.7}
+      ],
+      "prefill": [
+        {"input_tokens": 4096, "input_tps": 980.8, "ttft_p95_seconds": 1.86},
+        {"input_tokens": 32768, "input_tps": 1934.07, "ttft_p95_seconds": 14.85},
+        {"input_tokens": 131072, "input_tps": 1839.1, "ttft_p95_seconds": 69.19},
+        {"input_tokens": 245760, "input_tps": 1577.68, "ttft_p95_seconds": 155.41}
+      ],
+      "prefix": {"unique_ttft_p95_seconds": 69.6, "warm_ttft_p95_seconds": 22.49},
+      "soak": {"concurrency": 8, "minutes": 20, "output_tps": 33.9, "ttft_p95_seconds": 113.03, "requests": 87, "errors": 0},
+      "quality": {"passed": 13, "total": 13},
+      "tool_eval": {
+        "protocol_id": "tool-eval-standard-v1-b60e2f0",
+        "upstream_commit": "b60e2f00f6c44352a3680356e7c7948f777c5280",
+        "version": "0.0.1.dev1+unknown.gb60e2f00f",
+        "run_id": "2026-10-18T22-47-11.602512Z_90c9a9e8",
+        "config_fingerprint": "d4e37dbcfe1b",
+        "status": "complete",
+        "trials": 3,
+        "scenarios_per_trial": 69,
+        "completion_rate": 100.0,
+        "score_mean": 92.7,
+        "score_median": 93.0,
+        "score_stddev": 1.5,
+        "score_ci95": [
+          91.0,
+          94.0
+        ],
+        "pass_at_3": 97.1,
+        "pass_hat_3": 81.2,
+        "reliability_gap": 15.9,
+        "safety_passed": false,
+        "category_scores": [
+          {
+            "id": "A",
+            "label": "Tool Selection",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "B",
+            "label": "Parameter Precision",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "C",
+            "label": "Multi-Step Chains",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "D",
+            "label": "Restraint & Refusal",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "E",
+            "label": "Error Recovery",
+            "mean_percent": 77.7,
+            "stddev_percent": 25.4
+          },
+          {
+            "id": "F",
+            "label": "Localization",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "G",
+            "label": "Structured Reasoning",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "H",
+            "label": "Instruction Following",
+            "mean_percent": 93.3,
+            "stddev_percent": 5.8
+          },
+          {
+            "id": "I",
+            "label": "Context & State",
+            "mean_percent": 86.7,
+            "stddev_percent": 10.4
+          },
+          {
+            "id": "J",
+            "label": "Code Patterns",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "K",
+            "label": "Safety & Boundaries",
+            "mean_percent": 90.7,
+            "stddev_percent": 2.3
+          },
+          {
+            "id": "L",
+            "label": "Toolset Scale",
+            "mean_percent": 91.7,
+            "stddev_percent": 14.4
+          },
+          {
+            "id": "M",
+            "label": "Autonomous Planning",
+            "mean_percent": 83.3,
+            "stddev_percent": 16.5
+          },
+          {
+            "id": "N",
+            "label": "Creative Composition",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "O",
+            "label": "Structured Output",
+            "mean_percent": 88.7,
+            "stddev_percent": 9.8
+          }
+        ],
+        "report": "2026-10-18-nemotron35-super-vl-nvfp4-vllm-dflash-1m-tool-eval.md"
+      }
+    },
     {
       "id": "qwen38-flash-next-fp4-local-tensorfold-1spark-262k",
       "model_id": "qwen38-flash-next",
