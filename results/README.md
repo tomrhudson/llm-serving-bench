@@ -6,12 +6,13 @@ same tables and charts without hand-editing this page.
 
 Choosing a model for a workload? Open the [model selection dashboard](MODEL-GUIDE.md).
 
-Last updated: 2026-10-18 · Published baselines: 18
+Last updated: 2026-10-18 · Published baselines: 19
 
 ## At a glance
 
 | Model | Hardware / runtime | Configured context | Peak decode tok/s | c1 TTFT p95 | Longest-context TTFT p95 | Soak tok/s | Canaries | Tool use | Recommended concurrency | Recipe credit |
 |---|---|---:|---:|---:|---:|---:|---:|---|---|---|
+| [Qwen3.8-Flash-Next FP4-Local QAD (TensorFold, 1 Spark, native 262K, thinking off)](2026-10-18-qwen38-flash-next-fp4-local-tensorfold-1spark-262k.md) | 1x NVIDIA DGX Spark (128GB) / TensorFold | 256K | 100.43 @ c12 | 0.48s | 133.79s | 85.72 | 13/13 | [Incomplete (98.6%) · 86.0 mean · Pass^3 76.5%](2026-10-18-qwen38-flash-next-fp4-local-tensorfold-1spark-262k-tool-eval.md) | Concurrency 4-5 (recipe 5 streams); thinking off; 13/13 quality | [MiaAI-Lab Qwen3.8 Flash Next single-Spark TensorFold recipe](https://github.com/MiaAI-Lab/Qwen3.8-Flash-Next-Single-DGX-Spark-TensorFold/tree/656879fd752749bbd11a6e1a065a326c00940911) |
 | [DeepSeek V4 Flash Vision-Exp (Anemll vLLM DSpark, TP=2, 1M, thinking off)](2026-10-18-deepseek-v4-flash-vision-exp-dspark-2x-1m.md) | 2x NVIDIA DGX Spark (128GB each) / vLLM (Anemll DSpark 0.1.1) | 1M | 79.91 @ c8 | 0.69s | 185.15s | 84.53 | 13/13 | [⚠ safety · 91.7 mean · Pass^3 84.1%](2026-10-18-deepseek-v4-flash-vision-exp-dspark-2x-1m-tool-eval.md) | Concurrency 4-6 (recipe max-num-seqs 6); thinking off; 13/13 quality | [MiaAI-Lab DeepSeek-v4-Flash DSpark 2x recipe](https://github.com/MiaAI-Lab/DeepSeek-v4-Flash-DSpark-2x-DGX-Spark/tree/a8b4636710068fd30edb98e1365d567086cc208e) |
 | [MiniCPM-V 4.7 35B-A3B EXL3 6.08bpw (ExLlamaV3, native 262K, thinking off)](2026-10-18-minicpm-v47-exl3-262k.md) | 1x NVIDIA DGX Spark (128GB) / ExLlamaV3 | 256K | 52.74 @ c16 | 2.74s | 226.64s | 51.35 | 13/13 | [⚠ safety · Incomplete (98.6%) · 86.0 mean · Pass^3 79.4%](2026-10-18-minicpm-v47-exl3-262k-tool-eval.md) | Concurrency 1 (one request at a time); thinking off; 13/13 quality | [r0b0tlab MiniCPM-V 4.7 EXL3 GB10 recipe](https://github.com/r0b0tlab/minicpm-v47-exl3-exllamav3-gb10/tree/b8859be8b257ddb7602f68ce7b85a7f0fd03f7b4) |
 | [Qwen3.8 27B MLX 4-bit (TensorFold, native 262K, thinking off)](2026-10-17-qwen38-27b-tensorfold-262k.md) | 1x NVIDIA DGX Spark (128GB) / TensorFold | 256K | 201.49 @ c16 | 0.44s | 311.47s | 160.59 | 13/13 | [⚠ safety · Incomplete (98.6%) · 90.0 mean · Pass^3 85.3%](2026-10-17-qwen38-27b-tensorfold-262k-tool-eval.md) | Concurrency 8 (recipe PARALLEL=8); thinking off; 13/13 quality | [MiaAI-Lab Qwen3.8 27B TensorFold recipe](https://github.com/MiaAI-Lab/Qwen3.8-27B-DGX-Spark-TensorFold/tree/c11ff138871cf43d12898d79dbfa4dc952d17ca4) |
@@ -86,6 +87,7 @@ retained as explicitly qualified pilot evidence.
 
 | Serving baseline | Protocol | Status | Completion | Mean score | Pass@3 | Pass^3 | Safety gate |
 |---|---|---|---:|---:|---:|---:|---|
+| [Qwen3.8-Flash-Next FP4-Local QAD (TensorFold, 1 Spark, native 262K, thinking off)](2026-10-18-qwen38-flash-next-fp4-local-tensorfold-1spark-262k-tool-eval.md) | `tool-eval-standard-v1-b60e2f0` | incomplete | 98.6% | 86.0 | 76.5% | 76.5% | pass |
 | [DeepSeek V4 Flash Vision-Exp (Anemll vLLM DSpark, TP=2, 1M, thinking off)](2026-10-18-deepseek-v4-flash-vision-exp-dspark-2x-1m-tool-eval.md) | `tool-eval-standard-v1-b60e2f0` | complete | 100.0% | 91.7 | 94.2% | 84.1% | **FAILED** |
 | [MiniCPM-V 4.7 35B-A3B EXL3 6.08bpw (ExLlamaV3, native 262K, thinking off)](2026-10-18-minicpm-v47-exl3-262k-tool-eval.md) | `tool-eval-standard-v1-b60e2f0` | incomplete | 98.6% | 86.0 | 79.4% | 79.4% | **FAILED** |
 | [Qwen3.8 27B MLX 4-bit (TensorFold, native 262K, thinking off)](2026-10-17-qwen38-27b-tensorfold-262k-tool-eval.md) | `tool-eval-standard-v1-b60e2f0` | incomplete | 98.6% | 90.0 | 85.3% | 85.3% | **FAILED** |
