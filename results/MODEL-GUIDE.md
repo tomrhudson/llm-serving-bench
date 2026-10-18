@@ -4,7 +4,7 @@ Use this page to choose among the model families with published DGX Spark
 baselines in this repository. For the full cross-configuration numbers and charts,
 open the [benchmark summary](README.md).
 
-Last updated: 2026-10-17 · Model families: 6 · Published configurations: 16
+Last updated: 2026-10-18 · Model families: 7 · Published configurations: 17
 
 ## Hardware footprint
 
@@ -20,6 +20,7 @@ Published recipes use 1× DGX Spark, 2× DGX Spark configurations with 128GB of 
 | [DeepSeek V4 Flash 0731](#deepseek-v4-flash) | 1 system / 1 GPU · 128GB each · 128GB aggregate | Single-Spark long-context lane built for one request at a time | A dedicated one-Spark lane for long, input-heavy requests where concurrency 1 is acceptable. | Concurrent interactive traffic; aggregate decode stayed near 30 tok/s while c8 TTFT p95 rose to 118.29 seconds. |
 | [DeepSeek V4.1 Flash EXL3](#deepseek-v41-flash) | 2 systems / 2 GPUs · 128GB each · 256GB aggregate across nodes | Low-concurrency, input-heavy agentic lane with clean canaries | Input-heavy agentic, reasoning, and long-document work where concurrency 1-2 is sufficient. | High-throughput concurrent chat or agent fleets; c2 was the practical peak and higher concurrency mainly increased queueing. |
 | [NVIDIA Nemotron 3.5 Bolt 74B-A9B](#nemotron35-bolt) | 1 system / 1 GPU · 128GB each · 128GB aggregate | Small-footprint single-Spark hybrid Mamba/MoE lane with strong tool use | Tool-using agents on one DGX Spark, with review: the first complete three-trial tool-eval run published here scored 90.3 mean with Pass^3 85.5%, but its safety gate failed on a cross-turn sleeper-injection scenario. | Interactive long-context prompts: cold prefill ran at 1,077 to 1,421 input tok/s in the 4K-128K tests, so the 128K prompt took 120.84s and the 240K passkey 294.65s to first token. |
+| [MiniCPM-V 4.7 35B-A3B](#minicpm-v47) | 1 system / 1 GPU · 128GB each · 128GB aggregate | Small-footprint single-Spark text lane on ExLlamaV3 (one request at a time) | A single-user text lane that leaves most of a Spark free: the server held about 31 GiB of GPU memory and host MemAvailable never fell below 80.8 GiB. | Concurrent traffic: the qualified profile serves one request at a time, so aggregate decode stays at 52-53 tok/s from c2 to c16 while TTFT p95 grows to 145.74s at c16. |
 
 Practical default: start with **Qwen3.8-Flash-Next** for mixed interactive,
 coding, RAG, and agent traffic. When only one Spark is available, use
@@ -339,6 +340,54 @@ The benchmarked checkpoint is NVIDIA's 24GB pack (IQ2_XXS experts, NVFP4 Mamba p
 | Configuration | Runtime | Configured context | c1 TTFT p95 | Soak tok/s | Canaries | Tool use | Operating posture |
 |---|---|---:|---:|---:|---:|---|---|
 | [Nemotron 3.5 Bolt 74B-A9B 24GB (TensorFold, native 262K)](2026-10-17-nemotron35-bolt-tensorfold-262k.md) **(pick)** | TensorFold | 256K | 0.44s | 145.52 | 13/13 | [⚠ safety · 90.3 mean · Pass^3 85.5%](2026-10-17-nemotron35-bolt-tensorfold-262k-tool-eval.md) | Concurrency 8 interactive; 16 batch; 13/13 quality |
+
+<a id="minicpm-v47"></a>
+## MiniCPM-V 4.7 35B-A3B
+
+> Small-footprint single-Spark text lane on ExLlamaV3 (one request at a time)
+
+**Recommended tested configuration:** [MiniCPM-V 4.7 35B-A3B EXL3 6.08bpw (ExLlamaV3, native 262K, thinking off)](2026-10-18-minicpm-v47-exl3-262k.md)
+
+### Checkpoint choices
+
+- **Benchmarked checkpoint:** [r0b0tlab/MiniCPM-V-4.7-35B-A3B-EXL3-6.08bpw @ 8f9f078](https://huggingface.co/r0b0tlab/MiniCPM-V-4.7-35B-A3B-EXL3-6.08bpw/tree/8f9f07872b09)
+- **Upstream base model:** [openbmb/MiniCPM-V-4.7-35B-A3B](https://huggingface.co/openbmb/MiniCPM-V-4.7-35B-A3B)
+- **Uncensored / abliterated:** None identified — No community uncensored/abliterated MiniCPM-V 4.7 checkpoint was identified when this baseline was published; none is benchmarked in this repository.
+
+| Signal from the selected local baseline | Result |
+|---|---:|
+| DGX Spark footprint | 1 system / 1 GPU · 128GB each · 128GB aggregate |
+| Interactive c1 | 47.74 output tok/s · 2.74s TTFT p95 |
+| Peak short-prompt decode | 52.74 output tok/s @ c16 |
+| 20-minute c8 soak | 51.35 output tok/s · 0 errors |
+| Longest tested prompt | 240K · 226.64s TTFT p95 |
+| Regression canaries | 13/13 |
+| Tool-use evaluation | [⚠ safety · Incomplete (98.6%) · 86.0 mean · Pass^3 79.4%](2026-10-18-minicpm-v47-exl3-262k-tool-eval.md) |
+
+### Good fit
+
+- A single-user text lane that leaves most of a Spark free: the server held about 31 GiB of GPU memory and host MemAvailable never fell below 80.8 GiB.
+- Fast long-prompt ingestion for its size: 128K cold prefill took 82.15s and the 240K passkey 226.64s to first token, and warm 32K prefix reuse cut TTFT p95 from 55.77s to 8.82s.
+- Single-stream chat and coding at about 48 output tok/s (c1), with a clean 20-minute soak (128 requests, zero errors).
+
+### Do not choose it when
+
+- Concurrent traffic: the qualified profile serves one request at a time, so aggregate decode stays at 52-53 tok/s from c2 to c16 while TTFT p95 grows to 145.74s at c16.
+- Untrusted tool output or email-sending agents without guardrails: TC-60 (cross-turn sleeper injection) failed in all three tool-eval trials, and the run was incomplete (98.6%) because the endpoint does not enforce tool_choice=required.
+- Strict JSON-schema output: structured-output scenarios scored 33%.
+- Image or video input: ExLlamaV3 does not run the vision tower in this recipe, so this lane is text-only.
+
+### Configuration call
+
+Use the recipe's default gb10-text-262k profile for one user at a time, and route concurrent work to a batching runtime. Treat tool use as supervised only.
+
+The benchmarked checkpoint is r0b0tlab's 6.08 bpw EXL3 pack served by a patched ExLlamaV3 fork. Results describe that quantized, text-only serving stack, not the full-precision multimodal model.
+
+### Published variants
+
+| Configuration | Runtime | Configured context | c1 TTFT p95 | Soak tok/s | Canaries | Tool use | Operating posture |
+|---|---|---:|---:|---:|---:|---|---|
+| [MiniCPM-V 4.7 35B-A3B EXL3 6.08bpw (ExLlamaV3, native 262K, thinking off)](2026-10-18-minicpm-v47-exl3-262k.md) **(pick)** | ExLlamaV3 | 256K | 2.74s | 51.35 | 13/13 | [⚠ safety · Incomplete (98.6%) · 86.0 mean · Pass^3 79.4%](2026-10-18-minicpm-v47-exl3-262k-tool-eval.md) | Concurrency 1 (one request at a time); thinking off; 13/13 quality |
 
 ## Reading the dashboard
 

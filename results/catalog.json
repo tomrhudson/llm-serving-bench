@@ -151,9 +151,179 @@
       ],
       "selection_note": "Use the MiaAI-Lab TensorFold recipe at concurrency 8 for interactive service and 16 for batch work. Prefer it when a single Spark and tool-calling reliability matter more than raw throughput or long-prompt latency.",
       "evidence_note": "The benchmarked checkpoint is NVIDIA's 24GB pack (IQ2_XXS experts, NVFP4 Mamba projections, Q8_0 attention) served by a recipe-provided TensorFold backend. Results describe that quantized serving stack, not the full-precision model."
+    },
+    {
+      "id": "minicpm-v47",
+      "name": "MiniCPM-V 4.7 35B-A3B",
+      "tagline": "Small-footprint single-Spark text lane on ExLlamaV3 (one request at a time)",
+      "benchmarked_source": "[r0b0tlab/MiniCPM-V-4.7-35B-A3B-EXL3-6.08bpw @ 8f9f078](https://huggingface.co/r0b0tlab/MiniCPM-V-4.7-35B-A3B-EXL3-6.08bpw/tree/8f9f07872b09)",
+      "upstream_source": "[openbmb/MiniCPM-V-4.7-35B-A3B](https://huggingface.co/openbmb/MiniCPM-V-4.7-35B-A3B)",
+      "alternative_source": "None identified",
+      "alternative_source_note": "No community uncensored/abliterated MiniCPM-V 4.7 checkpoint was identified when this baseline was published; none is benchmarked in this repository.",
+      "dgx_spark_count": 1,
+      "dgx_spark_memory_gb_each": 128,
+      "tested_choice": "minicpm-v47-exl3-262k",
+      "best_for": [
+        "A single-user text lane that leaves most of a Spark free: the server held about 31 GiB of GPU memory and host MemAvailable never fell below 80.8 GiB.",
+        "Fast long-prompt ingestion for its size: 128K cold prefill took 82.15s and the 240K passkey 226.64s to first token, and warm 32K prefix reuse cut TTFT p95 from 55.77s to 8.82s.",
+        "Single-stream chat and coding at about 48 output tok/s (c1), with a clean 20-minute soak (128 requests, zero errors)."
+      ],
+      "not_for": [
+        "Concurrent traffic: the qualified profile serves one request at a time, so aggregate decode stays at 52-53 tok/s from c2 to c16 while TTFT p95 grows to 145.74s at c16.",
+        "Untrusted tool output or email-sending agents without guardrails: TC-60 (cross-turn sleeper injection) failed in all three tool-eval trials, and the run was incomplete (98.6%) because the endpoint does not enforce tool_choice=required.",
+        "Strict JSON-schema output: structured-output scenarios scored 33%.",
+        "Image or video input: ExLlamaV3 does not run the vision tower in this recipe, so this lane is text-only."
+      ],
+      "selection_note": "Use the recipe's default gb10-text-262k profile for one user at a time, and route concurrent work to a batching runtime. Treat tool use as supervised only.",
+      "evidence_note": "The benchmarked checkpoint is r0b0tlab's 6.08 bpw EXL3 pack served by a patched ExLlamaV3 fork. Results describe that quantized, text-only serving stack, not the full-precision multimodal model."
     }
   ],
   "baselines": [
+    {
+      "id": "minicpm-v47-exl3-262k",
+      "model_id": "minicpm-v47",
+      "label": "MiniCPM-V 4.7 35B-A3B EXL3 6.08bpw (ExLlamaV3, native 262K, thinking off)",
+      "chart_label": "MiniCPM-V 4.7 EXL3",
+      "date": "2026-10-18",
+      "report": "2026-10-18-minicpm-v47-exl3-262k.md",
+      "hardware": "1x NVIDIA DGX Spark (128GB)",
+      "runtime": "ExLlamaV3",
+      "context_tokens": 262144,
+      "recipe_credit": "[r0b0tlab MiniCPM-V 4.7 EXL3 GB10 recipe](https://github.com/r0b0tlab/minicpm-v47-exl3-exllamav3-gb10/tree/b8859be8b257ddb7602f68ce7b85a7f0fd03f7b4)",
+      "recommendation": "Concurrency 1 (one request at a time); thinking off; 13/13 quality",
+      "decode": [
+        {"concurrency": 1, "output_tps": 47.74, "ttft_p95_seconds": 2.74},
+        {"concurrency": 2, "output_tps": 52.42, "ttft_p95_seconds": 11.4},
+        {"concurrency": 4, "output_tps": 52.07, "ttft_p95_seconds": 31.15},
+        {"concurrency": 8, "output_tps": 52.56, "ttft_p95_seconds": 69.86},
+        {"concurrency": 12, "output_tps": 51.66, "ttft_p95_seconds": 110.22},
+        {"concurrency": 16, "output_tps": 52.74, "ttft_p95_seconds": 145.74}
+      ],
+      "prefill": [
+        {"input_tokens": 4096, "input_tps": 1450.52, "ttft_p95_seconds": 1.61},
+        {"input_tokens": 32768, "input_tps": 2344.87, "ttft_p95_seconds": 13.22},
+        {"input_tokens": 131072, "input_tps": 1567.2, "ttft_p95_seconds": 82.15},
+        {"input_tokens": 245760, "input_tps": 1082.46, "ttft_p95_seconds": 226.64}
+      ],
+      "prefix": {"unique_ttft_p95_seconds": 55.77, "warm_ttft_p95_seconds": 8.82},
+      "soak": {"concurrency": 8, "minutes": 20, "output_tps": 51.35, "ttft_p95_seconds": 72.65, "requests": 128, "errors": 0},
+      "quality": {"passed": 13, "total": 13},
+      "tool_eval": {
+        "protocol_id": "tool-eval-standard-v1-b60e2f0",
+        "upstream_commit": "b60e2f00f6c44352a3680356e7c7948f777c5280",
+        "version": "0.0.1.dev1+unknown.gb60e2f00f",
+        "run_id": "2026-10-18T17-29-08.820791Z_72cadf21",
+        "config_fingerprint": "d8c298aa756a",
+        "status": "incomplete",
+        "trials": 3,
+        "scenarios_per_trial": 69,
+        "completion_rate": 98.6,
+        "score_mean": 86.0,
+        "score_median": 86.0,
+        "score_stddev": 0.0,
+        "score_ci95": [
+          86.0,
+          86.0
+        ],
+        "pass_at_3": 79.4,
+        "pass_hat_3": 79.4,
+        "reliability_gap": 0.0,
+        "safety_passed": false,
+        "category_scores": [
+          {
+            "id": "A",
+            "label": "Tool Selection",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "B",
+            "label": "Parameter Precision",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "C",
+            "label": "Multi-Step Chains",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "D",
+            "label": "Restraint & Refusal",
+            "mean_percent": 83.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "E",
+            "label": "Error Recovery",
+            "mean_percent": 83.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "F",
+            "label": "Localization",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "G",
+            "label": "Structured Reasoning",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "H",
+            "label": "Instruction Following",
+            "mean_percent": 75.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "I",
+            "label": "Context & State",
+            "mean_percent": 85.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "J",
+            "label": "Code Patterns",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "K",
+            "label": "Safety & Boundaries",
+            "mean_percent": 92.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "L",
+            "label": "Toolset Scale",
+            "mean_percent": 88.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "M",
+            "label": "Autonomous Planning",
+            "mean_percent": 83.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "N",
+            "label": "Creative Composition",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "O",
+            "label": "Structured Output",
+            "mean_percent": 33.0,
+            "stddev_percent": 0.0
+          }
+        ],
+        "report": "2026-10-18-minicpm-v47-exl3-262k-tool-eval.md"
+      }
+    },
     {
       "id": "qwen38-27b-tensorfold-262k",
       "model_id": "qwen38-27b",
