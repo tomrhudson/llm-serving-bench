@@ -15,7 +15,8 @@
       "best_for": [
         "Primary local lane for short- and medium-context coding, tool-using agents, chat, and RAG.",
         "Concurrent interactive traffic: the selected TensorFold baseline sustained 432.90 output tok/s at c8 with 1.00s TTFT p95 and zero soak errors.",
-        "Native-context work through the suite's validated approximately 240K-token prompt."
+        "Native-context work through the suite's validated approximately 240K-token prompt.",
+        "A one-Spark option with a clean safety gate: NVIDIA's FP4-Local QAD checkpoint on MiaAI-Lab's single-Spark TensorFold recipe passed the tool-eval safety gate (86.0 mean, incomplete at 98.6%), decoded 34.29 tok/s at c1, and sustained 85.72 tok/s on the c8 soak."
       ],
       "not_for": [
         "Treating a configured 1M YaRN window as validated 1M model quality; the published runs exercise context only through approximately 240K tokens.",
@@ -204,6 +205,151 @@
     }
   ],
   "baselines": [
+    {
+      "id": "qwen38-flash-next-fp4-local-tensorfold-1spark-262k",
+      "model_id": "qwen38-flash-next",
+      "label": "Qwen3.8-Flash-Next FP4-Local QAD (TensorFold, 1 Spark, native 262K, thinking off)",
+      "chart_label": "Qwen3.8-Flash-Next FP4 TF 1x",
+      "date": "2026-10-18",
+      "report": "2026-10-18-qwen38-flash-next-fp4-local-tensorfold-1spark-262k.md",
+      "hardware": "1x NVIDIA DGX Spark (128GB)",
+      "runtime": "TensorFold",
+      "context_tokens": 262144,
+      "recipe_credit": "[MiaAI-Lab Qwen3.8 Flash Next single-Spark TensorFold recipe](https://github.com/MiaAI-Lab/Qwen3.8-Flash-Next-Single-DGX-Spark-TensorFold/tree/656879fd752749bbd11a6e1a065a326c00940911)",
+      "recommendation": "Concurrency 4-5 (recipe 5 streams); thinking off; 13/13 quality",
+      "decode": [
+        {"concurrency": 1, "output_tps": 34.29, "ttft_p95_seconds": 0.48},
+        {"concurrency": 2, "output_tps": 57.62, "ttft_p95_seconds": 0.64},
+        {"concurrency": 4, "output_tps": 75.71, "ttft_p95_seconds": 0.51},
+        {"concurrency": 8, "output_tps": 89.3, "ttft_p95_seconds": 20.46},
+        {"concurrency": 12, "output_tps": 100.43, "ttft_p95_seconds": 41.47},
+        {"concurrency": 16, "output_tps": 95.69, "ttft_p95_seconds": 61.0}
+      ],
+      "prefill": [
+        {"input_tokens": 4096, "input_tps": 1176.04, "ttft_p95_seconds": 1.95},
+        {"input_tokens": 32768, "input_tps": 1962.37, "ttft_p95_seconds": 15.03},
+        {"input_tokens": 131072, "input_tps": 1956.29, "ttft_p95_seconds": 65.1},
+        {"input_tokens": 245760, "input_tps": 1827.36, "ttft_p95_seconds": 133.79}
+      ],
+      "prefix": {"unique_ttft_p95_seconds": 57.12, "warm_ttft_p95_seconds": 1.27},
+      "soak": {"concurrency": 8, "minutes": 20, "output_tps": 85.72, "ttft_p95_seconds": 28.44, "requests": 207, "errors": 0},
+      "quality": {"passed": 13, "total": 13},
+      "tool_eval": {
+        "protocol_id": "tool-eval-standard-v1-b60e2f0",
+        "upstream_commit": "b60e2f00f6c44352a3680356e7c7948f777c5280",
+        "version": "0.0.1.dev1+unknown.gb60e2f00f",
+        "run_id": "2026-10-18T21-00-04.499944Z_b2685159",
+        "config_fingerprint": "89ae642f083f",
+        "status": "incomplete",
+        "trials": 3,
+        "scenarios_per_trial": 69,
+        "completion_rate": 98.6,
+        "score_mean": 86.0,
+        "score_median": 86.0,
+        "score_stddev": 0.0,
+        "score_ci95": [
+          86.0,
+          86.0
+        ],
+        "pass_at_3": 76.5,
+        "pass_hat_3": 76.5,
+        "reliability_gap": 0.0,
+        "safety_passed": true,
+        "category_scores": [
+          {
+            "id": "A",
+            "label": "Tool Selection",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "B",
+            "label": "Parameter Precision",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "C",
+            "label": "Multi-Step Chains",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "D",
+            "label": "Restraint & Refusal",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "E",
+            "label": "Error Recovery",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "F",
+            "label": "Localization",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "G",
+            "label": "Structured Reasoning",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "H",
+            "label": "Instruction Following",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "I",
+            "label": "Context & State",
+            "mean_percent": 85.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "J",
+            "label": "Code Patterns",
+            "mean_percent": 67.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "K",
+            "label": "Safety & Boundaries",
+            "mean_percent": 77.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "L",
+            "label": "Toolset Scale",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "M",
+            "label": "Autonomous Planning",
+            "mean_percent": 83.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "N",
+            "label": "Creative Composition",
+            "mean_percent": 83.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "O",
+            "label": "Structured Output",
+            "mean_percent": 40.0,
+            "stddev_percent": 0.0
+          }
+        ],
+        "report": "2026-10-18-qwen38-flash-next-fp4-local-tensorfold-1spark-262k-tool-eval.md"
+      }
+    },
     {
       "id": "deepseek-v4-flash-vision-exp-dspark-2x-1m",
       "model_id": "deepseek-v4-flash-vision-exp",
