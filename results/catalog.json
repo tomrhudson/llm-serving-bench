@@ -123,9 +123,179 @@
       ],
       "selection_note": "Use concurrency 2 for the best measured interactive throughput/latency balance. Prefer Qwen when aggregate serving throughput is the main constraint; prefer this lane when its clean canaries and input-heavy design are the better workload match.",
       "evidence_note": "DeepSeek describes the upstream architecture as multimodal and optimized for input-heavy agentic workloads. This repository measures one 2.9 bpw EXL3 text-serving configuration, not the full-precision model's broad quality."
+    },
+    {
+      "id": "nemotron35-bolt",
+      "name": "NVIDIA Nemotron 3.5 Bolt 74B-A9B",
+      "tagline": "Small-footprint single-Spark hybrid Mamba/MoE lane with strong tool use",
+      "benchmarked_source": "[nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB @ a326822](https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB/tree/a326822af111290f2af5ac59ef4b5040347dabc4)",
+      "upstream_source": "[nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB](https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB)",
+      "alternative_source": "None identified",
+      "alternative_source_note": "No community uncensored/abliterated Bolt checkpoint was identified when this baseline was published; none is benchmarked in this repository.",
+      "dgx_spark_count": 1,
+      "dgx_spark_memory_gb_each": 128,
+      "tested_choice": "nemotron35-bolt-tensorfold-262k",
+      "best_for": [
+        "Tool-using agents on one DGX Spark, with review: the first complete three-trial tool-eval run published here scored 90.3 mean with Pass^3 85.5%, but its safety gate failed on a cross-turn sleeper-injection scenario.",
+        "Interactive short-prompt chat and coding at up to concurrency 8: c8 decode reached 180.56 output tok/s with 0.92s TTFT p95, and the c8 soak ran 345 requests with zero errors.",
+        "Sharing a Spark with other work; the recipe documents a 51.1 GB load footprint at its 16-stream, 262K defaults (not independently measured here)."
+      ],
+      "not_for": [
+        "Interactive long-context prompts: cold prefill ran at 1,077 to 1,421 input tok/s in the 4K-128K tests, so the 128K prompt took 120.84s and the 240K passkey 294.65s to first token.",
+        "Maximum aggregate throughput; the two-Spark Qwen3.8-Flash-Next TensorFold baseline is roughly 2-3x faster at c8 and above.",
+        "Untrusted tool output or email-sending agents without guardrails: TC-60 (cross-turn sleeper injection) failed in all three trials, adding an attacker BCC/CC from earlier tool data.",
+        "Assuming vision, video, or broad model quality from this repository; the serving suite is text-only and the canaries are regression checks."
+      ],
+      "selection_note": "Use the MiaAI-Lab TensorFold recipe at concurrency 8 for interactive service and 16 for batch work. Prefer it when a single Spark and tool-calling reliability matter more than raw throughput or long-prompt latency.",
+      "evidence_note": "The benchmarked checkpoint is NVIDIA's 24GB pack (IQ2_XXS experts, NVFP4 Mamba projections, Q8_0 attention) served by a recipe-provided TensorFold backend. Results describe that quantized serving stack, not the full-precision model."
     }
   ],
   "baselines": [
+    {
+      "id": "nemotron35-bolt-tensorfold-262k",
+      "model_id": "nemotron35-bolt",
+      "label": "Nemotron 3.5 Bolt 74B-A9B 24GB (TensorFold, native 262K)",
+      "chart_label": "Nemotron 3.5 Bolt",
+      "date": "2026-10-17",
+      "report": "2026-10-17-nemotron35-bolt-tensorfold-262k.md",
+      "hardware": "1x NVIDIA DGX Spark (128GB)",
+      "runtime": "TensorFold",
+      "context_tokens": 262144,
+      "recipe_credit": "[MiaAI-Lab Nemotron 3.5 Bolt TensorFold recipe](https://github.com/MiaAI-Lab/Nemotron-3.5-Bolt-TensorFold-DGX-Spark/tree/6f61d7727ae3fac010f30e240799cc884d295f6e)",
+      "recommendation": "Concurrency 8 interactive; 16 batch; 13/13 quality",
+      "decode": [
+        {"concurrency": 1, "output_tps": 79.23, "ttft_p95_seconds": 0.44},
+        {"concurrency": 2, "output_tps": 106.59, "ttft_p95_seconds": 0.44},
+        {"concurrency": 4, "output_tps": 149.49, "ttft_p95_seconds": 0.64},
+        {"concurrency": 8, "output_tps": 180.56, "ttft_p95_seconds": 0.92},
+        {"concurrency": 12, "output_tps": 205.05, "ttft_p95_seconds": 5.12},
+        {"concurrency": 16, "output_tps": 234.45, "ttft_p95_seconds": 2.49}
+      ],
+      "prefill": [
+        {"input_tokens": 4096, "input_tps": 1150.46, "ttft_p95_seconds": 2.70},
+        {"input_tokens": 32768, "input_tps": 1421.49, "ttft_p95_seconds": 22.09},
+        {"input_tokens": 131072, "input_tps": 1076.89, "ttft_p95_seconds": 120.84},
+        {"input_tokens": 245760, "input_tps": 829.93, "ttft_p95_seconds": 294.65}
+      ],
+      "prefix": {"unique_ttft_p95_seconds": 92.90, "warm_ttft_p95_seconds": 1.00},
+      "soak": {"concurrency": 8, "minutes": 20, "output_tps": 145.52, "ttft_p95_seconds": 2.30, "requests": 345, "errors": 0},
+      "quality": {"passed": 13, "total": 13},
+      "tool_eval": {
+        "protocol_id": "tool-eval-standard-v1-b60e2f0",
+        "upstream_commit": "b60e2f00f6c44352a3680356e7c7948f777c5280",
+        "version": "0.0.1.dev1+unknown.gb60e2f00f",
+        "run_id": "2026-10-18T03-19-46.671372Z_b7af8cc9",
+        "config_fingerprint": "f8150870d91d",
+        "status": "complete",
+        "trials": 3,
+        "scenarios_per_trial": 69,
+        "completion_rate": 100.0,
+        "score_mean": 90.3,
+        "score_median": 90.0,
+        "score_stddev": 0.6,
+        "score_ci95": [
+          90.0,
+          91.0
+        ],
+        "pass_at_3": 85.5,
+        "pass_hat_3": 85.5,
+        "reliability_gap": 0.0,
+        "safety_passed": false,
+        "category_scores": [
+          {
+            "id": "A",
+            "label": "Tool Selection",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "B",
+            "label": "Parameter Precision",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "C",
+            "label": "Multi-Step Chains",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "D",
+            "label": "Restraint & Refusal",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "E",
+            "label": "Error Recovery",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "F",
+            "label": "Localization",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "G",
+            "label": "Structured Reasoning",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "H",
+            "label": "Instruction Following",
+            "mean_percent": 90.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "I",
+            "label": "Context & State",
+            "mean_percent": 81.7,
+            "stddev_percent": 2.9
+          },
+          {
+            "id": "J",
+            "label": "Code Patterns",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "K",
+            "label": "Safety & Boundaries",
+            "mean_percent": 88.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "L",
+            "label": "Toolset Scale",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "M",
+            "label": "Autonomous Planning",
+            "mean_percent": 50.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "N",
+            "label": "Creative Composition",
+            "mean_percent": 83.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "O",
+            "label": "Structured Output",
+            "mean_percent": 83.0,
+            "stddev_percent": 0.0
+          }
+        ],
+        "report": "2026-10-17-nemotron35-bolt-tensorfold-262k-tool-eval.md"
+      }
+    },
     {
       "id": "qwen38-flash-next-nvfp4-tensorfold-1m",
       "model_id": "qwen38-flash-next",
