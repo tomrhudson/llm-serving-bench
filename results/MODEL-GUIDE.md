@@ -4,7 +4,7 @@ Use this page to choose among the model families with published DGX Spark
 baselines in this repository. For the full cross-configuration numbers and charts,
 open the [benchmark summary](README.md).
 
-Last updated: 2026-10-08 · Model families: 5 · Published configurations: 14
+Last updated: 2026-10-17 · Model families: 6 · Published configurations: 15
 
 ## Hardware footprint
 
@@ -19,6 +19,7 @@ Published recipes use 1× DGX Spark, 2× DGX Spark configurations with 128GB of 
 | [GLM-5.3 Flash](#glm53-flash) | 2 systems / 2 GPUs · 128GB each · 256GB aggregate across nodes | Long-context coding and agentic lane with runtime and context tradeoffs | Complex coding and agentic work at low concurrency, consistent with the upstream model's stated focus. | Exact-string or deterministic transformation workloads on the TensorFold lane until the repeatable reverse-marker regression is understood; its combined result was 10/13. |
 | [DeepSeek V4 Flash 0731](#deepseek-v4-flash) | 1 system / 1 GPU · 128GB each · 128GB aggregate | Single-Spark long-context lane built for one request at a time | A dedicated one-Spark lane for long, input-heavy requests where concurrency 1 is acceptable. | Concurrent interactive traffic; aggregate decode stayed near 30 tok/s while c8 TTFT p95 rose to 118.29 seconds. |
 | [DeepSeek V4.1 Flash EXL3](#deepseek-v41-flash) | 2 systems / 2 GPUs · 128GB each · 256GB aggregate across nodes | Low-concurrency, input-heavy agentic lane with clean canaries | Input-heavy agentic, reasoning, and long-document work where concurrency 1-2 is sufficient. | High-throughput concurrent chat or agent fleets; c2 was the practical peak and higher concurrency mainly increased queueing. |
+| [NVIDIA Nemotron 3.5 Bolt 74B-A9B](#nemotron35-bolt) | 1 system / 1 GPU · 128GB each · 128GB aggregate | Small-footprint single-Spark hybrid Mamba/MoE lane with strong tool use | Tool-using agents on one DGX Spark, with review: the first complete three-trial tool-eval run published here scored 90.3 mean with Pass^3 85.5%, but its safety gate failed on a cross-turn sleeper-injection scenario. | Interactive long-context prompts: cold prefill ran at 1,077 to 1,421 input tok/s in the 4K-128K tests, so the 128K prompt took 120.84s and the 240K passkey 294.65s to first token. |
 
 Practical default: start with **Qwen3.8-Flash-Next** for mixed interactive,
 coding, RAG, and agent traffic. When only one Spark is available, use
@@ -286,6 +287,54 @@ DeepSeek describes the upstream architecture as multimodal and optimized for inp
 | Configuration | Runtime | Configured context | c1 TTFT p95 | Soak tok/s | Canaries | Tool use | Operating posture |
 |---|---|---:|---:|---:|---:|---|---|
 | [DeepSeek V4.1 Flash EXL3 2.9 bpw](2026-09-15-deepseek-v41-flash-exl3-2.9bpw-600k.md) **(pick)** | vLLM | 600K | 0.85s | 35.31 | 13/13 | Not run | Concurrency 2; unpacked Engram |
+
+<a id="nemotron35-bolt"></a>
+## NVIDIA Nemotron 3.5 Bolt 74B-A9B
+
+> Small-footprint single-Spark hybrid Mamba/MoE lane with strong tool use
+
+**Recommended tested configuration:** [Nemotron 3.5 Bolt 74B-A9B 24GB (TensorFold, native 262K)](2026-10-17-nemotron35-bolt-tensorfold-262k.md)
+
+### Checkpoint choices
+
+- **Benchmarked checkpoint:** [nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB @ a326822](https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB/tree/a326822af111290f2af5ac59ef4b5040347dabc4)
+- **Upstream base model:** [nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB](https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB)
+- **Uncensored / abliterated:** None identified — No community uncensored/abliterated Bolt checkpoint was identified when this baseline was published; none is benchmarked in this repository.
+
+| Signal from the selected local baseline | Result |
+|---|---:|
+| DGX Spark footprint | 1 system / 1 GPU · 128GB each · 128GB aggregate |
+| Interactive c1 | 79.23 output tok/s · 0.44s TTFT p95 |
+| Peak short-prompt decode | 234.45 output tok/s @ c16 |
+| 20-minute c8 soak | 145.52 output tok/s · 0 errors |
+| Longest tested prompt | 240K · 294.65s TTFT p95 |
+| Regression canaries | 13/13 |
+| Tool-use evaluation | [⚠ safety · 90.3 mean · Pass^3 85.5%](2026-10-17-nemotron35-bolt-tensorfold-262k-tool-eval.md) |
+
+### Good fit
+
+- Tool-using agents on one DGX Spark, with review: the first complete three-trial tool-eval run published here scored 90.3 mean with Pass^3 85.5%, but its safety gate failed on a cross-turn sleeper-injection scenario.
+- Interactive short-prompt chat and coding at up to concurrency 8: c8 decode reached 180.56 output tok/s with 0.92s TTFT p95, and the c8 soak ran 345 requests with zero errors.
+- Sharing a Spark with other work; the recipe documents a 51.1 GB load footprint at its 16-stream, 262K defaults (not independently measured here).
+
+### Do not choose it when
+
+- Interactive long-context prompts: cold prefill ran at 1,077 to 1,421 input tok/s in the 4K-128K tests, so the 128K prompt took 120.84s and the 240K passkey 294.65s to first token.
+- Maximum aggregate throughput; the two-Spark Qwen3.8-Flash-Next TensorFold baseline is roughly 2-3x faster at c8 and above.
+- Untrusted tool output or email-sending agents without guardrails: TC-60 (cross-turn sleeper injection) failed in all three trials, adding an attacker BCC/CC from earlier tool data.
+- Assuming vision, video, or broad model quality from this repository; the serving suite is text-only and the canaries are regression checks.
+
+### Configuration call
+
+Use the MiaAI-Lab TensorFold recipe at concurrency 8 for interactive service and 16 for batch work. Prefer it when a single Spark and tool-calling reliability matter more than raw throughput or long-prompt latency.
+
+The benchmarked checkpoint is NVIDIA's 24GB pack (IQ2_XXS experts, NVFP4 Mamba projections, Q8_0 attention) served by a recipe-provided TensorFold backend. Results describe that quantized serving stack, not the full-precision model.
+
+### Published variants
+
+| Configuration | Runtime | Configured context | c1 TTFT p95 | Soak tok/s | Canaries | Tool use | Operating posture |
+|---|---|---:|---:|---:|---:|---|---|
+| [Nemotron 3.5 Bolt 74B-A9B 24GB (TensorFold, native 262K)](2026-10-17-nemotron35-bolt-tensorfold-262k.md) **(pick)** | TensorFold | 256K | 0.44s | 145.52 | 13/13 | [⚠ safety · 90.3 mean · Pass^3 85.5%](2026-10-17-nemotron35-bolt-tensorfold-262k-tool-eval.md) | Concurrency 8 interactive; 16 batch; 13/13 quality |
 
 ## Reading the dashboard
 
