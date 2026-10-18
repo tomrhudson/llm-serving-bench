@@ -4,7 +4,7 @@ Use this page to choose among the model families with published DGX Spark
 baselines in this repository. For the full cross-configuration numbers and charts,
 open the [benchmark summary](README.md).
 
-Last updated: 2026-10-18 · Model families: 8 · Published configurations: 19
+Last updated: 2026-10-18 · Model families: 9 · Published configurations: 20
 
 ## Hardware footprint
 
@@ -20,6 +20,7 @@ Published recipes use 1× DGX Spark, 2× DGX Spark configurations with 128GB of 
 | [DeepSeek V4 Flash 0731](#deepseek-v4-flash) | 1 system / 1 GPU · 128GB each · 128GB aggregate | Single-Spark long-context lane built for one request at a time | A dedicated one-Spark lane for long, input-heavy requests where concurrency 1 is acceptable. | Concurrent interactive traffic; aggregate decode stayed near 30 tok/s while c8 TTFT p95 rose to 118.29 seconds. |
 | [DeepSeek V4.1 Flash EXL3](#deepseek-v41-flash) | 2 systems / 2 GPUs · 128GB each · 256GB aggregate across nodes | Low-concurrency, input-heavy agentic lane with clean canaries | Input-heavy agentic, reasoning, and long-document work where concurrency 1-2 is sufficient. | High-throughput concurrent chat or agent fleets; c2 was the practical peak and higher concurrency mainly increased queueing. |
 | [NVIDIA Nemotron 3.5 Bolt 74B-A9B](#nemotron35-bolt) | 1 system / 1 GPU · 128GB each · 128GB aggregate | Small-footprint single-Spark hybrid Mamba/MoE lane with strong tool use | Tool-using agents on one DGX Spark, with review: the first complete three-trial tool-eval run published here scored 90.3 mean with Pass^3 85.5%, but its safety gate failed on a cross-turn sleeper-injection scenario. | Interactive long-context prompts: cold prefill ran at 1,077 to 1,421 input tok/s in the 4K-128K tests, so the 128K prompt took 120.84s and the 240K passkey 294.65s to first token. |
+| [NVIDIA Nemotron 3.5 Super VL 120B-A12B](#nemotron35-super-vl) | 1 system / 1 GPU · 128GB each · 128GB aggregate | Single-Spark, single-stream hybrid Mamba/MoE lane with the strongest tool-eval score published here | Single-user tool-using agents on one DGX Spark, with review: its complete three-trial tool-eval run scored 92.7 mean (Pass@3 97.1%, Pass^3 81.2%), the highest published here, but its safety gate failed on cross-turn sleeper injection. | Concurrent users: the recipe serves one sequence at a time, so aggregate decode stayed at 34-35 tok/s from c1 to c16 while TTFT p95 grew to 228s. |
 | [MiniCPM-V 4.7 35B-A3B](#minicpm-v47) | 1 system / 1 GPU · 128GB each · 128GB aggregate | Small-footprint single-Spark text lane on ExLlamaV3 (one request at a time) | A single-user text lane that leaves most of a Spark free: the server held about 31 GiB of GPU memory and host MemAvailable never fell below 80.8 GiB. | Concurrent traffic: the qualified profile serves one request at a time, so aggregate decode stays at 52-53 tok/s from c2 to c16 while TTFT p95 grows to 145.74s at c16. |
 | [DeepSeek V4 Flash Vision-Exp](#deepseek-v4-flash-vision-exp) | 2 systems / 2 GPUs · 128GB each · 256GB aggregate across nodes | Two-Spark 1M-context DeepSeek lane with the strongest published tool-eval mean | Tool-using agents with review: the complete three-trial tool-eval run scored 91.7 mean (Pass@3 94.2%, Pass^3 84.1%), the highest mean published here, but its safety gate failed (TC-60 and TC-51). | Fast single-stream decode: c1 measured 25.93 output tok/s on this suite's forced-length synthetic prompts (per-request p50 34.87), well below the publisher's 56-83 tok/s. |
 
@@ -343,6 +344,53 @@ The benchmarked checkpoint is NVIDIA's 24GB pack (IQ2_XXS experts, NVFP4 Mamba p
 | Configuration | Runtime | Configured context | c1 TTFT p95 | Soak tok/s | Canaries | Tool use | Operating posture |
 |---|---|---:|---:|---:|---:|---|---|
 | [Nemotron 3.5 Bolt 74B-A9B 24GB (TensorFold, native 262K)](2026-10-17-nemotron35-bolt-tensorfold-262k.md) **(pick)** | TensorFold | 256K | 0.44s | 145.52 | 13/13 | [⚠ safety · 90.3 mean · Pass^3 85.5%](2026-10-17-nemotron35-bolt-tensorfold-262k-tool-eval.md) | Concurrency 8 interactive; 16 batch; 13/13 quality |
+
+<a id="nemotron35-super-vl"></a>
+## NVIDIA Nemotron 3.5 Super VL 120B-A12B
+
+> Single-Spark, single-stream hybrid Mamba/MoE lane with the strongest tool-eval score published here
+
+**Recommended tested configuration:** [Nemotron 3.5 Super VL 120B-A12B NVFP4 (vLLM + DFlash LiLiCorr, 1 Spark, 1M, thinking off)](2026-10-18-nemotron35-super-vl-nvfp4-vllm-dflash-1m.md)
+
+### Checkpoint choices
+
+- **Benchmarked checkpoint:** [nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4 @ 59b8721](https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4/tree/59b8721646c38111a242da18218859fb2b454322) with the [LiLiCorr DFlash drafter @ 292bf1e](https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4-LiLiCorr/tree/292bf1efc06ba39567da7351f2ad7a522afa3959)
+- **Upstream base model:** [nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16](https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16)
+- **Uncensored / abliterated:** None identified — No community uncensored/abliterated Super VL checkpoint was identified when this baseline was published; none is benchmarked in this repository.
+
+| Signal from the selected local baseline | Result |
+|---|---:|
+| DGX Spark footprint | 1 system / 1 GPU · 128GB each · 128GB aggregate |
+| Interactive c1 | 34.15 output tok/s · 0.58s TTFT p95 |
+| Peak short-prompt decode | 34.95 output tok/s @ c12 |
+| 20-minute c8 soak | 33.90 output tok/s · 0 errors |
+| Longest tested prompt | 240K · 155.41s TTFT p95 |
+| Regression canaries | 13/13 |
+| Tool-use evaluation | [⚠ safety · 92.7 mean · Pass^3 81.2%](2026-10-18-nemotron35-super-vl-nvfp4-vllm-dflash-1m-tool-eval.md) |
+
+### Good fit
+
+- Single-user tool-using agents on one DGX Spark, with review: its complete three-trial tool-eval run scored 92.7 mean (Pass@3 97.1%, Pass^3 81.2%), the highest published here, but its safety gate failed on cross-turn sleeper injection.
+- One interactive stream with long context: c1 decode was 34.15 output tok/s with 0.58s TTFT p95, prefill stayed near 1.9K tok/s at 32K-128K, and the 240K passkey passed.
+
+### Do not choose it when
+
+- Concurrent users: the recipe serves one sequence at a time, so aggregate decode stayed at 34-35 tok/s from c1 to c16 while TTFT p95 grew to 228s.
+- Untrusted tool output or email-sending agents without guardrails: TC-60 (cross-turn sleeper injection) failed in all three trials, adding an attacker BCC/CC from earlier tool data.
+- Sharing the Spark: the server held up to about 97 GiB of GPU memory and host swap reached about 9 GiB during the suite.
+- Assuming vision, video, or broad model quality from this repository; the serving suite is text-only and the canaries are regression checks.
+
+### Configuration call
+
+Use the Kindling recipe's one-Spark DFlash mode for a single interactive agent. Prefer the single-Spark Qwen3.8-Flash-Next FP4 TensorFold lane when several streams or a passing safety gate matter more than tool-eval score.
+
+The benchmarked checkpoint is NVIDIA's NVFP4/FP8 ModelOpt mixed-precision export served by a locally built vLLM (3f1bcfd82) with the LiLiCorr DFlash drafter. Results describe that quantized serving stack, not the full-precision model.
+
+### Published variants
+
+| Configuration | Runtime | Configured context | c1 TTFT p95 | Soak tok/s | Canaries | Tool use | Operating posture |
+|---|---|---:|---:|---:|---:|---|---|
+| [Nemotron 3.5 Super VL 120B-A12B NVFP4 (vLLM + DFlash LiLiCorr, 1 Spark, 1M, thinking off)](2026-10-18-nemotron35-super-vl-nvfp4-vllm-dflash-1m.md) **(pick)** | vLLM | 1M | 0.58s | 33.90 | 13/13 | [⚠ safety · 92.7 mean · Pass^3 81.2%](2026-10-18-nemotron35-super-vl-nvfp4-vllm-dflash-1m-tool-eval.md) | Single-stream only (recipe max-num-seqs 1); thinking off; 13/13 quality |
 
 <a id="minicpm-v47"></a>
 ## MiniCPM-V 4.7 35B-A3B
