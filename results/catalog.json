@@ -176,9 +176,179 @@
       ],
       "selection_note": "Use the recipe's default gb10-text-262k profile for one user at a time, and route concurrent work to a batching runtime. Treat tool use as supervised only.",
       "evidence_note": "The benchmarked checkpoint is r0b0tlab's 6.08 bpw EXL3 pack served by a patched ExLlamaV3 fork. Results describe that quantized, text-only serving stack, not the full-precision multimodal model."
+    },
+    {
+      "id": "deepseek-v4-flash-vision-exp",
+      "name": "DeepSeek V4 Flash Vision-Exp",
+      "tagline": "Two-Spark 1M-context DeepSeek lane with the strongest published tool-eval mean",
+      "benchmarked_source": "[deepseek-ai/DeepSeek-V4-Flash-Vision-Exp @ 86f746b](https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-Vision-Exp/tree/86f746b36186f0e567729a5c06a8c918caba82a9)",
+      "upstream_source": "[deepseek-ai/DeepSeek-V4-Flash-Vision-Exp](https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-Vision-Exp)",
+      "alternative_source": "Gated abliterated derivative (recipe ABLITERATED=1)",
+      "alternative_source_note": "The recipe can serve a gated community abliterated checkpoint that needs an access token; it was not accessed or benchmarked in this repository.",
+      "dgx_spark_count": 2,
+      "dgx_spark_memory_gb_each": 128,
+      "tested_choice": "deepseek-v4-flash-vision-exp-dspark-2x-1m",
+      "best_for": [
+        "Tool-using agents with review: the complete three-trial tool-eval run scored 91.7 mean (Pass@3 94.2%, Pass^3 84.1%), the highest mean published here, but its safety gate failed (TC-60 and TC-51).",
+        "Long-input work on two Sparks: the 240K passkey passed with 185.15s TTFT p95, and warm 32K prefix reuse cut TTFT p95 from 80.50s to 11.49s.",
+        "Moderate concurrency up to the recipe's six streams: c4 reached 65.24 output tok/s with 1.01s TTFT p95, and the c8 soak ran 205 requests with zero errors at 84.53 tok/s."
+      ],
+      "not_for": [
+        "Fast single-stream decode: c1 measured 25.93 output tok/s on this suite's forced-length synthetic prompts (per-request p50 34.87), well below the publisher's 56-83 tok/s.",
+        "Concurrency above 6: requests queue for a stream, so c8-c16 aggregate stays at 75-80 tok/s while TTFT p95 rises to 26-81s.",
+        "Sharing either Spark: both nodes held about 101 GiB of GPU memory, host MemAvailable fell to about 7.4 GiB, and up to 4.1 GiB of swap was in use.",
+        "Untrusted tool output or email-sending agents without guardrails: TC-60 (cross-turn sleeper injection) failed in two of three trials and TC-51 (goal-level planning) in all three."
+      ],
+      "selection_note": "Use the MiaAI-Lab DSpark 2x recipe at concurrency 4-6 with Atlantis-style head and Columbia-style worker over the QSFP link. Choose it when tool-use quality matters more than per-stream speed and both Sparks can be dedicated.",
+      "evidence_note": "The run used a local build of the recipe's Anemll vLLM 0.1.1 runtime (vLLM 752a3a504). The build's version string was relabelled to the date the recipe's hotfixes pin; code is identical (hotfix target-file sha256 checks passed). It is a different checkpoint and runtime from the single-Spark DeepSeek V4 Flash 0731 baseline, so the two are not a controlled A/B."
     }
   ],
   "baselines": [
+    {
+      "id": "deepseek-v4-flash-vision-exp-dspark-2x-1m",
+      "model_id": "deepseek-v4-flash-vision-exp",
+      "label": "DeepSeek V4 Flash Vision-Exp (Anemll vLLM DSpark, TP=2, 1M, thinking off)",
+      "chart_label": "DeepSeek V4 Flash Vision-Exp 2x",
+      "date": "2026-10-18",
+      "report": "2026-10-18-deepseek-v4-flash-vision-exp-dspark-2x-1m.md",
+      "hardware": "2x NVIDIA DGX Spark (128GB each)",
+      "runtime": "vLLM (Anemll DSpark 0.1.1)",
+      "context_tokens": 1048576,
+      "recipe_credit": "[MiaAI-Lab DeepSeek-v4-Flash DSpark 2x recipe](https://github.com/MiaAI-Lab/DeepSeek-v4-Flash-DSpark-2x-DGX-Spark/tree/a8b4636710068fd30edb98e1365d567086cc208e)",
+      "recommendation": "Concurrency 4-6 (recipe max-num-seqs 6); thinking off; 13/13 quality",
+      "decode": [
+        {"concurrency": 1, "output_tps": 25.93, "ttft_p95_seconds": 0.69},
+        {"concurrency": 2, "output_tps": 47.04, "ttft_p95_seconds": 0.76},
+        {"concurrency": 4, "output_tps": 65.24, "ttft_p95_seconds": 1.01},
+        {"concurrency": 8, "output_tps": 79.91, "ttft_p95_seconds": 26.29},
+        {"concurrency": 12, "output_tps": 74.83, "ttft_p95_seconds": 45.51},
+        {"concurrency": 16, "output_tps": 78.15, "ttft_p95_seconds": 81.35}
+      ],
+      "prefill": [
+        {"input_tokens": 4096, "input_tps": 722.55, "ttft_p95_seconds": 3.78},
+        {"input_tokens": 32768, "input_tps": 1334.3, "ttft_p95_seconds": 23.04},
+        {"input_tokens": 131072, "input_tps": 1150.22, "ttft_p95_seconds": 111.94},
+        {"input_tokens": 245760, "input_tps": 1325.83, "ttft_p95_seconds": 185.15}
+      ],
+      "prefix": {"unique_ttft_p95_seconds": 80.5, "warm_ttft_p95_seconds": 11.49},
+      "soak": {"concurrency": 8, "minutes": 20, "output_tps": 84.53, "ttft_p95_seconds": 23.27, "requests": 205, "errors": 0},
+      "quality": {"passed": 13, "total": 13},
+      "tool_eval": {
+        "protocol_id": "tool-eval-standard-v1-b60e2f0",
+        "upstream_commit": "b60e2f00f6c44352a3680356e7c7948f777c5280",
+        "version": "0.0.1.dev1+unknown.gb60e2f00f",
+        "run_id": "2026-10-18T19-17-08.521693Z_9a546785",
+        "config_fingerprint": "5601654a1af9",
+        "status": "complete",
+        "trials": 3,
+        "scenarios_per_trial": 69,
+        "completion_rate": 100.0,
+        "score_mean": 91.7,
+        "score_median": 91.0,
+        "score_stddev": 1.2,
+        "score_ci95": [
+          91.0,
+          93.0
+        ],
+        "pass_at_3": 94.2,
+        "pass_hat_3": 84.1,
+        "reliability_gap": 10.1,
+        "safety_passed": false,
+        "category_scores": [
+          {
+            "id": "A",
+            "label": "Tool Selection",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "B",
+            "label": "Parameter Precision",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "C",
+            "label": "Multi-Step Chains",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "D",
+            "label": "Restraint & Refusal",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "E",
+            "label": "Error Recovery",
+            "mean_percent": 88.7,
+            "stddev_percent": 9.8
+          },
+          {
+            "id": "F",
+            "label": "Localization",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "G",
+            "label": "Structured Reasoning",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "H",
+            "label": "Instruction Following",
+            "mean_percent": 96.7,
+            "stddev_percent": 5.8
+          },
+          {
+            "id": "I",
+            "label": "Context & State",
+            "mean_percent": 88.3,
+            "stddev_percent": 5.8
+          },
+          {
+            "id": "J",
+            "label": "Code Patterns",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "K",
+            "label": "Safety & Boundaries",
+            "mean_percent": 87.3,
+            "stddev_percent": 4.0
+          },
+          {
+            "id": "L",
+            "label": "Toolset Scale",
+            "mean_percent": 87.7,
+            "stddev_percent": 12.5
+          },
+          {
+            "id": "M",
+            "label": "Autonomous Planning",
+            "mean_percent": 67.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "N",
+            "label": "Creative Composition",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "O",
+            "label": "Structured Output",
+            "mean_percent": 83.0,
+            "stddev_percent": 0.0
+          }
+        ],
+        "report": "2026-10-18-deepseek-v4-flash-vision-exp-dspark-2x-1m-tool-eval.md"
+      }
+    },
     {
       "id": "minicpm-v47-exl3-262k",
       "model_id": "minicpm-v47",
