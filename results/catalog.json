@@ -39,15 +39,18 @@
       "best_for": [
         "A capable local text lane that fits on one DGX Spark without cross-node serving.",
         "Concurrent interactive traffic on the selected NVFP4 baseline: its c8 soak sustained 157.80 output tok/s with 1.01s TTFT p95 and zero request errors.",
-        "Native-context retrieval work through the suite's validated approximately 240K-token prompt."
+        "Native-context retrieval work through the suite's validated approximately 240K-token prompt.",
+        "Faster single-stream work on a dedicated Spark via the TensorFold variant: 50.25 output tok/s at c1 (thinking off, versus 31.83 on SGLang NVFP4) and a 311s first token on the 240K check."
       ],
       "not_for": [
         "Interactive near-window prompts; the official and uncensored baselines took 395 and 558 seconds respectively to first token on the 240K check.",
         "Using the uncensored derivative by default in trust-sensitive workflows; it needs workload-specific safety and behavior validation.",
-        "Treating vision or tool quality as benchmarked here; the published suite is text-only."
+        "Treating vision as benchmarked here; the published suite is text-only. Tool use was measured only on the TensorFold variant, whose run was incomplete (98.6%) and failed the safety gate on TC-51.",
+        "Sharing the Spark with other work on the TensorFold variant: its recipe pins a 78 GiB KV pool, the server process held about 95 GiB of GPU memory, and host MemAvailable fell to 16-18 GiB.",
+        "Strict JSON-schema output on the TensorFold variant: its v0.6.0 image lacks xgrammar, so json_schema requests return HTTP 400 and structured-output scenarios scored 40%."
       ],
       "selection_note": "Use the RadixArk NVFP4 checkpoint as the default: it is materially faster and has the cleaner upstream relationship. Choose the orcarouter uncensored derivative only when that behavior is an explicit requirement, and cap interactive concurrency at 4.",
-      "evidence_note": "The two reports share the same single-Spark SGLang runtime family but use different checkpoints and serving limits. Their performance is therefore an operational comparison, not a controlled quantization-only A/B."
+      "evidence_note": "The two reports share the same single-Spark SGLang runtime family but use different checkpoints and serving limits. Their performance is therefore an operational comparison, not a controlled quantization-only A/B. The TensorFold variant serves a different checkpoint (Vontra/Qwen3.8-27B-MLX-4bit @ 22d8d53, affine 4-bit, with the z-lab DFlash2 drafter) on a different runtime, so it is likewise an operational comparison."
     },
     {
       "id": "glm53-flash",
@@ -151,6 +154,151 @@
     }
   ],
   "baselines": [
+    {
+      "id": "qwen38-27b-tensorfold-262k",
+      "model_id": "qwen38-27b",
+      "label": "Qwen3.8 27B MLX 4-bit (TensorFold, native 262K, thinking off)",
+      "chart_label": "Qwen3.8 27B TensorFold",
+      "date": "2026-10-17",
+      "report": "2026-10-17-qwen38-27b-tensorfold-262k.md",
+      "hardware": "1x NVIDIA DGX Spark (128GB)",
+      "runtime": "TensorFold",
+      "context_tokens": 262144,
+      "recipe_credit": "[MiaAI-Lab Qwen3.8 27B TensorFold recipe](https://github.com/MiaAI-Lab/Qwen3.8-27B-DGX-Spark-TensorFold/tree/c11ff138871cf43d12898d79dbfa4dc952d17ca4)",
+      "recommendation": "Concurrency 8 (recipe PARALLEL=8); thinking off; 13/13 quality",
+      "decode": [
+        {"concurrency": 1, "output_tps": 50.25, "ttft_p95_seconds": 0.44},
+        {"concurrency": 2, "output_tps": 89.48, "ttft_p95_seconds": 0.78},
+        {"concurrency": 4, "output_tps": 128.82, "ttft_p95_seconds": 1.38},
+        {"concurrency": 8, "output_tps": 179.13, "ttft_p95_seconds": 2.86},
+        {"concurrency": 12, "output_tps": 197.68, "ttft_p95_seconds": 19.64},
+        {"concurrency": 16, "output_tps": 201.49, "ttft_p95_seconds": 25.03}
+      ],
+      "prefill": [
+        {"input_tokens": 4096, "input_tps": 1015.32, "ttft_p95_seconds": 2.48},
+        {"input_tokens": 32768, "input_tps": 1478.42, "ttft_p95_seconds": 20.58},
+        {"input_tokens": 131072, "input_tps": 1049.04, "ttft_p95_seconds": 122.39},
+        {"input_tokens": 245760, "input_tps": 787.01, "ttft_p95_seconds": 311.47}
+      ],
+      "prefix": {"unique_ttft_p95_seconds": 94.71, "warm_ttft_p95_seconds": 73.23},
+      "soak": {"concurrency": 8, "minutes": 20, "output_tps": 160.59, "ttft_p95_seconds": 2.35, "requests": 382, "errors": 0},
+      "quality": {"passed": 13, "total": 13},
+      "tool_eval": {
+        "protocol_id": "tool-eval-standard-v1-b60e2f0",
+        "upstream_commit": "b60e2f00f6c44352a3680356e7c7948f777c5280",
+        "version": "0.0.1.dev1+unknown.gb60e2f00f",
+        "run_id": "2026-10-18T13-42-52.682141Z_d5c68cad",
+        "config_fingerprint": "77ad73a2a4c8",
+        "status": "incomplete",
+        "trials": 3,
+        "scenarios_per_trial": 69,
+        "completion_rate": 98.6,
+        "score_mean": 90.0,
+        "score_median": 90.0,
+        "score_stddev": 0.0,
+        "score_ci95": [
+          90.0,
+          90.0
+        ],
+        "pass_at_3": 85.3,
+        "pass_hat_3": 85.3,
+        "reliability_gap": 0.0,
+        "safety_passed": false,
+        "category_scores": [
+          {
+            "id": "A",
+            "label": "Tool Selection",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "B",
+            "label": "Parameter Precision",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "C",
+            "label": "Multi-Step Chains",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "D",
+            "label": "Restraint & Refusal",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "E",
+            "label": "Error Recovery",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "F",
+            "label": "Localization",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "G",
+            "label": "Structured Reasoning",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "H",
+            "label": "Instruction Following",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "I",
+            "label": "Context & State",
+            "mean_percent": 95.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "J",
+            "label": "Code Patterns",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "K",
+            "label": "Safety & Boundaries",
+            "mean_percent": 88.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "L",
+            "label": "Toolset Scale",
+            "mean_percent": 88.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "M",
+            "label": "Autonomous Planning",
+            "mean_percent": 67.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "N",
+            "label": "Creative Composition",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "O",
+            "label": "Structured Output",
+            "mean_percent": 40.0,
+            "stddev_percent": 0.0
+          }
+        ],
+        "report": "2026-10-17-qwen38-27b-tensorfold-262k-tool-eval.md"
+      }
+    },
     {
       "id": "nemotron35-bolt-tensorfold-262k",
       "model_id": "nemotron35-bolt",

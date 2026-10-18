@@ -4,7 +4,7 @@ Use this page to choose among the model families with published DGX Spark
 baselines in this repository. For the full cross-configuration numbers and charts,
 open the [benchmark summary](README.md).
 
-Last updated: 2026-10-17 · Model families: 6 · Published configurations: 15
+Last updated: 2026-10-17 · Model families: 6 · Published configurations: 16
 
 ## Hardware footprint
 
@@ -121,23 +121,27 @@ Qwen describes the upstream model as an experimental, multimodal agentic archite
 - A capable local text lane that fits on one DGX Spark without cross-node serving.
 - Concurrent interactive traffic on the selected NVFP4 baseline: its c8 soak sustained 157.80 output tok/s with 1.01s TTFT p95 and zero request errors.
 - Native-context retrieval work through the suite's validated approximately 240K-token prompt.
+- Faster single-stream work on a dedicated Spark via the TensorFold variant: 50.25 output tok/s at c1 (thinking off, versus 31.83 on SGLang NVFP4) and a 311s first token on the 240K check.
 
 ### Do not choose it when
 
 - Interactive near-window prompts; the official and uncensored baselines took 395 and 558 seconds respectively to first token on the 240K check.
 - Using the uncensored derivative by default in trust-sensitive workflows; it needs workload-specific safety and behavior validation.
-- Treating vision or tool quality as benchmarked here; the published suite is text-only.
+- Treating vision as benchmarked here; the published suite is text-only. Tool use was measured only on the TensorFold variant, whose run was incomplete (98.6%) and failed the safety gate on TC-51.
+- Sharing the Spark with other work on the TensorFold variant: its recipe pins a 78 GiB KV pool, the server process held about 95 GiB of GPU memory, and host MemAvailable fell to 16-18 GiB.
+- Strict JSON-schema output on the TensorFold variant: its v0.6.0 image lacks xgrammar, so json_schema requests return HTTP 400 and structured-output scenarios scored 40%.
 
 ### Configuration call
 
 Use the RadixArk NVFP4 checkpoint as the default: it is materially faster and has the cleaner upstream relationship. Choose the orcarouter uncensored derivative only when that behavior is an explicit requirement, and cap interactive concurrency at 4.
 
-The two reports share the same single-Spark SGLang runtime family but use different checkpoints and serving limits. Their performance is therefore an operational comparison, not a controlled quantization-only A/B.
+The two reports share the same single-Spark SGLang runtime family but use different checkpoints and serving limits. Their performance is therefore an operational comparison, not a controlled quantization-only A/B. The TensorFold variant serves a different checkpoint (Vontra/Qwen3.8-27B-MLX-4bit @ 22d8d53, affine 4-bit, with the z-lab DFlash2 drafter) on a different runtime, so it is likewise an operational comparison.
 
 ### Published variants
 
 | Configuration | Runtime | Configured context | c1 TTFT p95 | Soak tok/s | Canaries | Tool use | Operating posture |
 |---|---|---:|---:|---:|---:|---|---|
+| [Qwen3.8 27B MLX 4-bit (TensorFold, native 262K, thinking off)](2026-10-17-qwen38-27b-tensorfold-262k.md) | TensorFold | 256K | 0.44s | 160.59 | 13/13 | [⚠ safety · Incomplete (98.6%) · 90.0 mean · Pass^3 85.3%](2026-10-17-qwen38-27b-tensorfold-262k-tool-eval.md) | Concurrency 8 (recipe PARALLEL=8); thinking off; 13/13 quality |
 | [Qwen3.8 27B NVFP4 (SGLang)](2026-10-02-qwen38-27b-nvfp4-sglang-native-262k.md) **(pick)** | SGLang | 256K | 0.18s | 157.80 | 13/13 | Not run | Concurrency 8; 13/13 quality |
 | [Qwen3.8 27B Uncensored FP8 (SGLang)](2026-10-02-qwen38-27b-uncensored-fp8-sglang-native-262k.md) | SGLang | 256K | 0.28s | 63.89 | 13/13 | Not run | Concurrency 4; derivative checkpoint; 13/13 quality |
 
