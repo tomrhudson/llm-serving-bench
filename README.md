@@ -149,6 +149,7 @@ Alternative checkpoints are discovery links only unless an individual report
 explicitly benchmarks them.
 
 - [NVIDIA Nemotron 3.5 Bolt 74B-A9B 24GB, TensorFold, one DGX Spark, native 262K context](results/2026-10-17-nemotron35-bolt-tensorfold-262k.md) — served with [MiaAI-Lab's Bolt TensorFold recipe](https://github.com/MiaAI-Lab/Nemotron-3.5-Bolt-TensorFold-DGX-Spark/tree/6f61d7727ae3fac010f30e240799cc884d295f6e); complete tool-eval run with a failed safety gate
+- [Qwen3.8 27B MLX 4-bit, TensorFold, one DGX Spark, native 262K context, thinking off](results/2026-10-17-qwen38-27b-tensorfold-262k.md) — served with [MiaAI-Lab's Qwen3.8 27B TensorFold recipe](https://github.com/MiaAI-Lab/Qwen3.8-27B-DGX-Spark-TensorFold/tree/c11ff138871cf43d12898d79dbfa4dc952d17ca4); incomplete (98.6%) tool-eval run with a failed safety gate (TC-51)
 - [Qwen3.8 27B NVFP4, SGLang, one DGX Spark, native 262K context](results/2026-10-02-qwen38-27b-nvfp4-sglang-native-262k.md) — served with [MiaAI-Lab's single-Spark recipe](https://github.com/MiaAI-Lab/Qwen3.8-27B-SGLang-DGX-Spark/tree/5d2df792a2ca7e076cb80b8302f5349d492d6f54)
 - [Qwen3.8 27B Uncensored FP8, SGLang, one DGX Spark, native 262K context](results/2026-10-02-qwen38-27b-uncensored-fp8-sglang-native-262k.md) — derivative checkpoint on the same single-Spark recipe family
 - [DeepSeek V4 Flash 0731 EXL3/SparkInfer, one DGX Spark, 384K context](results/2026-10-02-deepseek-v4-flash-0731-sparkinfer-384k.md) — concurrency-1 lane with a documented benchmark-only dependency repair
