@@ -4,7 +4,7 @@ Use this page to choose among the model families with published DGX Spark
 baselines in this repository. For the full cross-configuration numbers and charts,
 open the [benchmark summary](README.md).
 
-Last updated: 2026-10-18 · Model families: 10 · Published configurations: 21
+Last updated: 2026-10-19 · Model families: 11 · Published configurations: 22
 
 ## Hardware footprint
 
@@ -24,6 +24,7 @@ Published recipes use 1× DGX Spark, 2× DGX Spark configurations with 128GB of 
 | [MiniCPM-V 4.7 35B-A3B](#minicpm-v47) | 1 system / 1 GPU · 128GB each · 128GB aggregate | Small-footprint single-Spark text lane on ExLlamaV3 (one request at a time) | A single-user text lane that leaves most of a Spark free: the server held about 31 GiB of GPU memory and host MemAvailable never fell below 80.8 GiB. | Concurrent traffic: the qualified profile serves one request at a time, so aggregate decode stays at 52-53 tok/s from c2 to c16 while TTFT p95 grows to 145.74s at c16. |
 | [DeepSeek V4 Flash Vision-Exp](#deepseek-v4-flash-vision-exp) | 2 systems / 2 GPUs · 128GB each · 256GB aggregate across nodes | Two-Spark 1M-context DeepSeek lane with the strongest published tool-eval mean | Tool-using agents with review: the complete three-trial tool-eval run scored 91.7 mean (Pass@3 94.2%, Pass^3 84.1%), the highest mean published here, but its safety gate failed (TC-60 and TC-51). | Fast single-stream decode: c1 measured 25.93 output tok/s on this suite's forced-length synthetic prompts (per-request p50 34.87), well below the publisher's 56-83 tok/s. |
 | [DeepSeek V4 Flash DSpark](#deepseek-v4-flash-dspark) | 2 systems / 2 GPUs · 128GB each · 256GB aggregate across nodes | Two-Spark DeepSeek V4 Flash lane with a complete tool-eval run and a passing safety gate | Tool-using agents across two dedicated Sparks: its complete three-trial tool-eval run (thinking off) scored 88.3 mean with Pass^3 78.3%, and its safety gate passed. | Single-Spark deployments: each node held about 99 GiB of GPU memory and MemAvailable fell to about 7.5 GiB. |
+| [DeepSeek V4.1 Flash 1017 EXL3-EAQ](#deepseek-v41-flash-1017) | 2 systems / 2 GPUs · 128GB each · 256GB aggregate across nodes | Two-Spark TensorFold lane for up to four streams, with a passing tool-eval safety gate | Single-user or small-team tool-using agents across two dedicated Sparks: its three-trial tool-eval run (thinking on, incomplete at 98.6%) scored 90 mean with Pass^3 83.8%, and its safety gate passed. | More than four concurrent streams: the engine serves 4 at a time, so aggregate decode stayed near 120-123 tok/s from c4 to c16 while c16 TTFT p95 grew to 52.79s, and the c8 soak sustained 103.17 tok/s. |
 
 Practical default: start with **Qwen3.8-Flash-Next** for mixed interactive,
 coding, RAG, and agent traffic. When only one Spark is available, use
@@ -535,6 +536,54 @@ Benchmarked on the Anemll dspark-vllm-gx10 0.1.1 runtime image with DSpark specu
 | Configuration | Runtime | Configured context | c1 TTFT p95 | Soak tok/s | Canaries | Tool use | Operating posture |
 |---|---|---:|---:|---:|---:|---|---|
 | [DeepSeek V4 Flash DSpark (Anemll DSpark vLLM 0.1.1, original July deployment, 2 Sparks TP=2, 1M, thinking off)](2026-10-18-deepseek-v4-flash-dspark-2x-orig-1m.md) **(pick)** | vLLM (Anemll DSpark) | 1M | 4.12s | 111.10 | 13/13 | [88.3 mean · Pass^3 78.3%](2026-10-18-deepseek-v4-flash-dspark-2x-orig-1m-tool-eval.md) | Concurrency 4-6 (max-num-seqs 6); thinking off; 13/13 quality |
+
+<a id="deepseek-v41-flash-1017"></a>
+## DeepSeek V4.1 Flash 1017 EXL3-EAQ
+
+> Two-Spark TensorFold lane for up to four streams, with a passing tool-eval safety gate
+
+**Recommended tested configuration:** [DeepSeek V4.1 Flash 1017 EXL3-EAQ 2.9 bpw (TensorFold native, 2 Sparks TP=2, 262K, 4 streams)](2026-10-19-deepseek-v41-flash-1017-exl3-eaq-tensorfold-2x-262k.md)
+
+### Checkpoint choices
+
+- **Benchmarked checkpoint:** [Mia-AiLab/DeepSeek-V4.1-Flash-1017-EXL3-EAQ-v1-2.9-bpw @ 6d54be4](https://huggingface.co/Mia-AiLab/DeepSeek-V4.1-Flash-1017-EXL3-EAQ-v1-2.9-bpw/tree/6d54be4fca338d79b17c3b03cc9a423bb3ac6718)
+- **Upstream base model:** [deepseek-ai/DeepSeek-V4.1-Flash-1017](https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash-1017)
+- **Uncensored / abliterated:** None benchmarked — The earlier DeepSeek V4.1 Flash EXL3 2.9 bpw checkpoint is a separate catalog entry; no uncensored/abliterated 1017 checkpoint is benchmarked in this repository.
+
+| Signal from the selected local baseline | Result |
+|---|---:|
+| DGX Spark footprint | 2 systems / 2 GPUs · 128GB each · 256GB aggregate across nodes |
+| Interactive c1 | 65.62 output tok/s · 0.48s TTFT p95 |
+| Peak short-prompt decode | 123.18 output tok/s @ c16 |
+| 20-minute c8 soak | 103.17 output tok/s · 0 errors |
+| Longest tested prompt | 240K · 125.17s TTFT p95 |
+| Regression canaries | 13/13 |
+| Tool-use evaluation | [Incomplete (98.6%) · 90.0 mean · Pass^3 83.8%](2026-10-19-deepseek-v41-flash-1017-exl3-eaq-tensorfold-2x-262k-tool-eval.md) |
+
+### Good fit
+
+- Single-user or small-team tool-using agents across two dedicated Sparks: its three-trial tool-eval run (thinking on, incomplete at 98.6%) scored 90 mean with Pass^3 83.8%, and its safety gate passed.
+- Up to four concurrent streams with long context: c4 decode reached 119.53 output tok/s, the 240K passkey passed, and four concurrent ~61K-token prompts completed without errors.
+
+### Do not choose it when
+
+- More than four concurrent streams: the engine serves 4 at a time, so aggregate decode stayed near 120-123 tok/s from c4 to c16 while c16 TTFT p95 grew to 52.79s, and the c8 soak sustained 103.17 tok/s.
+- Interactive long-prompt work: 128K prefill took 127.77s TTFT p95 (about 1.1K tok/s).
+- Windows above 262K tokens as tested, or sharing either Spark: each node held about 104-105 GiB of GPU memory and the head node's MemAvailable fell to about 5.5 GiB.
+- Structured output: category O averaged 40% (TC-68 failed in all three trials).
+- Assuming vision, video, or broad model quality from this repository; the serving suite is text-only and the canaries are regression checks.
+
+### Configuration call
+
+Use the MiaAI-Lab 1017 TensorFold recipe in local-copy mode at concurrency 1-4 when both Sparks can be dedicated. Prefer Qwen3.8-Flash-Next TensorFold for concurrent service, faster prefill, and a 1M window.
+
+Benchmarked on TensorFold (native Zig, TP=2) built locally from the recipe's pinned sources (image built with PULL=0), with a 262,144-token shared pool and 4 streams. Results describe that 2.9 bpw EXL3-EAQ serving stack, not the full-precision model.
+
+### Published variants
+
+| Configuration | Runtime | Configured context | c1 TTFT p95 | Soak tok/s | Canaries | Tool use | Operating posture |
+|---|---|---:|---:|---:|---:|---|---|
+| [DeepSeek V4.1 Flash 1017 EXL3-EAQ 2.9 bpw (TensorFold native, 2 Sparks TP=2, 262K, 4 streams)](2026-10-19-deepseek-v41-flash-1017-exl3-eaq-tensorfold-2x-262k.md) **(pick)** | TensorFold | 256K | 0.48s | 103.17 | 13/13 | [Incomplete (98.6%) · 90.0 mean · Pass^3 83.8%](2026-10-19-deepseek-v41-flash-1017-exl3-eaq-tensorfold-2x-262k-tool-eval.md) | Concurrency 1-4 (4 streams); serving thinking off; 13/13 quality |
 
 ## Reading the dashboard
 
