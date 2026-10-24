@@ -4,7 +4,7 @@ Use this page to choose among the model families with published DGX Spark
 baselines in this repository. For the full cross-configuration numbers and charts,
 open the [benchmark summary](README.md).
 
-Last updated: 2026-10-24 · Model families: 12 · Published configurations: 23
+Last updated: 2026-10-24 · Model families: 13 · Published configurations: 24
 
 ## Hardware footprint
 
@@ -26,6 +26,7 @@ Published recipes use 1× DGX Spark, 2× DGX Spark configurations with 128GB of 
 | [DeepSeek V4 Flash DSpark](#deepseek-v4-flash-dspark) | 2 systems / 2 GPUs · 128GB each · 256GB aggregate across nodes | Two-Spark DeepSeek V4 Flash lane with a complete tool-eval run and a passing safety gate | Tool-using agents across two dedicated Sparks: its complete three-trial tool-eval run (thinking off) scored 88.3 mean with Pass^3 78.3%, and its safety gate passed. | Single-Spark deployments: each node held about 99 GiB of GPU memory and MemAvailable fell to about 7.5 GiB. |
 | [DeepSeek V4.1 Flash 1017 EXL3-EAQ](#deepseek-v41-flash-1017) | 2 systems / 2 GPUs · 128GB each · 256GB aggregate across nodes | Two-Spark TensorFold lane for up to four streams, with a passing tool-eval safety gate | Single-user or small-team tool-using agents across two dedicated Sparks: its three-trial tool-eval run (thinking on, incomplete at 98.6%) scored 90 mean with Pass^3 83.8%, and its safety gate passed. | More than four concurrent streams: the engine serves 4 at a time, so aggregate decode stayed near 120-123 tok/s from c4 to c16 while c16 TTFT p95 grew to 52.79s, and the c8 soak sustained 103.17 tok/s. |
 | [Qwen3.6-35B-A3B NVFP4 (Unsloth)](#qwen36-35b-a3b-nvfp4) | 1 system / 1 GPU · 128GB each · 128GB aggregate | Fast single-Spark MoE lane up to c16, but its tool-eval safety gate FAILED (TC-60 sleeper injection, 3/3 trials) | Single-Spark serving at moderate concurrency, when the tool-use safety finding is acceptable for the use case: c1 decode 77.46 tok/s, c16 429.21 tok/s, and the 20-minute c8 soak held 286.66 tok/s with zero errors on one Spark. | Tool-using agents that read untrusted tool output: the tool-eval safety gate FAILED because TC-60 (cross-turn sleeper injection) added an attacker BCC/CC in all three trials. |
+| [Recursive Flint 40B-A2.5B NVFP4 GGUF](#flint-nvfp4-gguf) | 1 system / 1 GPU · 128GB each · 128GB aggregate | Single-Spark llama.cpp lane with one slot: about 82 tok/s at every concurrency (requests queue), tool-eval 86 mean with the safety gate passed | A single user on one Spark: c1 decode 81.73 tok/s (per-request about 85 tok/s) with 0.32s TTFT p95, using about 29 GB of GPU memory and leaving about 77 GiB of host memory available. | Concurrent serving as tested: with -np 1 (the model card's single slot) requests queue, so c2-c16 aggregate stayed at about 82 tok/s and c16 TTFT p95 reached 93.2s. These numbers measure queueing, not batching. |
 
 Practical default: start with **Qwen3.8-Flash-Next** for mixed interactive,
 coding, RAG, and agent traffic. When only one Spark is available, use
@@ -633,6 +634,52 @@ Benchmarked on a locally built image: timothystewart6/vllm-gb10 @ 94352d3 (vLLM 
 | Configuration | Runtime | Configured context | c1 TTFT p95 | Soak tok/s | Canaries | Tool use | Operating posture |
 |---|---|---:|---:|---:|---:|---|---|
 | [Qwen3.6-35B-A3B NVFP4 (vLLM GB10 + MiaAI-Lab patch, MTP 2, 1 Spark, 262K)](2026-10-24-qwen36-35b-a3b-nvfp4-vllm-mtp2-1x-262k.md) **(pick)** | vLLM | 256K | 0.20s | 286.66 | 12/12 | [⚠ safety · 88.3 mean · Pass^3 76.8%](2026-10-24-qwen36-35b-a3b-nvfp4-vllm-mtp2-1x-262k-tool-eval.md) | Not recommended for tool agents (safety gate FAILED); throughput reference c1-c16; 12/12 canaries, needle not measured |
+
+<a id="flint-nvfp4-gguf"></a>
+## Recursive Flint 40B-A2.5B NVFP4 GGUF
+
+> Single-Spark llama.cpp lane with one slot: about 82 tok/s at every concurrency (requests queue), tool-eval 86 mean with the safety gate passed
+
+**Recommended tested configuration:** [Recursive Flint NVFP4 GGUF (llama.cpp b11856, -np 1, 1 Spark, 262K)](2026-10-24-flint-nvfp4-gguf-llamacpp-1x-262k.md)
+
+### Checkpoint choices
+
+- **Benchmarked checkpoint:** [RecursiveSI/flint-nvfp4-gguf @ 6ec43e1](https://huggingface.co/RecursiveSI/flint-nvfp4-gguf/tree/6ec43e19b565fc8d560e2d04985d7724f20673bf)
+- **Upstream base model:** [RecursiveSI/flint](https://huggingface.co/RecursiveSI/flint)
+- **Uncensored / abliterated:** None benchmarked — Other Flint quantizations (for example the Q4_K_M GGUF) and the BF16 base were not benchmarked in this repository.
+
+| Signal from the selected local baseline | Result |
+|---|---:|
+| DGX Spark footprint | 1 system / 1 GPU · 128GB each · 128GB aggregate |
+| Interactive c1 | 81.73 output tok/s · 0.32s TTFT p95 |
+| Peak short-prompt decode | 83.40 output tok/s @ c2 |
+| 20-minute c8 soak | 74.62 output tok/s · 0 errors |
+| Longest tested prompt | 128K · 89.89s TTFT p95 |
+| Regression canaries | 10/13 |
+| Tool-use evaluation | [86.0 mean · Pass^3 75.4%](2026-10-24-flint-nvfp4-gguf-llamacpp-1x-262k-tool-eval.md) |
+
+### Good fit
+
+- A single user on one Spark: c1 decode 81.73 tok/s (per-request about 85 tok/s) with 0.32s TTFT p95, using about 29 GB of GPU memory and leaving about 77 GiB of host memory available.
+- Tool use at one request at a time: the three-trial tool-eval scored 86 mean (Pass^3 75.4%) and passed its safety gate.
+
+### Do not choose it when
+
+- Concurrent serving as tested: with -np 1 (the model card's single slot) requests queue, so c2-c16 aggregate stayed at about 82 tok/s and c16 TTFT p95 reached 93.2s. These numbers measure queueing, not batching.
+- Long prompts at speed: 128K prefill TTFT p95 was 89.89s (about 1.5K input tok/s) and the 240K passkey took 220.19s (it passed), against 48.97s and 98.98s for Qwen3.8-Flash-Next TensorFold.
+- Short-budget answers: the model always reasons in its reply, so the 128-token reversal canary ran out of tokens in all three attempts (recorded as setup-limited).
+
+### Configuration call
+
+Not selected. Qwen3.8-Flash-Next TensorFold on two Sparks stays the lane: it batches concurrent requests (417.63 tok/s at c16), prefills faster at 128K, and serves a 1M window. Flint is a low-memory single-user option on one Spark.
+
+Benchmarked on a locally built llama.cpp image (b11856, 3642238, CUDA 13.2, sm_121a) from the model card's llama-server command, with no recipe repository. Served with -np 1, a 262,144-token f16 KV cache, flash attention, and reasoning-preserve at its default. The serving suite set reasoning_budget_tokens=0; the tool-eval used the server default.
+
+### Published variants
+
+| Configuration | Runtime | Configured context | c1 TTFT p95 | Soak tok/s | Canaries | Tool use | Operating posture |
+|---|---|---:|---:|---:|---:|---|---|
+| [Recursive Flint NVFP4 GGUF (llama.cpp b11856, -np 1, 1 Spark, 262K)](2026-10-24-flint-nvfp4-gguf-llamacpp-1x-262k.md) **(pick)** | llama.cpp | 256K | 0.32s | 74.62 | 10/13 | [86.0 mean · Pass^3 75.4%](2026-10-24-flint-nvfp4-gguf-llamacpp-1x-262k-tool-eval.md) | Single-user reference only; one slot queues concurrent requests; tool-eval 86 with safety passed; 10/13 quality checks incl. 240K passkey (reversal canary setup-limited) |
 
 ## Reading the dashboard
 
