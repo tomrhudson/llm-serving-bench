@@ -119,11 +119,16 @@ class OpenAIClient:
         return self._json_request(self.api_url + "/models")
 
     def tokenize_count(self, prompt: str) -> int:
-        response = self._json_request(
-            self.root_url + "/tokenize",
-            {"model": self.model, "prompt": prompt},
-        )
-        return int(response["count"])
+        url = self.root_url + "/tokenize"
+        response = self._json_request(url, {"model": self.model, "prompt": prompt})
+        if isinstance(response, dict) and "count" in response:
+            return int(response["count"])
+        # llama.cpp's /tokenize reads "content" and returns the token list.
+        response = self._json_request(url, {"content": prompt})
+        tokens = response.get("tokens") if isinstance(response, dict) else None
+        if isinstance(tokens, list):
+            return len(tokens)
+        raise RuntimeError(f"unrecognized /tokenize response from {url}")
 
     def flush_cache(self) -> bool:
         request = self._api_request(
