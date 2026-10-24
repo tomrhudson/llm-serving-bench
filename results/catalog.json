@@ -275,9 +275,225 @@
       ],
       "selection_note": "Not selected. Qwen3.8-Flash-Next TensorFold on two Sparks stays the lane: it passed its safety gate and prefills much faster at 128K. This single-Spark lane is a throughput reference only until the TC-60 failure is understood.",
       "evidence_note": "Benchmarked on a locally built image: timothystewart6/vllm-gb10 @ 94352d3 (vLLM 0.26.1.dev0+g568afb3a1, FlashInfer 0.6.14) plus the MiaAI-Lab recipe's soft-fallback patch layer, with MTP speculative decoding (2 tokens) and an fp8 KV cache. The recipe's license is stated only in its README (MIT, no LICENSE file); Tom approved it for personal benchmarking."
+    },
+    {
+      "id": "flint-nvfp4-gguf",
+      "name": "Recursive Flint 40B-A2.5B NVFP4 GGUF",
+      "tagline": "Single-Spark llama.cpp lane with one slot: about 82 tok/s at every concurrency (requests queue), tool-eval 86 mean with the safety gate passed",
+      "benchmarked_source": "[RecursiveSI/flint-nvfp4-gguf @ 6ec43e1](https://huggingface.co/RecursiveSI/flint-nvfp4-gguf/tree/6ec43e19b565fc8d560e2d04985d7724f20673bf)",
+      "upstream_source": "[RecursiveSI/flint](https://huggingface.co/RecursiveSI/flint)",
+      "alternative_source": "None benchmarked",
+      "alternative_source_note": "Other Flint quantizations (for example the Q4_K_M GGUF) and the BF16 base were not benchmarked in this repository.",
+      "dgx_spark_count": 1,
+      "dgx_spark_memory_gb_each": 128,
+      "tested_choice": "flint-nvfp4-gguf-llamacpp-1x-262k",
+      "best_for": [
+        "A single user on one Spark: c1 decode 81.73 tok/s (per-request about 85 tok/s) with 0.32s TTFT p95, using about 29 GB of GPU memory and leaving about 77 GiB of host memory available.",
+        "Tool use at one request at a time: the three-trial tool-eval scored 86 mean (Pass^3 75.4%) and passed its safety gate."
+      ],
+      "not_for": [
+        "Concurrent serving as tested: with -np 1 (the model card's single slot) requests queue, so c2-c16 aggregate stayed at about 82 tok/s and c16 TTFT p95 reached 93.2s. These numbers measure queueing, not batching.",
+        "Long prompts at speed: 128K prefill TTFT p95 was 89.89s (about 1.5K input tok/s) and the 240K passkey took 220.19s (it passed), against 48.97s and 98.98s for Qwen3.8-Flash-Next TensorFold.",
+        "Short-budget answers: the model always reasons in its reply, so the 128-token reversal canary ran out of tokens in all three attempts (recorded as setup-limited)."
+      ],
+      "selection_note": "Not selected. Qwen3.8-Flash-Next TensorFold on two Sparks stays the lane: it batches concurrent requests (417.63 tok/s at c16), prefills faster at 128K, and serves a 1M window. Flint is a low-memory single-user option on one Spark.",
+      "evidence_note": "Benchmarked on a locally built llama.cpp image (b11856, 3642238, CUDA 13.2, sm_121a) from the model card's llama-server command, with no recipe repository. Served with -np 1, a 262,144-token f16 KV cache, flash attention, and reasoning-preserve at its default. The serving suite set reasoning_budget_tokens=0; the tool-eval used the server default."
     }
   ],
   "baselines": [
+    {
+      "id": "flint-nvfp4-gguf-llamacpp-1x-262k",
+      "model_id": "flint-nvfp4-gguf",
+      "label": "Recursive Flint NVFP4 GGUF (llama.cpp b11856, -np 1, 1 Spark, 262K)",
+      "chart_label": "Flint NVFP4 1x",
+      "date": "2026-10-24",
+      "report": "2026-10-24-flint-nvfp4-gguf-llamacpp-1x-262k.md",
+      "hardware": "1x NVIDIA DGX Spark (128GB)",
+      "runtime": "llama.cpp",
+      "context_tokens": 262144,
+      "recipe_credit": "Model card llama-server command ([RecursiveSI/flint-nvfp4-gguf](https://huggingface.co/RecursiveSI/flint-nvfp4-gguf/tree/6ec43e19b565fc8d560e2d04985d7724f20673bf)); no recipe repository",
+      "recommendation": "Single-user reference only; one slot queues concurrent requests; tool-eval 86 with safety passed; 10/13 quality checks incl. 240K passkey (reversal canary setup-limited)",
+      "decode": [
+        {
+          "concurrency": 1,
+          "output_tps": 81.73,
+          "ttft_p95_seconds": 0.32
+        },
+        {
+          "concurrency": 2,
+          "output_tps": 83.4,
+          "ttft_p95_seconds": 6.46
+        },
+        {
+          "concurrency": 4,
+          "output_tps": 82.85,
+          "ttft_p95_seconds": 18.95
+        },
+        {
+          "concurrency": 8,
+          "output_tps": 83.03,
+          "ttft_p95_seconds": 43.81
+        },
+        {
+          "concurrency": 12,
+          "output_tps": 81.67,
+          "ttft_p95_seconds": 69.43
+        },
+        {
+          "concurrency": 16,
+          "output_tps": 82.95,
+          "ttft_p95_seconds": 93.22
+        }
+      ],
+      "prefill": [
+        {
+          "input_tokens": 4096,
+          "input_tps": 1485.24,
+          "ttft_p95_seconds": 2.0
+        },
+        {
+          "input_tokens": 32768,
+          "input_tps": 1848.59,
+          "ttft_p95_seconds": 16.74
+        },
+        {
+          "input_tokens": 131072,
+          "input_tps": 1436.04,
+          "ttft_p95_seconds": 89.89
+        }
+      ],
+      "prefix": {
+        "unique_ttft_p95_seconds": 71.12,
+        "warm_ttft_p95_seconds": 6.38
+      },
+      "soak": {
+        "concurrency": 8,
+        "minutes": 20,
+        "output_tps": 74.62,
+        "ttft_p95_seconds": 48.81,
+        "requests": 182,
+        "errors": 0
+      },
+      "quality": {
+        "passed": 10,
+        "total": 13
+      },
+      "tool_eval": {
+        "protocol_id": "tool-eval-standard-v1-b60e2f0",
+        "upstream_commit": "b60e2f00f6c44352a3680356e7c7948f777c5280",
+        "version": "0.0.1.dev1+unknown.gb60e2f00f",
+        "run_id": "2026-10-24T22-01-25.981108Z_1819face",
+        "config_fingerprint": "39c863f02924",
+        "status": "complete",
+        "trials": 3,
+        "scenarios_per_trial": 69,
+        "completion_rate": 100.0,
+        "score_mean": 86.0,
+        "score_median": 86.0,
+        "score_stddev": 1.0,
+        "score_ci95": [
+          85.0,
+          87.0
+        ],
+        "pass_at_3": 84.1,
+        "pass_hat_3": 75.4,
+        "reliability_gap": 8.7,
+        "safety_passed": true,
+        "category_scores": [
+          {
+            "id": "A",
+            "label": "Tool Selection",
+            "mean_percent": 88.7,
+            "stddev_percent": 9.8
+          },
+          {
+            "id": "B",
+            "label": "Parameter Precision",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "C",
+            "label": "Multi-Step Chains",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "D",
+            "label": "Restraint & Refusal",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "E",
+            "label": "Error Recovery",
+            "mean_percent": 72.3,
+            "stddev_percent": 9.2
+          },
+          {
+            "id": "F",
+            "label": "Localization",
+            "mean_percent": 67.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "G",
+            "label": "Structured Reasoning",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "H",
+            "label": "Instruction Following",
+            "mean_percent": 90.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "I",
+            "label": "Context & State",
+            "mean_percent": 68.3,
+            "stddev_percent": 11.5
+          },
+          {
+            "id": "J",
+            "label": "Code Patterns",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "K",
+            "label": "Safety & Boundaries",
+            "mean_percent": 85.7,
+            "stddev_percent": 4.0
+          },
+          {
+            "id": "L",
+            "label": "Toolset Scale",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "M",
+            "label": "Autonomous Planning",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "N",
+            "label": "Creative Composition",
+            "mean_percent": 83.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "O",
+            "label": "Structured Output",
+            "mean_percent": 75.0,
+            "stddev_percent": 0.0
+          }
+        ],
+        "report": "2026-10-24-flint-nvfp4-gguf-llamacpp-1x-262k-tool-eval.md"
+      }
+    },
     {
       "id": "qwen36-35b-a3b-nvfp4-vllm-mtp2-1x-262k",
       "model_id": "qwen36-35b-a3b-nvfp4",
