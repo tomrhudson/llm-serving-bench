@@ -6,12 +6,13 @@ same tables and charts without hand-editing this page.
 
 Choosing a model for a workload? Open the [model selection dashboard](MODEL-GUIDE.md).
 
-Last updated: 2026-10-19 · Published baselines: 22
+Last updated: 2026-10-24 · Published baselines: 23
 
 ## At a glance
 
 | Model | Hardware / runtime | Configured context | Peak decode tok/s | c1 TTFT p95 | Longest-context TTFT p95 | Soak tok/s | Canaries | Tool use | Recommended concurrency | Recipe credit |
 |---|---|---:|---:|---:|---:|---:|---:|---|---|---|
+| [Qwen3.6-35B-A3B NVFP4 (vLLM GB10 + MiaAI-Lab patch, MTP 2, 1 Spark, 262K)](2026-10-24-qwen36-35b-a3b-nvfp4-vllm-mtp2-1x-262k.md) | 1x NVIDIA DGX Spark (128GB) / vLLM | 256K | 429.21 @ c16 | 0.20s | 53.44s | 286.66 | 12/12 | [⚠ safety · 88.3 mean · Pass^3 76.8%](2026-10-24-qwen36-35b-a3b-nvfp4-vllm-mtp2-1x-262k-tool-eval.md) | Not recommended for tool agents (safety gate FAILED); throughput reference c1-c16; 12/12 canaries, needle not measured | [MiaAI-Lab Unsloth Qwen3.6-35B NVFP4 DGX Spark recipe](https://github.com/MiaAI-Lab/Unsloth-Qwen3.6-35b-NVFP4-DGX-Spark/tree/79c9e6f359f6101cdacd0dfd6fe9861ae2493a4d) |
 | [DeepSeek V4.1 Flash 1017 EXL3-EAQ 2.9 bpw (TensorFold native, 2 Sparks TP=2, 262K, 4 streams)](2026-10-19-deepseek-v41-flash-1017-exl3-eaq-tensorfold-2x-262k.md) | 2x NVIDIA DGX Spark (128GB each) / TensorFold | 256K | 123.18 @ c16 | 0.48s | 125.17s | 103.17 | 13/13 | [Incomplete (98.6%) · 90.0 mean · Pass^3 83.8%](2026-10-19-deepseek-v41-flash-1017-exl3-eaq-tensorfold-2x-262k-tool-eval.md) | Concurrency 1-4 (4 streams); serving thinking off; 13/13 quality | [MiaAI-Lab DeepSeek V4.1 Flash 1017 recipe](https://github.com/MiaAI-Lab/DeepSeek-v4.1-Flash-1017-2x-DGX-Sparks/tree/1afc8910b76574aa6b844a08ec9643d14d57089a) |
 | [DeepSeek V4 Flash DSpark (Anemll DSpark vLLM 0.1.1, original July deployment, 2 Sparks TP=2, 1M, thinking off)](2026-10-18-deepseek-v4-flash-dspark-2x-orig-1m.md) | 2x NVIDIA DGX Spark (128GB each) / vLLM (Anemll DSpark) | 1M | 104.82 @ c16 | 4.12s | 175.40s | 111.10 | 13/13 | [88.3 mean · Pass^3 78.3%](2026-10-18-deepseek-v4-flash-dspark-2x-orig-1m-tool-eval.md) | Concurrency 4-6 (max-num-seqs 6); thinking off; 13/13 quality | [MiaAI-Lab DeepSeek-v4-Flash DSpark 2x DGX Spark recipe](https://github.com/MiaAI-Lab/DeepSeek-v4-Flash-DSpark-2x-DGX-Spark/tree/b4cc551b0adb6aa62979d92686b9fe0f1326d640) |
 | [Nemotron 3.5 Super VL 120B-A12B NVFP4 (vLLM + DFlash LiLiCorr, 1 Spark, 1M, thinking off)](2026-10-18-nemotron35-super-vl-nvfp4-vllm-dflash-1m.md) | 1x NVIDIA DGX Spark (128GB) / vLLM | 1M | 34.95 @ c12 | 0.58s | 155.41s | 33.90 | 13/13 | [⚠ safety · 92.7 mean · Pass^3 81.2%](2026-10-18-nemotron35-super-vl-nvfp4-vllm-dflash-1m-tool-eval.md) | Single-stream only (recipe max-num-seqs 1); thinking off; 13/13 quality | [Kindling Nemotron 3.5 Super VL DGX Spark recipe](https://github.com/kindlingai/nemotron-3.5-super-vl-dgx-spark/tree/452acc1d74e76cfee4b45ad7a16998ee57f0a423) |
@@ -59,6 +60,7 @@ each model card, license, runtime requirements, and safety posture before deploy
 | DeepSeek V4 Flash Vision-Exp | [deepseek-ai/DeepSeek-V4-Flash-Vision-Exp @ 86f746b](https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-Vision-Exp/tree/86f746b36186f0e567729a5c06a8c918caba82a9) | [deepseek-ai/DeepSeek-V4-Flash-Vision-Exp](https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-Vision-Exp) | Gated abliterated derivative (recipe ABLITERATED=1) | The recipe can serve a gated community abliterated checkpoint that needs an access token; it was not accessed or benchmarked in this repository. |
 | DeepSeek V4 Flash DSpark | [deepseek-ai/DeepSeek-V4-Flash-DSpark @ 62af8ff](https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-DSpark/tree/62af8fffb2f7030cac4de2f0169f5b8d1101b646) | [deepseek-ai/DeepSeek-V4-Flash-DSpark](https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-DSpark) | None benchmarked | The Vision-Exp checkpoint is a separate catalog entry; no uncensored/abliterated DSpark checkpoint is benchmarked in this repository. |
 | DeepSeek V4.1 Flash 1017 EXL3-EAQ | [Mia-AiLab/DeepSeek-V4.1-Flash-1017-EXL3-EAQ-v1-2.9-bpw @ 6d54be4](https://huggingface.co/Mia-AiLab/DeepSeek-V4.1-Flash-1017-EXL3-EAQ-v1-2.9-bpw/tree/6d54be4fca338d79b17c3b03cc9a423bb3ac6718) | [deepseek-ai/DeepSeek-V4.1-Flash-1017](https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash-1017) | None benchmarked | The earlier DeepSeek V4.1 Flash EXL3 2.9 bpw checkpoint is a separate catalog entry; no uncensored/abliterated 1017 checkpoint is benchmarked in this repository. |
+| Qwen3.6-35B-A3B NVFP4 (Unsloth) | [unsloth/Qwen3.6-35B-A3B-NVFP4 @ 739af1e](https://huggingface.co/unsloth/Qwen3.6-35B-A3B-NVFP4/tree/739af1e7aac320af1682ed1e0cce369af4c5265d) | [Qwen/Qwen3.6-35B-A3B](https://huggingface.co/Qwen/Qwen3.6-35B-A3B) | None benchmarked | Other Qwen3.6-35B-A3B NVFP4 checkpoints (for example nvidia/Qwen3.6-35B-A3B-NVFP4) were not benchmarked in this repository. |
 
 ## Decode scaling
 
@@ -93,6 +95,7 @@ retained as explicitly qualified pilot evidence.
 
 | Serving baseline | Protocol | Status | Completion | Mean score | Pass@3 | Pass^3 | Safety gate |
 |---|---|---|---:|---:|---:|---:|---|
+| [Qwen3.6-35B-A3B NVFP4 (vLLM GB10 + MiaAI-Lab patch, MTP 2, 1 Spark, 262K)](2026-10-24-qwen36-35b-a3b-nvfp4-vllm-mtp2-1x-262k-tool-eval.md) | `tool-eval-standard-v1-b60e2f0` | complete | 100.0% | 88.3 | 89.9% | 76.8% | **FAILED** |
 | [DeepSeek V4.1 Flash 1017 EXL3-EAQ 2.9 bpw (TensorFold native, 2 Sparks TP=2, 262K, 4 streams)](2026-10-19-deepseek-v41-flash-1017-exl3-eaq-tensorfold-2x-262k-tool-eval.md) | `tool-eval-standard-v1-b60e2f0` | incomplete | 98.6% | 90.0 | 83.8% | 83.8% | pass |
 | [DeepSeek V4 Flash DSpark (Anemll DSpark vLLM 0.1.1, original July deployment, 2 Sparks TP=2, 1M, thinking off)](2026-10-18-deepseek-v4-flash-dspark-2x-orig-1m-tool-eval.md) | `tool-eval-standard-v1-b60e2f0` | complete | 100.0% | 88.3 | 84.1% | 78.3% | pass |
 | [Nemotron 3.5 Super VL 120B-A12B NVFP4 (vLLM + DFlash LiLiCorr, 1 Spark, 1M, thinking off)](2026-10-18-nemotron35-super-vl-nvfp4-vllm-dflash-1m-tool-eval.md) | `tool-eval-standard-v1-b60e2f0` | complete | 100.0% | 92.7 | 97.1% | 81.2% | **FAILED** |
