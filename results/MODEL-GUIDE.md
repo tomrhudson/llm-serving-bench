@@ -4,7 +4,7 @@ Use this page to choose among the model families with published DGX Spark
 baselines in this repository. For the full cross-configuration numbers and charts,
 open the [benchmark summary](README.md).
 
-Last updated: 2026-10-24 · Model families: 13 · Published configurations: 24
+Last updated: 2026-10-24 · Model families: 13 · Published configurations: 25
 
 ## Hardware footprint
 
@@ -201,6 +201,7 @@ Z.ai positions GLM-5.3 Flash for coding, agents, multimodal input, and long cont
 
 | Configuration | Runtime | Configured context | c1 TTFT p95 | Soak tok/s | Canaries | Tool use | Operating posture |
 |---|---|---:|---:|---:|---:|---|---|
+| [GLM-5.3 Flash EXL3 4 bpw (TensorFold v0.6.0, DFlash2, recipe 3fd60dfc)](2026-10-24-glm53-flash-exl3-tensorfold-v060-dflash2-2x-1m.md) | TensorFold | 1M | 0.44s | 80.18 | 12/12 | [⚠ safety · 94.0 mean · Pass^3 92.8%](2026-10-24-glm53-flash-exl3-tensorfold-v060-dflash2-2x-1m-tool-eval.md) | Not selected: tool-eval safety gate FAILED (TC-51, all three trials) despite a 94 mean; c1 54.53 / c4 93.20 tok/s (parallel 4); 12/12 canaries; 240K passkey not measured |
 | [GLM-5.3 Flash NVFP4 (vLLM, low reasoning)](2026-10-03-glm53-flash-nvfp4-vllm-native-262k-low-reasoning.md) | vLLM | 256K | 0.45s | 60.90 | 13/13 | Not run | Concurrency 1 interactive; 8 batch; 13/13 with accuracy warning |
 | [GLM-5.3 Flash EXL3/TR3 4 bpw (TensorFold v0.6.0)](2026-10-01-glm53-flash-exl3-tensorfold-v060-1m.md) **(pick)** | TensorFold | 1M | 0.41s | 84.90 | 10/13 | Not run | Concurrency 1 interactive; 4 batch; 10/13 quality |
 | [GLM-5.3 Flash EXL3/TR3 4 bpw (refreshed recipe)](2026-09-15-glm53-flash-exl3-tr3-4bpw-850k.md) | vLLM | 850K | 1.27s | 21.88 | 13/13 | Not run | Concurrency 1 interactive; 4 batch; Socket |
