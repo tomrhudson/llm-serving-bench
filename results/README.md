@@ -6,12 +6,13 @@ same tables and charts without hand-editing this page.
 
 Choosing a model for a workload? Open the [model selection dashboard](MODEL-GUIDE.md).
 
-Last updated: 2026-10-24 · Published baselines: 25
+Last updated: 2026-10-25 · Published baselines: 26
 
 ## At a glance
 
 | Model | Hardware / runtime | Configured context | Peak decode tok/s | c1 TTFT p95 | Longest-context TTFT p95 | Soak tok/s | Canaries | Tool use | Recommended concurrency | Recipe credit |
 |---|---|---:|---:|---:|---:|---:|---:|---|---|---|
+| [DeepSeek V4.1 Flash 1017 EXL3-EAQ 2.9 bpw (TensorFold native, 2 Sparks TP=2, 262K, 4 streams, recipe 27741e17)](2026-10-25-deepseek-v41-flash-1017-exl3-eaq-tensorfold-2x-262k-27741e.md) | 2x NVIDIA DGX Spark (128GB each) / TensorFold | 256K | 125.87 @ c16 | 0.51s | 120.40s | 108.73 | 13/13 | [Incomplete (98.6%) · 90.0 mean · Pass^3 82.4%](2026-10-25-deepseek-v41-flash-1017-exl3-eaq-tensorfold-2x-262k-27741e-tool-eval.md) | Latest run (Oct 25, recipe 27741e17, checkpoint 45ee5d0); not selected: decode and soak 2-5% faster than Oct 19 and 32K-128K prefill 1.2-1.8x faster, but tool-eval Pass^3 82.4% vs 83.8% (both incomplete, 90 mean); 13/13 quality | [MiaAI-Lab DeepSeek V4.1 Flash 1017 recipe](https://github.com/MiaAI-Lab/DeepSeek-v4.1-Flash-1017-2x-DGX-Sparks/tree/27741e176a9e5b98c10c9c7d012fd3e4fcdc19b6) |
 | [GLM-5.3 Flash EXL3 4 bpw (TensorFold v0.6.0, DFlash2, recipe 3fd60dfc)](2026-10-24-glm53-flash-exl3-tensorfold-v060-dflash2-2x-1m.md) | 2x NVIDIA DGX Spark (128GB each) / TensorFold | 1M | 93.20 @ c4 | 0.44s | 74.18s | 80.18 | 12/12 | [⚠ safety · 94.0 mean · Pass^3 92.8%](2026-10-24-glm53-flash-exl3-tensorfold-v060-dflash2-2x-1m-tool-eval.md) | Latest run (Oct 24); not selected: tool-eval safety gate FAILED (TC-51 3/3, plus TC-43 and TC-68 3/3) despite a 94 mean; c1 54.53 / c4 93.20 tok/s (parallel 4); 12/12 canaries; 240K passkey not measured | [MiaAI-Lab TensorFold recipe](https://github.com/MiaAI-Lab/GLM-5.3-Flash-EXL3-2x-DGX-Sparks-TensorFold/tree/3fd60dfc836fab0f1ed0fd4f0afaf2a1d62b2aab) |
 | [Recursive Flint NVFP4 GGUF (llama.cpp b11856, -np 1, 1 Spark, 262K)](2026-10-24-flint-nvfp4-gguf-llamacpp-1x-262k.md) | 1x NVIDIA DGX Spark (128GB) / llama.cpp | 256K | 83.40 @ c2 | 0.32s | 89.89s | 74.62 | 10/13 | [86.0 mean · Pass^3 75.4%](2026-10-24-flint-nvfp4-gguf-llamacpp-1x-262k-tool-eval.md) | Single-user reference only; one slot queues concurrent requests; tool-eval 86 with safety passed; 10/13 quality checks incl. 240K passkey (reversal canary setup-limited) | Model card llama-server command ([RecursiveSI/flint-nvfp4-gguf](https://huggingface.co/RecursiveSI/flint-nvfp4-gguf/tree/6ec43e19b565fc8d560e2d04985d7724f20673bf)); no recipe repository |
 | [Qwen3.6-35B-A3B NVFP4 (vLLM GB10 + MiaAI-Lab patch, MTP 2, 1 Spark, 262K)](2026-10-24-qwen36-35b-a3b-nvfp4-vllm-mtp2-1x-262k.md) | 1x NVIDIA DGX Spark (128GB) / vLLM | 256K | 429.21 @ c16 | 0.20s | 53.44s | 286.66 | 12/12 | [⚠ safety · 88.3 mean · Pass^3 76.8%](2026-10-24-qwen36-35b-a3b-nvfp4-vllm-mtp2-1x-262k-tool-eval.md) | Not recommended for tool agents (safety gate FAILED); throughput reference c1-c16; 12/12 canaries, needle not measured | [MiaAI-Lab Unsloth Qwen3.6-35B NVFP4 DGX Spark recipe](https://github.com/MiaAI-Lab/Unsloth-Qwen3.6-35b-NVFP4-DGX-Spark/tree/79c9e6f359f6101cdacd0dfd6fe9861ae2493a4d) |
@@ -98,6 +99,7 @@ retained as explicitly qualified pilot evidence.
 
 | Serving baseline | Protocol | Status | Completion | Mean score | Pass@3 | Pass^3 | Safety gate |
 |---|---|---|---:|---:|---:|---:|---|
+| [DeepSeek V4.1 Flash 1017 EXL3-EAQ 2.9 bpw (TensorFold native, 2 Sparks TP=2, 262K, 4 streams, recipe 27741e17)](2026-10-25-deepseek-v41-flash-1017-exl3-eaq-tensorfold-2x-262k-27741e-tool-eval.md) | `tool-eval-standard-v1-b60e2f0` | incomplete | 98.6% | 90.0 | 82.4% | 82.4% | pass |
 | [GLM-5.3 Flash EXL3 4 bpw (TensorFold v0.6.0, DFlash2, recipe 3fd60dfc)](2026-10-24-glm53-flash-exl3-tensorfold-v060-dflash2-2x-1m-tool-eval.md) | `tool-eval-standard-v1-b60e2f0` | complete | 100.0% | 94.0 | 92.8% | 92.8% | **FAILED** |
 | [Recursive Flint NVFP4 GGUF (llama.cpp b11856, -np 1, 1 Spark, 262K)](2026-10-24-flint-nvfp4-gguf-llamacpp-1x-262k-tool-eval.md) | `tool-eval-standard-v1-b60e2f0` | complete | 100.0% | 86.0 | 84.1% | 75.4% | pass |
 | [Qwen3.6-35B-A3B NVFP4 (vLLM GB10 + MiaAI-Lab patch, MTP 2, 1 Spark, 262K)](2026-10-24-qwen36-35b-a3b-nvfp4-vllm-mtp2-1x-262k-tool-eval.md) | `tool-eval-standard-v1-b60e2f0` | complete | 100.0% | 88.3 | 89.9% | 76.8% | **FAILED** |
