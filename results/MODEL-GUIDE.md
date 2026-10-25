@@ -4,7 +4,7 @@ Use this page to choose among the model families with published DGX Spark
 baselines in this repository. For the full cross-configuration numbers and charts,
 open the [benchmark summary](README.md).
 
-Last updated: 2026-10-24 · Model families: 13 · Published configurations: 25
+Last updated: 2026-10-25 · Model families: 13 · Published configurations: 26
 
 ## Hardware footprint
 
@@ -587,6 +587,7 @@ Benchmarked on TensorFold (native Zig, TP=2) built locally from the recipe's pin
 
 | Configuration | Runtime | Configured context | c1 TTFT p95 | Soak tok/s | Canaries | Tool use | Operating posture |
 |---|---|---:|---:|---:|---:|---|---|
+| [DeepSeek V4.1 Flash 1017 EXL3-EAQ 2.9 bpw (TensorFold native, 2 Sparks TP=2, 262K, 4 streams, recipe 27741e17)](2026-10-25-deepseek-v41-flash-1017-exl3-eaq-tensorfold-2x-262k-27741e.md) | TensorFold | 256K | 0.51s | 108.73 | 13/13 | [Incomplete (98.6%) · 90.0 mean · Pass^3 82.4%](2026-10-25-deepseek-v41-flash-1017-exl3-eaq-tensorfold-2x-262k-27741e-tool-eval.md) | Latest run (Oct 25, recipe 27741e17, checkpoint 45ee5d0); not selected: decode and soak 2-5% faster than Oct 19 and 32K-128K prefill 1.2-1.8x faster, but tool-eval Pass^3 82.4% vs 83.8% (both incomplete, 90 mean); 13/13 quality |
 | [DeepSeek V4.1 Flash 1017 EXL3-EAQ 2.9 bpw (TensorFold native, 2 Sparks TP=2, 262K, 4 streams)](2026-10-19-deepseek-v41-flash-1017-exl3-eaq-tensorfold-2x-262k.md) **(pick)** | TensorFold | 256K | 0.48s | 103.17 | 13/13 | [Incomplete (98.6%) · 90.0 mean · Pass^3 83.8%](2026-10-19-deepseek-v41-flash-1017-exl3-eaq-tensorfold-2x-262k-tool-eval.md) | Concurrency 1-4 (4 streams); serving thinking off; 13/13 quality |
 
 <a id="qwen36-35b-a3b-nvfp4"></a>
