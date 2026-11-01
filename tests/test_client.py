@@ -60,6 +60,32 @@ class ClientTests(unittest.TestCase):
         self.assertEqual(without_v1.root_url, "https://example.test")
         self.assertEqual(without_v1.api_url, "https://example.test/v1")
 
+    def test_tokenize_count_supports_vllm_and_llama_cpp(self) -> None:
+        client = OpenAIClient("http://127.0.0.1:8000/v1", "model")
+        calls = []
+
+        def vllm(url, payload=None, timeout=None):
+            calls.append(payload)
+            return {"count": 7, "tokens": [1] * 7}
+
+        client._json_request = vllm
+        self.assertEqual(client.tokenize_count("hi"), 7)
+        self.assertEqual(calls, [{"model": "model", "prompt": "hi"}])
+
+        calls.clear()
+
+        def llama_cpp(url, payload=None, timeout=None):
+            calls.append(payload)
+            return {"tokens": [1, 2, 3] if "content" in payload else []}
+
+        client._json_request = llama_cpp
+        self.assertEqual(client.tokenize_count("hi"), 3)
+        self.assertEqual(calls[-1], {"content": "hi", "add_special": False})
+
+        client._json_request = lambda url, payload=None, timeout=None: {}
+        with self.assertRaises(RuntimeError):
+            client.tokenize_count("hi")
+
     def test_malformed_base_url_is_rejected(self) -> None:
         for base_url in ["", "localhost:8000", "file:///tmp/socket", "https:///v1"]:
             with self.subTest(base_url=base_url):
@@ -107,7 +133,7 @@ class ClientTests(unittest.TestCase):
             with self.subTest(response=response):
                 client = OpenAIClient("http://example.test/v1", "model")
                 client._json_request = Mock(return_value=response)
-                with self.assertRaisesRegex(ValueError, "unsupported /tokenize"):
+                with self.assertRaisesRegex(RuntimeError, "unrecognized /tokenize"):
                     client.tokenize_count("benchmark words")
 
     def test_reasoning_delta_variants(self) -> None:

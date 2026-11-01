@@ -140,7 +140,7 @@ class OpenAIClient:
                     raise ValueError("tokenizer returned no tokens for a nonempty prompt")
                 self._tokenize_with_content = True
                 return count
-        raise ValueError("unsupported /tokenize response")
+        raise RuntimeError(f"unrecognized /tokenize response from {url}")
 
     def flush_cache(self) -> bool:
         request = self._api_request(
