@@ -108,10 +108,22 @@ Apache-2.0 [Q8_0 GGUF fallback](https://huggingface.co/bartowski/Nanbeige_Nanbei
 
 ## Later candidates: not run
 
-MiniMax-M3.1-Flash needs a validated two-Spark serving path before a test is
-scheduled. BLACKFOLD requires its own gated access and recipe review. Mistral
-Large 4 Mix-256G is 232,947,436,288 bytes of weights and leaves little room for
-host memory, caches, and runtime workspace; two-Spark feasibility is unvalidated.
+MiniMax's Mia EXL3 repository is 171,035,902,206 bytes (159.29 GiB), under
+the base model's MiniMax Community terms. Its card still lists engine loading,
+generation, quality, long context, speculative decoding, and vision as untested;
+no public Mia two-Spark recipe was found. Unsloth's UD-IQ3_XXS alternative is
+160,048,968,132 bytes across five files. It still needs runtime validation.
+
+BLACKFOLD remains gated with MIT weight-license metadata. Its public TP2 recipe
+asks for about 520 GB on each node. Access, exact payload, and compatibility
+with the already-staged Mia cache have not been validated.
+
+Mistral Large 4 Mix-256G is exactly 232,947,436,288 bytes (216.95 GiB) across
+six parts, under the Mistral Ecosystem Open Weight License. That leaves limited
+room across these two hosts for the OS, runtime, and KV cache; no two-Spark
+runtime or memory budget is validated. A future download must select the
+Mix-256G folder: the entire repository also includes a larger pack and totals
+726,506,773,591 bytes. No later model was executed or its weights downloaded.
 
 ## Recommendation
 
