@@ -103,9 +103,10 @@ match every requested run identity field.
 6. serial and eight-way deterministic canaries;
 7. a 20-minute concurrency-8 steady-state soak.
 
-The protocol works with other SGLang and vLLM models that expose OpenAI chat
-completions plus the common `/tokenize` endpoint. Copy the JSON and adjust
-context lengths for models with smaller native windows.
+The protocol works with SGLang, vLLM, TensorFold, and llama.cpp servers that
+expose OpenAI chat completions and `/tokenize`. The client supports count-based
+tokenization and llama.cpp's native `content`/`tokens` API. Copy the JSON and
+adjust context lengths for models with smaller native windows.
 
 ## Fair comparisons
 

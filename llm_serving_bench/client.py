@@ -69,6 +69,7 @@ class OpenAIClient:
             self.api_url = base_url + "/v1"
         self.model = model
         self.timeout = timeout
+        self._tokenize_with_content = False
         self.headers = {"Content-Type": "application/json"}
         self.api_key = api_key
 
@@ -119,11 +120,27 @@ class OpenAIClient:
         return self._json_request(self.api_url + "/models")
 
     def tokenize_count(self, prompt: str) -> int:
-        response = self._json_request(
-            self.root_url + "/tokenize",
-            {"model": self.model, "prompt": prompt},
+        url = self.root_url + "/tokenize"
+        content_payload = {"content": prompt, "add_special": False}
+        payload = (
+            content_payload if self._tokenize_with_content
+            else {"model": self.model, "prompt": prompt}
         )
-        return int(response["count"])
+        response = self._json_request(url, payload)
+        if isinstance(response, dict) and "count" in response:
+            return int(response["count"])
+        if isinstance(response, dict) and isinstance(response.get("tokens"), list):
+            # llama.cpp ignores the OpenAI-style prompt field. Retry with its
+            # native payload before trusting the returned token list.
+            if not self._tokenize_with_content:
+                response = self._json_request(url, content_payload)
+            if isinstance(response, dict) and isinstance(response.get("tokens"), list):
+                count = len(response["tokens"])
+                if prompt.strip() and not count:
+                    raise ValueError("tokenizer returned no tokens for a nonempty prompt")
+                self._tokenize_with_content = True
+                return count
+        raise ValueError("unsupported /tokenize response")
 
     def flush_cache(self) -> bool:
         request = self._api_request(
