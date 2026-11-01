@@ -2,7 +2,7 @@
 
 Date: 2026-11-01
 
-Status: **IN PROGRESS — fresh production serving reference complete; pinned tool evaluation running. No candidate measurements yet.**
+Status: **IN PROGRESS — reference run finished; tool result incomplete at 98.6%. Candidate staging continues; no candidate measurements yet.**
 
 This campaign uses the existing `llm-serving-bench` serving matrix and the pinned
 `tool-eval-standard-v1-b60e2f0` profile. The serving suite is the previously used
@@ -18,8 +18,8 @@ context rather than a controlled comparison to this thinking-off cohort.
 
 | Model | Quant | Spark(s) | Load time | Memory used | Single-stream tok/s | Prefill tok/s | Benchmark scores vs reference | Notes or problems |
 |---|---|---|---|---|---|---|---|---|
-| Qwen3.8-Flash-Next production reference | NVIDIA NVFP4 | 2x DGX Spark, TP=2 | Not measured yet | Observed host peaks 87.94 / 85.51 GiB (partial telemetry) | 70.25 | 2,801.80 at 128K | 13/13 regression checks; tool profile running | 575/575 requests; c8 soak 185.82 tok/s; cache-reset endpoint unavailable |
-| Nanbeige4.3-33B | FP8 | 1x DGX Spark | Pending | Pending | Pending | Pending | Pending | All 17 staged files size-verified; seven weight shards SHA-256 verified |
+| Qwen3.8-Flash-Next production reference | NVIDIA NVFP4 | 2x DGX Spark, TP=2 | Not measured yet | Observed host peaks 87.94 / 85.51 GiB (partial telemetry) | 70.25 | 2,801.80 at 128K | 13/13 regression checks; tool mean 87.7 (98.6% complete) | 575/575 requests; c8 soak 185.82 tok/s; cache-reset endpoint unavailable |
+| Nanbeige4.3-33B | FP8 | 1x DGX Spark | Pending | Pending | Pending | Pending | Pending | All FP8 weight shards verified; isolated-listener exception pending; approved Q8_0 fallback staging |
 | Qwen3.8-Flash-Next, ABLIT=0 | FP4-Local QAD | 1x DGX Spark | Pending | Pending | Pending | Pending | Pending | Stock control for the overlay |
 | Qwen3.8-Flash-Next, ABLIT=1 | FP4-Local QAD + Keys overlay | Same single Spark | Pending | Pending | Pending | Pending | Pending | Gated access confirmed; terms accepted by operator |
 | DeepSeek-V4.1-Flash-1017 | EXL3 EAQ v1, 2.9 bpw | 2x DGX Spark, TP=2 | Pending | Pending | Pending | Pending | Pending | Separate outage window required |
@@ -31,6 +31,20 @@ completion). At 128K, median prompt tokens / TTFT was 2,895.51 tok/s. The two
 per-host memory peaks are partial observations: 168/322 and 169/322 host samples
 contained usable memory data. Direct API traffic continued through an established
 SSH tunnel during the new-connection failures.
+
+The pinned tool profile finished all three trials but graded 204/207 scenario
+trials (98.6%). TC-64 (JSON schema compliance) was excluded by the evaluator,
+matching the runtime's known structured-output limitation. Mean score was 87.7
+(stddev 0.6; 95% interval 87.0–88.0), Pass@3 79.4%, and Pass^3 77.9%.
+The protocol safety gate passed. This remains incomplete evidence and must not
+be treated as a complete comparative quality score. Serving requests disabled
+thinking; tool evaluation retained the server's thinking-on default, as in the
+existing combined workflow.
+
+Both production processes kept their original pre-run PIDs and start times;
+neither OOMed. Direct health/model identity and an exact routed postflight
+canary passed, with the router attributing the request to the existing SSH
+backend tunnel. No production container was stopped.
 
 ## Verified artifacts and boundaries
 
@@ -49,6 +63,17 @@ comparative scores.
 
 Raw staging logs, integrity receipts, and run artifacts remain private under
 `.bench-runs/20261101-candidate-comparison/` and are not committed.
+
+## Nanbeige runtime constraint
+
+The cached vLLM stack initializes PyTorch distributed state even with one GPU.
+PyTorch's [TCPStore listener](https://github.com/pytorch/pytorch/blob/v2.11.0/torch/csrc/distributed/c10d/TCPStoreLibUvBackend.cpp)
+binds wildcard addresses. A host-network launch would violate the operator's
+listener rule, so none was attempted. An isolated `--network none` container
+with a private Unix-socket API is prepared as an alternative, pending an
+explicit exception for the container-internal listener. The already-approved
+Apache-2.0 [Q8_0 GGUF fallback](https://huggingface.co/bartowski/Nanbeige_Nanbeige4.3-33B-GGUF/tree/9beb68421fdf7be095093a6888325fa2c83ddd38)
+(35,195,128,960 bytes) is being staged to continue under the original rule.
 
 ## Later candidates: not run
 
