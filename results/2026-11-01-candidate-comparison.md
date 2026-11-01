@@ -2,7 +2,7 @@
 
 Date: 2026-11-01
 
-Status: **IN PROGRESS — reference finished; isolated Nanbeige FP8 benchmark running. Q8_0 fallback measurements are partial. Production is temporarily stopped in the approved Nanbeige window; restoration is queued after evaluation.**
+Status: **IN PROGRESS — Nanbeige serving matrix finished with one timeout; production restored and direct/Hermes route verified. Qwen A/B and DeepSeek staging continues.**
 
 This campaign uses the existing `llm-serving-bench` serving matrix and the pinned
 `tool-eval-standard-v1-b60e2f0` profile. The serving suite is the previously used
@@ -18,8 +18,8 @@ context rather than a controlled comparison to this thinking-off cohort.
 
 | Model | Quant | Spark(s) | Load time | Memory used | Single-stream tok/s | Prefill tok/s | Benchmark scores vs reference | Notes or problems |
 |---|---|---|---|---|---|---|---|---|
-| Qwen3.8-Flash-Next production reference | NVIDIA NVFP4 | 2x DGX Spark, TP=2 | Not measured yet | Observed host peaks 87.94 / 85.51 GiB (partial telemetry) | 70.25 | 2,801.80 at 128K | 13/13 regression checks; tool mean 87.7 (98.6% complete) | 575/575 requests; c8 soak 185.82 tok/s; cache-reset endpoint unavailable |
-| Nanbeige4.3-33B | FP8 | 1x DGX Spark | 357.90 s first startup | 33.36 GiB weights + 64.8 GiB KV reserved; host peak pending | 6.58 (completed cell) | Pending | Pending | Full matrix running; isolated container/Unix socket; no errors in completed cells |
+| Qwen3.8-Flash-Next production reference | NVIDIA NVFP4 | 2x DGX Spark, TP=2 | 91.82 s on restoration | Observed host peaks 87.94 / 85.51 GiB (partial telemetry) | 70.25 | 2,801.80 at 128K | 13/13 regression checks; tool mean 87.7 (98.6% complete) | 575/575 requests; c8 soak 185.82 tok/s; cache-reset endpoint unavailable |
+| Nanbeige4.3-33B | FP8 | 1x DGX Spark | 357.90 s first startup | 110.67 GiB observed host peak | 6.58 | 334.88 at 128K | 9/12 canaries vs reference 12/12; 240K timed out vs reference pass; tools not run | 244/245 requests; c8 soak 46.82 tok/s; no OOM/restarts/guard trips |
 | Qwen3.8-Flash-Next, ABLIT=0 | FP4-Local QAD | 1x DGX Spark | Pending | Pending | Pending | Pending | Pending | Stock control for the overlay |
 | Qwen3.8-Flash-Next, ABLIT=1 | FP4-Local QAD + Keys overlay | Same single Spark | Pending | Pending | Pending | Pending | Pending | Gated access confirmed; terms accepted by operator |
 | DeepSeek-V4.1-Flash-1017 | EXL3 EAQ v1, 2.9 bpw | 2x DGX Spark, TP=2 | Pending | Pending | Pending | Pending | Pending | Separate outage window required |
@@ -46,6 +46,36 @@ neither OOMed. Direct health/model identity and an exact routed postflight
 canary passed, with the router attributing the request to the existing SSH
 backend tunnel. These checks preceded the first authorized production stop for Nanbeige. Both production containers are preserved, with restoration required after the experiment.
 
+## Nanbeige completed measurements
+
+The full serving run took 5,167.25 seconds. Its only request error was the
+240K retrieval: `TimeoutError` after 900.60 seconds, without an answer. The
+12 remaining accuracy probes were graded, and nine passed. All three failures
+were the same string reversal (`SPARK38` → `83SKRAPS`, expected `83KRAPS`);
+production Qwen passed all 12 matching canaries and its retrieval probe.
+The existing combined runner rejects serving results with request errors, so
+its pinned tool evaluation was not started. No substitute quality score was
+created.
+
+The c8 soak completed 112/112 requests in 1,224.78 seconds at 46.82 output tok/s.
+All 1,033 memory samples were valid: peak host use 110.67 GiB, minimum available
+11.02 GiB. No OOM, restart, or memory-guard stop occurred. At 128K, p95 TTFT was
+374.93 seconds. Cold/warm 32K prefix p95 TTFT was 54.94 / 0.97 seconds.
+
+After the experiment, the preserved production worker and head were started
+in that order. Container IDs and `unless-stopped` policies matched, direct
+model/canary checks passed, and an exact Hermes → router → production-backend
+canary passed. Restoration timing above is container start to the API listen
+log; first healthy observation was 106.11 seconds after recovery began with
+15-second polling. These retained-container recovery timings are not a
+controlled cold-start comparison with Nanbeige’s first compilation.
+
+Production is configured for a 1,048,576-token window. The current campaign’s
+workloads reach 240K; Nanbeige and the new single-Spark Qwen recipe use 262,144.
+The single-Spark recipe’s smaller maximum is a deployment tradeoff even if its
+benchmark results are favorable. Longer production contexts were not validated
+by this campaign.
+
 ## Verified artifacts and boundaries
 
 - [Nanbeige FP8](https://huggingface.co/primitive-ai/Nanbeige4.3-33B-FP8/tree/0140c157bc44507929a742c220865b0870052552): Apache-2.0; 35,548,055,920 bytes in the pinned repository. Its configuration supports 524,288 positions; the planned test uses 262,144.
@@ -70,7 +100,7 @@ The cached vLLM stack initializes PyTorch distributed state even with one GPU.
 PyTorch's [TCPStore listener](https://github.com/pytorch/pytorch/blob/v2.11.0/torch/csrc/distributed/c10d/TCPStoreLibUvBackend.cpp)
 binds wildcard addresses. A host-network launch would violate the operator's
 listener rule, so none was attempted. An isolated `--network none` container
-with a private Unix-socket API was explicitly approved, passed the existing direct canary, and is now running the unchanged suite. The container has only a loopback interface and no external route; the socket is owner-only (0600) beneath a private directory (0700). The already-approved
+with a private Unix-socket API was explicitly approved and completed the unchanged suite. The container has only a loopback interface and no external route; the socket is owner-only (0600) beneath a private directory (0700). The already-approved
 Apache-2.0 [Q8_0 GGUF fallback](https://huggingface.co/bartowski/Nanbeige_Nanbeige4.3-33B-GGUF/tree/9beb68421fdf7be095093a6888325fa2c83ddd38)
 (35,195,128,960 bytes) loaded in 32.365 seconds and completed preliminary decode cells without errors: c1 6.15, c2 11.99, c4 22.85, c8 41.73, c12 56.33 output tok/s. Its run was deliberately interrupted when FP8 isolation approval arrived. These are partial observations, without a completed suite or tool score; the preferred FP8 format will receive the full protocol.
 
@@ -83,5 +113,4 @@ host memory, caches, and runtime workspace; two-Spark feasibility is unvalidated
 
 ## Recommendation
 
-Pending completed measurements. Keep the production Qwen service as the
-reference and recovery target throughout the campaign.
+Nanbeige FP8 does not earn a replacement recommendation from this run: it was slower, failed one retrieval request, and missed the same string-reversal probe three times. Keep production Qwen while the controlled overlay pair and two-node DeepSeek candidate remain unmeasured.
