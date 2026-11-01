@@ -2,7 +2,7 @@
 
 Date: 2026-11-01
 
-Status: **AWAITING FRESH OUTAGE APPROVAL — Qwen A/B completed. DeepSeek first launch failed; production is restored and verified. The corrected retry passed a CPU mount-path check and launch dry-run.**
+Status: **IN PROGRESS — Qwen A/B completed. DeepSeek corrected retry was explicitly approved, loaded successfully on both Sparks, and is running the unchanged benchmark. Production restoration is required afterward.**
 
 This campaign uses the existing `llm-serving-bench` serving matrix and the pinned
 `tool-eval-standard-v1-b60e2f0` profile. The serving suite is the previously used
@@ -22,7 +22,7 @@ context rather than a controlled comparison to this thinking-off cohort.
 | Nanbeige4.3-33B | FP8 | 1x DGX Spark | 357.90 s first startup | 110.67 GiB observed host peak | 6.58 | 334.88 at 128K | 9/12 canaries vs reference 12/12; 240K timed out vs reference pass; tools not run | 244/245 requests; c8 soak 46.82 tok/s; no OOM/restarts/guard trips |
 | Qwen3.8-Flash-Next, ABLIT=0 | FP4-Local QAD | 1x DGX Spark | 187.61 s | 92.35 GiB host peak | 40.57 | 2,058.98 at 128K | 13/13 regression checks; tool mean 89.0 (100% complete), safety gate failed | 319/319 requests; c8 soak 76.22 tok/s; five-stream admission cap |
 | Qwen3.8-Flash-Next, ABLIT=1 | FP4-Local QAD + Keys overlay | Same single Spark | 187.07 s | 92.03 GiB host peak | 54.00 | 2,078.18 at 128K | 13/13 regression checks; tool mean 86.0 (100% complete), critical safety failures | 413/413 requests; c8 soak 116.64 tok/s |
-| DeepSeek-V4.1-Flash-1017 | EXL3 EAQ v1, 2.9 bpw | 2x DGX Spark, TP=2 | Failed after 26.39 s | Not measured | Not measured | Not measured | Benchmark not started | Broken head Engram mount symlinks; corrected retry prepared; production restored |
+| DeepSeek-V4.1-Flash-1017 | EXL3 EAQ v1, 2.9 bpw | 2x DGX Spark, TP=2 | 34.01 s on retry | Pending | 64.58 (completed cell) | Pending | Pending | Corrected retry in c8 soak; four-stream admission cap |
 
 The reference completed in 1,845.43 seconds. Its 20-minute c8 soak completed
 442 requests without errors. Prefill in the table uses the existing harness
@@ -171,18 +171,18 @@ After the failure, both candidate ranks were stopped, then the original Qwen
 worker and head were started. Direct model/canary and exact Hermes → router →
 production-tunnel canaries passed; first healthy observation was 91.18 seconds
 after recovery began. Both originally approved outage windows are consumed.
-The operator's per-outage rule requires a fresh yes before executing this retry.
+The operator subsequently gave that fresh yes. The corrected retry loaded, passed its chat canary, and started the unchanged serving matrix. Post-load available memory was 7.9 / 10.5 GiB, above the 4 GiB soft guards. Restoration and both route checks remain required after this run.
 
 ## Verified artifacts and boundaries
 
-- [Nanbeige FP8](https://huggingface.co/primitive-ai/Nanbeige4.3-33B-FP8/tree/0140c157bc44507929a742c220865b0870052552): Apache-2.0; 35,548,055,920 bytes in the pinned repository. Its configuration supports 524,288 positions; the planned test uses 262,144.
+- [Nanbeige FP8](https://huggingface.co/primitive-ai/Nanbeige4.3-33B-FP8/tree/0140c157bc44507929a742c220865b0870052552): Apache-2.0; 35,548,055,920 bytes in the pinned repository. Its configuration supports 524,288 positions; this test used 262,144.
 - [Qwen FP4-Local](https://huggingface.co/nvidia/Qwen3.8-Flash-Next-FP4-Local/tree/b9ce18a6887e18c089fdea8509a33e63429a3300): NVIDIA Open Model Agreement plus upstream Qwen terms. All 33 pinned repository files passed fresh hashes on the test Spark, including 21 indexed weight shards totaling 102,192,011,716 bytes.
 - [Keys overlay](https://huggingface.co/drowzeys/keys-Qwen3.8-Flash-Next-NVFP4-FP4-QAD-house-qsa-L3-47/tree/c44f5b92ee3d307b82aab1c55f4cc4ae1d440344): pinned sidecar is 194,645,112 bytes. NVIDIA Open Model License plus the separately accepted access agreement. The sidecar downloaded successfully and its SHA-256 matched the pinned metadata.
 - [DeepSeek quant](https://huggingface.co/Mia-AiLab/DeepSeek-V4.1-Flash-1017-EXL3-EAQ-v1-2.9-bpw/tree/45ee5d0fd106c94a3d77f721e09cbb2f50e5a16b): MIT; repository payload 210,663,291,755 bytes. Required base-model Engram shards total 203,073,077,576 bytes. Matching retained artifacts are verified on both nodes: all head-side upstream source files and 256 required/present worker files passed fresh hashes. The retained rank-cache fingerprints match the current planner, the template matches, and the kernel kit passed its documented checks. The current recipe image was built, copied, and its ID matched on both nodes. The documented local-copy worker preflight passed. Quant + Engram shards + one rank-0 file total 519,856,832,154 bytes before metadata, kit, and image—more than the recipe’s approximate 505 GB. Existing files also retain an extra rank-1 copy on the head; nothing is deleted.
 - Both systems already have successful 2200 MHz cap services. The recipe also documents NFS configuration and optional conversion to a headless host; local-copy mode and current free memory avoid those changes. This campaign has changed no GPU clocks or host configuration.
 - All inference listeners remain loopback or fabric only; image pulls are disabled. Production containers will be preserved and restored by starting the worker before the API head, as explicitly approved by the operator.
 
-Both Qwen A/B launch dry runs passed. The separately built overlay view changes exactly 24 expected tensor mappings; all other stock files resolve unchanged. The operator explicitly approved two separate production outages: the A/B pair first, then DeepSeek only after verified production restoration. The A/B outage is complete, with verified restoration; the separately approved DeepSeek attempt also ended with verified restoration. Its corrected retry awaits fresh outage approval.
+Both Qwen A/B launch dry runs passed. The separately built overlay view changes exactly 24 expected tensor mappings; all other stock files resolve unchanged. The operator explicitly approved two separate production outages: the A/B pair first, then DeepSeek only after verified production restoration. The A/B outage is complete, with verified restoration; the separately approved DeepSeek attempt also ended with verified restoration. Its corrected retry was separately approved and is now running.
 
 A controlled overlay capability delta compares ABLIT=1 with ABLIT=0 on the same
 checkpoint, runtime, hardware, and settings. Comparing either single-Spark lane
@@ -224,4 +224,4 @@ Mix-256G folder: the entire repository also includes a larger pack and totals
 
 ## Recommendation
 
-Nanbeige FP8 does not earn a replacement recommendation from this run: it was slower, failed one retrieval request, and missed the same string-reversal probe three times. Keep production Qwen. The overlay is faster on the serving workload but loses three tool-score points versus stock and introduces critical tool-safety failures; it should not serve Hermes tool execution. DeepSeek needs the prepared mount-path retry before any performance or quality recommendation can be made.
+Nanbeige FP8 does not earn a replacement recommendation from this run: it was slower, failed one retrieval request, and missed the same string-reversal probe three times. Keep production Qwen. The overlay is faster on the serving workload but loses three tool-score points versus stock and introduces critical tool-safety failures; it should not serve Hermes tool execution. DeepSeek is running the corrected mount-path retry; its performance and quality recommendation remain pending.
