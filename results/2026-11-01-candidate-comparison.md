@@ -2,7 +2,7 @@
 
 Date: 2026-11-01
 
-Status: **IN PROGRESS — Nanbeige serving matrix finished with one timeout; production restored and direct/Hermes route verified. Qwen A/B and DeepSeek preflight complete; fresh outage approvals pending.**
+Status: **IN PROGRESS — Qwen A/B outage active: stock lane running on one Spark. Both separate remaining outages were explicitly approved; DeepSeek follows verified A/B restoration.**
 
 This campaign uses the existing `llm-serving-bench` serving matrix and the pinned
 `tool-eval-standard-v1-b60e2f0` profile. The serving suite is the previously used
@@ -20,9 +20,9 @@ context rather than a controlled comparison to this thinking-off cohort.
 |---|---|---|---|---|---|---|---|---|
 | Qwen3.8-Flash-Next production reference | NVIDIA NVFP4 | 2x DGX Spark, TP=2 | 91.82 s on restoration | Observed host peaks 87.94 / 85.51 GiB (partial telemetry) | 70.25 | 2,801.80 at 128K | 13/13 regression checks; tool mean 87.7 (98.6% complete) | 575/575 requests; c8 soak 185.82 tok/s; cache-reset endpoint unavailable |
 | Nanbeige4.3-33B | FP8 | 1x DGX Spark | 357.90 s first startup | 110.67 GiB observed host peak | 6.58 | 334.88 at 128K | 9/12 canaries vs reference 12/12; 240K timed out vs reference pass; tools not run | 244/245 requests; c8 soak 46.82 tok/s; no OOM/restarts/guard trips |
-| Qwen3.8-Flash-Next, ABLIT=0 | FP4-Local QAD | 1x DGX Spark | Pending | Pending | Pending | Pending | Pending | Stock control for the overlay |
+| Qwen3.8-Flash-Next, ABLIT=0 | FP4-Local QAD | 1x DGX Spark | 187.61 s | Pending | 40.57 (completed cell) | Pending | Pending | Stock matrix running; five-stream admission cap |
 | Qwen3.8-Flash-Next, ABLIT=1 | FP4-Local QAD + Keys overlay | Same single Spark | Pending | Pending | Pending | Pending | Pending | Gated access confirmed; terms accepted by operator |
-| DeepSeek-V4.1-Flash-1017 | EXL3 EAQ v1, 2.9 bpw | 2x DGX Spark, TP=2 | Pending | Pending | Pending | Pending | Pending | Separate outage window required |
+| DeepSeek-V4.1-Flash-1017 | EXL3 EAQ v1, 2.9 bpw | 2x DGX Spark, TP=2 | Pending | Pending | Pending | Pending | Pending | Approved after verified A/B restoration |
 
 The reference completed in 1,845.43 seconds. Its 20-minute c8 soak completed
 442 requests without errors. Prefill in the table uses the existing harness
@@ -85,7 +85,7 @@ by this campaign.
 - Both systems already have successful 2200 MHz cap services. The recipe also documents NFS configuration and optional conversion to a headless host; local-copy mode and current free memory avoid those changes. This campaign has changed no GPU clocks or host configuration.
 - All inference listeners remain loopback or fabric only; image pulls are disabled. Production containers will be preserved and restored by starting the worker before the API head, as explicitly approved by the operator.
 
-Both Qwen A/B launch dry runs passed. The separately built overlay view changes exactly 24 expected tensor mappings; all other stock files resolve unchanged. Production remains healthy while the next explicit outage decisions are pending.
+Both Qwen A/B launch dry runs passed. The separately built overlay view changes exactly 24 expected tensor mappings; all other stock files resolve unchanged. The operator explicitly approved two separate production outages: the A/B pair first, then DeepSeek only after verified production restoration. The A/B outage is now active.
 
 A controlled overlay capability delta compares ABLIT=1 with ABLIT=0 on the same
 checkpoint, runtime, hardware, and settings. Comparing either single-Spark lane
