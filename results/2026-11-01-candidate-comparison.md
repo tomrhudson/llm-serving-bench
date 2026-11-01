@@ -22,7 +22,7 @@ context rather than a controlled comparison to this thinking-off cohort.
 | Nanbeige4.3-33B | FP8 | 1x DGX Spark | 357.90 s first startup | 110.67 GiB observed host peak | 6.58 | 334.88 at 128K | 9/12 canaries vs reference 12/12; 240K timed out vs reference pass; tools not run | 244/245 requests; c8 soak 46.82 tok/s; no OOM/restarts/guard trips |
 | Qwen3.8-Flash-Next, ABLIT=0 | FP4-Local QAD | 1x DGX Spark | 187.61 s | 92.35 GiB host peak | 40.57 | 2,058.98 at 128K | 13/13 regression checks; tool mean 89.0 (100% complete), safety gate failed | 319/319 requests; c8 soak 76.22 tok/s; five-stream admission cap |
 | Qwen3.8-Flash-Next, ABLIT=1 | FP4-Local QAD + Keys overlay | Same single Spark | 187.07 s | 92.03 GiB host peak | 54.00 | 2,078.18 at 128K | 13/13 regression checks; tool mean 86.0 (100% complete), critical safety failures | 413/413 requests; c8 soak 116.64 tok/s |
-| DeepSeek-V4.1-Flash-1017 | EXL3 EAQ v1, 2.9 bpw | 2x DGX Spark, TP=2 | 34.01 s on retry | Pending | 64.58 (completed cell) | Pending | Pending | Corrected retry in c8 soak; four-stream admission cap |
+| DeepSeek-V4.1-Flash-1017 | EXL3 EAQ v1, 2.9 bpw | 2x DGX Spark, TP=2 | 34.01 s on retry | 115.53 / 113.15 GiB host peaks | 64.58 | 1,801.57 at 128K | 13/13 regression checks; tools running | 391/391 requests; c8 soak 107.66 tok/s; four-stream admission cap |
 
 The reference completed in 1,845.43 seconds. Its 20-minute c8 soak completed
 442 requests without errors. Prefill in the table uses the existing harness
@@ -149,8 +149,8 @@ was recorded did the separately approved DeepSeek outage begin.
 The first two-node startup failed on the head after 26.39 seconds with
 `FileNotFound`; no serving benchmark was started. The worker loaded in 23.4
 seconds and both RDMA rails linked. Neither container OOMed, and neither
-memory guard tripped. The recipe's 80.7 output tok/s and roughly 2,100 prefill
-tok/s claims remain **unverified**, not refuted by this startup failure.
+memory guard tripped. That startup failure alone provided no throughput evidence. The successful
+retry's measurements are reported below.
 
 The launch configuration incorrectly mounted a Hugging Face snapshot by itself
 at `/engram`. All four snapshot entries are relative symlinks into `../../blobs`;
@@ -172,6 +172,30 @@ worker and head were started. Direct model/canary and exact Hermes â†’ router â†
 production-tunnel canaries passed; first healthy observation was 91.18 seconds
 after recovery began. Both originally approved outage windows are consumed.
 The operator subsequently gave that fresh yes. The corrected retry loaded, passed its chat canary, and started the unchanged serving matrix. Post-load available memory was 7.9 / 10.5 GiB, above the 4 GiB soft guards. Restoration and both route checks remain required after this run.
+
+## DeepSeek completed serving measurements
+
+The corrected retry completed the unchanged serving suite in 2,178.27 seconds:
+391/391 requests succeeded and all 13 accuracy checks passed, including 240K
+retrieval (p95 TTFT 138.74 seconds). The c8 soak completed 258/258 requests in
+1,226.99 seconds at 107.66 output tok/s. Single-stream output was 64.58 tok/s;
+128K prefill was 1,801.57 input tok/s by the harness wall-time definition.
+Peak host use was 115.53 / 113.15 GiB, with 436/436 usable samples per node and
+minimum available memory 6.16 / 8.53 GiB. Neither rank OOMed, restarted, or
+tripped its memory guard. Cold/warm 32K prefix p95 TTFT was recorded in the raw
+serving artifact; warm p95 TTFT was 9.08 seconds.
+
+The recipe's **80.7 tok/s single-stream and roughly 2,100 tok/s prefill claims
+were not reproduced on this workload**. Our single-stream result was 20.0%
+below 80.7. For a closer prefill metric, median prompt tokens / TTFT was
+1,835.28 tok/s, 12.6% below 2,100 and 11.6% below the recipe's specific 128K
+2,077.1 tok/s result. The recipe uses prose/sparkDash prompts; this campaign
+uses the pinned synthetic serving matrix, including forced-length decode.
+These measurements describe this workload and deployment.
+
+The unchanged tool smoke and three-trial standard profile follow the successful
+serving run. Their capability result remains pending. Production restoration
+and the direct plus Hermes/router route checks remain required afterward.
 
 ## Verified artifacts and boundaries
 
