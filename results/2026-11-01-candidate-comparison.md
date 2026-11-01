@@ -2,7 +2,7 @@
 
 Date: 2026-11-01
 
-Status: **IN PROGRESS — Qwen A/B completed. DeepSeek corrected retry was explicitly approved, loaded successfully on both Sparks, and is running the unchanged benchmark. Production restoration is required afterward.**
+Status: **COMPLETE — all requested candidate runs finished. Original Qwen production containers are restored and healthy through the direct API and Hermes/router route. Later candidates were not run.**
 
 This campaign uses the existing `llm-serving-bench` serving matrix and the pinned
 `tool-eval-standard-v1-b60e2f0` profile. The serving suite is the previously used
@@ -20,9 +20,9 @@ context rather than a controlled comparison to this thinking-off cohort.
 |---|---|---|---|---|---|---|---|---|
 | Qwen3.8-Flash-Next production reference | NVIDIA NVFP4 | 2x DGX Spark, TP=2 | 91.82 s on restoration | Observed host peaks 87.94 / 85.51 GiB (partial telemetry) | 70.25 | 2,801.80 at 128K | 13/13 regression checks; tool mean 87.7 (98.6% complete) | 575/575 requests; c8 soak 185.82 tok/s; cache-reset endpoint unavailable |
 | Nanbeige4.3-33B | FP8 | 1x DGX Spark | 357.90 s first startup | 110.67 GiB observed host peak | 6.58 | 334.88 at 128K | 9/12 canaries vs reference 12/12; 240K timed out vs reference pass; tools not run | 244/245 requests; c8 soak 46.82 tok/s; no OOM/restarts/guard trips |
-| Qwen3.8-Flash-Next, ABLIT=0 | FP4-Local QAD | 1x DGX Spark | 187.61 s | 92.35 GiB host peak | 40.57 | 2,058.98 at 128K | 13/13 regression checks; tool mean 89.0 (100% complete), safety gate failed | 319/319 requests; c8 soak 76.22 tok/s; five-stream admission cap |
-| Qwen3.8-Flash-Next, ABLIT=1 | FP4-Local QAD + Keys overlay | Same single Spark | 187.07 s | 92.03 GiB host peak | 54.00 | 2,078.18 at 128K | 13/13 regression checks; tool mean 86.0 (100% complete), critical safety failures | 413/413 requests; c8 soak 116.64 tok/s |
-| DeepSeek-V4.1-Flash-1017 | EXL3 EAQ v1, 2.9 bpw | 2x DGX Spark, TP=2 | 34.01 s on retry | 115.53 / 113.15 GiB host peaks | 64.58 | 1,801.57 at 128K | 13/13 regression checks; tools running | 391/391 requests; c8 soak 107.66 tok/s; four-stream admission cap |
+| Qwen3.8-Flash-Next, ABLIT=0 | FP4-Local QAD | 1x DGX Spark | 187.61 s | 92.35 GiB host peak | 40.57 | 2,058.98 at 128K | 13/13 regression checks; tool mean 89.0 (+1.3; 100% complete), safety gate failed | 319/319 requests; c8 soak 76.22 tok/s; five-stream admission cap |
+| Qwen3.8-Flash-Next, ABLIT=1 | FP4-Local QAD + Keys overlay | Same single Spark | 187.07 s | 92.03 GiB host peak | 54.00 | 2,078.18 at 128K | 13/13 regression checks; tool mean 86.0 (−1.7; 100% complete), critical safety failures | 413/413 requests; c8 soak 116.64 tok/s |
+| DeepSeek-V4.1-Flash-1017 | EXL3 EAQ v1, 2.9 bpw | 2x DGX Spark, TP=2 | 34.01 s on retry | 115.53 / 113.15 GiB host peaks | 64.58 | 1,801.57 at 128K | 13/13 regression checks; tool mean 90.0 (+2.3; 98.6% complete), safety gate passed | 391/391 requests; c8 soak 107.66 tok/s; four-stream admission cap |
 
 The reference completed in 1,845.43 seconds. Its 20-minute c8 soak completed
 442 requests without errors. Prefill in the table uses the existing harness
@@ -41,10 +41,15 @@ be treated as a complete comparative quality score. Serving requests disabled
 thinking; tool evaluation retained the server's thinking-on default, as in the
 existing combined workflow.
 
-Both production processes kept their original pre-run PIDs and start times;
-neither OOMed. Direct health/model identity and an exact routed postflight
-canary passed, with the router attributing the request to the existing SSH
-backend tunnel. These checks preceded the first authorized production stop for Nanbeige. Both production containers are preserved, with restoration required after the experiment.
+Load times are Docker start to API listen. The reference value is retained-container
+recovery; candidate values use staged local files, with compilation included
+where needed. They are not controlled cold-start comparisons. Memory values
+are observed host use (MemTotal minus MemAvailable), including runtime and OS;
+reference telemetry is partial, while candidate serving samples are complete.
+The baseline and DeepSeek share the same excluded TC-64 scenario; the two
+single-Spark Qwen lanes graded all scenarios, so their score deltas against
+production have different coverage. Only ABLIT=0 versus ABLIT=1 is the controlled
+overlay comparison.
 
 ## Nanbeige completed measurements
 
@@ -144,7 +149,7 @@ exact Hermes → router → production-tunnel canary passed. First healthy
 observation was 91.02 seconds after restoration began. Only after that proof
 was recorded did the separately approved DeepSeek outage begin.
 
-## DeepSeek first launch and prepared correction
+## DeepSeek first launch and applied correction
 
 The first two-node startup failed on the head after 26.39 seconds with
 `FileNotFound`; no serving benchmark was started. The worker loaded in 23.4
@@ -160,18 +165,18 @@ network-disabled, read-only container using the failed launch's exact mounts
 confirmed that all four `/engram` paths were missing, while all four files
 opened correctly through the already-mounted complete `/hf` cache.
 
-The prepared correction uses the recipe's empty `HEAD_ENGRAM_DIR` default so
-rank 0 reads Engram through the complete local NVMe HF cache. It requires no
+The applied correction used the recipe's empty `HEAD_ENGRAM_DIR` default so
+rank 0 reads Engram through the complete local NVMe HF cache. It required no
 new downloads, copies, image build, host configuration, or clock changes.
 Spill remains explicitly off, as in the original attempt. The corrected
 launch dry-run passed; it uses fresh candidate names and retains all failed
-containers and logs. It will run the same unchanged benchmark if approved.
+containers and logs. The operator approved a fresh outage, and the corrected launch completed the unchanged benchmark.
 
 After the failure, both candidate ranks were stopped, then the original Qwen
 worker and head were started. Direct model/canary and exact Hermes → router →
 production-tunnel canaries passed; first healthy observation was 91.18 seconds
 after recovery began. Both originally approved outage windows are consumed.
-The operator subsequently gave that fresh yes. The corrected retry loaded, passed its chat canary, and started the unchanged serving matrix. Post-load available memory was 7.9 / 10.5 GiB, above the 4 GiB soft guards. Restoration and both route checks remain required after this run.
+The operator subsequently gave that fresh yes. The corrected retry loaded, passed its chat canary, and started the unchanged serving matrix. Post-load available memory was 7.9 / 10.5 GiB, above the 4 GiB soft guards. The final production restoration and both route checks passed, as recorded below.
 
 ## DeepSeek completed serving measurements
 
@@ -193,20 +198,47 @@ below 80.7. For a closer prefill metric, median prompt tokens / TTFT was
 uses the pinned synthetic serving matrix, including forced-length decode.
 These measurements describe this workload and deployment.
 
-The unchanged tool smoke and three-trial standard profile follow the successful
-serving run. Their capability result remains pending. Production restoration
-and the direct plus Hermes/router route checks remain required afterward.
+Tool smoke completed with score 97. The three-trial standard mean was **90.0**
+(stddev 0.0; 95% interval 90.0–90.0), **+2.3 points versus production's 87.7**.
+Both graded 204/207 scenario trials (98.6%): TC-64 was excluded in every trial
+because the engine returned HTTP 400 for unsupported structured-output fields.
+DeepSeek's safety gate passed without warnings; Pass@3 and Pass^3 were both
+82.4%, versus production's 79.4% and 77.9%.
+
+Against production, DeepSeek improved TC-06, TC-40, TC-45, TC-51, and TC-60;
+it regressed on TC-14, TC-43, and TC-63. The modest gain applies to this covered
+tool-use suite; schema compliance remains unmeasured. It came with 8.1% lower
+single-stream throughput, 35.7% lower 128K prefill throughput by the harness
+definition, and 42.1% lower soak throughput. It also required both Sparks, with
+6.16 GiB minimum observed head memory reserve, and used a 262K configured window.
+
+## Final recovery and retained state
+
+Both DeepSeek candidate ranks were stopped with `docker stop`. The preserved
+production worker was started before the head using the explicitly approved
+`docker start` exception to the removal-based wrapper. Original container IDs,
+images, and `unless-stopped` restart policies matched. Health/model identity,
+direct canary, and exact Hermes → router → production-tunnel canary checks
+passed. First healthy observation was **91.21 seconds** after final recovery
+began; route verification completed at **21:46:07 UTC on 2026-11-01**.
+All campaign candidate containers are stopped and preserved. No model weights
+or images were deleted; no host settings, clocks, or fleet registry changed.
+The benchmark's owned SSH control connections and loopback forwards were then
+closed. A fresh unique-sentinel Hermes/router canary still passed at
+21:48:39 UTC, attributing the response to the production backend tunnel.
+
 
 ## Verified artifacts and boundaries
 
 - [Nanbeige FP8](https://huggingface.co/primitive-ai/Nanbeige4.3-33B-FP8/tree/0140c157bc44507929a742c220865b0870052552): Apache-2.0; 35,548,055,920 bytes in the pinned repository. Its configuration supports 524,288 positions; this test used 262,144.
+- [Nanbeige NVFP4 fallback](https://huggingface.co/primitive-ai/Nanbeige4.3-33B-NVFP4/tree/5ddf8788ed1fa4bec0c0b6fc74ddb0bef7dc4212): Apache-2.0; 22,091,794,730 bytes. Not downloaded or run; the preferred FP8 format completed the requested protocol.
 - [Qwen FP4-Local](https://huggingface.co/nvidia/Qwen3.8-Flash-Next-FP4-Local/tree/b9ce18a6887e18c089fdea8509a33e63429a3300): NVIDIA Open Model Agreement plus upstream Qwen terms. All 33 pinned repository files passed fresh hashes on the test Spark, including 21 indexed weight shards totaling 102,192,011,716 bytes.
 - [Keys overlay](https://huggingface.co/drowzeys/keys-Qwen3.8-Flash-Next-NVFP4-FP4-QAD-house-qsa-L3-47/tree/c44f5b92ee3d307b82aab1c55f4cc4ae1d440344): pinned sidecar is 194,645,112 bytes. NVIDIA Open Model License plus the separately accepted access agreement. The sidecar downloaded successfully and its SHA-256 matched the pinned metadata.
 - [DeepSeek quant](https://huggingface.co/Mia-AiLab/DeepSeek-V4.1-Flash-1017-EXL3-EAQ-v1-2.9-bpw/tree/45ee5d0fd106c94a3d77f721e09cbb2f50e5a16b): MIT; repository payload 210,663,291,755 bytes. Required base-model Engram shards total 203,073,077,576 bytes. Matching retained artifacts are verified on both nodes: all head-side upstream source files and 256 required/present worker files passed fresh hashes. The retained rank-cache fingerprints match the current planner, the template matches, and the kernel kit passed its documented checks. The current recipe image was built, copied, and its ID matched on both nodes. The documented local-copy worker preflight passed. Quant + Engram shards + one rank-0 file total 519,856,832,154 bytes before metadata, kit, and image—more than the recipe’s approximate 505 GB. Existing files also retain an extra rank-1 copy on the head; nothing is deleted.
 - Both systems already have successful 2200 MHz cap services. The recipe also documents NFS configuration and optional conversion to a headless host; local-copy mode and current free memory avoid those changes. This campaign has changed no GPU clocks or host configuration.
-- All inference listeners remain loopback or fabric only; image pulls are disabled. Production containers will be preserved and restored by starting the worker before the API head, as explicitly approved by the operator.
+- All inference listeners remain loopback or fabric only; image pulls are disabled. Production containers were preserved and restored by starting the worker before the API head, as explicitly approved by the operator.
 
-Both Qwen A/B launch dry runs passed. The separately built overlay view changes exactly 24 expected tensor mappings; all other stock files resolve unchanged. The operator explicitly approved two separate production outages: the A/B pair first, then DeepSeek only after verified production restoration. The A/B outage is complete, with verified restoration; the separately approved DeepSeek attempt also ended with verified restoration. Its corrected retry was separately approved and is now running.
+Both Qwen A/B launch dry runs passed. The separately built overlay view changes exactly 24 expected tensor mappings; all other stock files resolve unchanged. The operator explicitly approved two separate production outages: the A/B pair first, then DeepSeek only after verified production restoration. The A/B outage is complete, with verified restoration; the separately approved DeepSeek attempt also ended with verified restoration. Its corrected retry was separately approved, completed the full protocol, and ended with verified production restoration.
 
 A controlled overlay capability delta compares ABLIT=1 with ABLIT=0 on the same
 checkpoint, runtime, hardware, and settings. Comparing either single-Spark lane
@@ -248,4 +280,24 @@ Mix-256G folder: the entire repository also includes a larger pack and totals
 
 ## Recommendation
 
-Nanbeige FP8 does not earn a replacement recommendation from this run: it was slower, failed one retrieval request, and missed the same string-reversal probe three times. Keep production Qwen. The overlay is faster on the serving workload but loses three tool-score points versus stock and introduces critical tool-safety failures; it should not serve Hermes tool execution. DeepSeek is running the corrected mount-path retry; its performance and quality recommendation remain pending.
+Keep production Qwen3.8-Flash-Next as the default. None of these results justifies
+a new permanent slot, so no `fleet/models.json` diff is proposed or applied.
+Nanbeige FP8 was much slower and failed retrieval/accuracy checks. The overlay
+lost three points against stock and introduced critical simulated tool-action
+failures; neither single-Spark Qwen lane passed the tool safety gate.
+
+DeepSeek is the candidate worth retaining as a staged alternative for further
+workload-specific evaluation: it passed the safety gate and gained 2.3 points
+on the same covered tool scenarios. Its lower throughput, higher observed
+memory use, smaller configured window, and need for both Sparks favor keeping
+Qwen in production. It cannot co-serve with the current TP2 Qwen deployment.
+Next, evaluate MiniMax only once a tested two-Spark recipe is available; keep
+BLACKFOLD and Mistral deferred pending their readiness gaps above.
+
+Private raw artifacts are indexed by
+`.bench-runs/20261101-candidate-comparison/README.md`; the machine-readable
+comparison is `comparison-summary.json` in that folder. Canonical per-run
+sources are `serving.json` and, where the existing gate allowed it,
+`tool-eval-standard.json`. The first DeepSeek failure and corrected retry are
+both retained. Only the sanitized report and intended code changes are committed
+locally; raw logs remain ignored under the repository's usual convention.
