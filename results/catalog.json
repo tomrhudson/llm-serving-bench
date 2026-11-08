@@ -303,6 +303,199 @@
   ],
   "baselines": [
     {
+      "id": "glm53-flash-exl3-tensorfold-1104-dflash2-2x-1m",
+      "model_id": "glm53-flash",
+      "label": "GLM-5.3 Flash EXL3 4 bpw (TensorFold 1.1.9, DFlash2, recipe 13f2464)",
+      "chart_label": "GLM-5.3 TF 1.1.9",
+      "date": "2026-11-08",
+      "report": "2026-11-08-glm53-flash-exl3-tensorfold-1104-dflash2-2x-1m.md",
+      "hardware": "2x NVIDIA DGX Spark (128GB each)",
+      "runtime": "TensorFold",
+      "context_tokens": 1048576,
+      "recipe_credit": "[MiaAI-Lab GLM-5.3 Flash 1104 recipe](https://github.com/MiaAI-Lab/GLM-5.3-Flash-DGX-Sparks-1104/tree/13f2464ee84ab2b5dabf0bb264d1144b02cf5fb7)",
+      "recommendation": "Latest run (Nov 8); not selected: stable and 13/13 checks passed, but c1 42.67 / c8 102.96 / c16 121.04 tok/s, the c8 soak was 62.29 tok/s, 240K TTFT was 391.26s, the tool safety gate failed, and the DFlash2 drafter is non-commercial",
+      "decode": [
+        {
+          "concurrency": 1,
+          "output_tps": 42.67,
+          "ttft_p95_seconds": 0.37
+        },
+        {
+          "concurrency": 2,
+          "output_tps": 58.01,
+          "ttft_p95_seconds": 0.72
+        },
+        {
+          "concurrency": 4,
+          "output_tps": 79.04,
+          "ttft_p95_seconds": 1.19
+        },
+        {
+          "concurrency": 8,
+          "output_tps": 102.96,
+          "ttft_p95_seconds": 2.75
+        },
+        {
+          "concurrency": 12,
+          "output_tps": 114.57,
+          "ttft_p95_seconds": 4.06
+        },
+        {
+          "concurrency": 16,
+          "output_tps": 121.04,
+          "ttft_p95_seconds": 5.23
+        }
+      ],
+      "prefill": [
+        {
+          "input_tokens": 4096,
+          "input_tps": 902.98,
+          "ttft_p95_seconds": 2.65
+        },
+        {
+          "input_tokens": 32768,
+          "input_tps": 1569.79,
+          "ttft_p95_seconds": 19.09
+        },
+        {
+          "input_tokens": 131072,
+          "input_tps": 1665.97,
+          "ttft_p95_seconds": 77.03
+        }
+      ],
+      "prefix": {
+        "unique_ttft_p95_seconds": 83.66,
+        "warm_ttft_p95_seconds": 84.94
+      },
+      "soak": {
+        "concurrency": 8,
+        "minutes": 20,
+        "output_tps": 62.29,
+        "ttft_p95_seconds": 38.12,
+        "requests": 149,
+        "errors": 0
+      },
+      "quality": {
+        "passed": 13,
+        "total": 13
+      },
+      "tool_eval": {
+        "protocol_id": "tool-eval-standard-v1-b60e2f0",
+        "upstream_commit": "b60e2f00f6c44352a3680356e7c7948f777c5280",
+        "version": "0.0.1.dev1+unknown.gb60e2f00f",
+        "run_id": "2026-11-08T08-37-02.577175Z_852fce51",
+        "config_fingerprint": "ea85c011da3b",
+        "status": "complete",
+        "trials": 3,
+        "scenarios_per_trial": 69,
+        "completion_rate": 100.0,
+        "score_mean": 93.0,
+        "score_median": 93.0,
+        "score_stddev": 0.0,
+        "score_ci95": [
+          93.0,
+          93.0
+        ],
+        "pass_at_3": 91.3,
+        "pass_hat_3": 91.3,
+        "reliability_gap": 0.0,
+        "safety_passed": false,
+        "category_scores": [
+          {
+            "id": "A",
+            "label": "Tool Selection",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "B",
+            "label": "Parameter Precision",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "C",
+            "label": "Multi-Step Chains",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "D",
+            "label": "Restraint & Refusal",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "E",
+            "label": "Error Recovery",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "F",
+            "label": "Localization",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "G",
+            "label": "Structured Reasoning",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "H",
+            "label": "Instruction Following",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "I",
+            "label": "Context & State",
+            "mean_percent": 95.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "J",
+            "label": "Code Patterns",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "K",
+            "label": "Safety & Boundaries",
+            "mean_percent": 88.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "L",
+            "label": "Toolset Scale",
+            "mean_percent": 88.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "M",
+            "label": "Autonomous Planning",
+            "mean_percent": 67.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "N",
+            "label": "Creative Composition",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "O",
+            "label": "Structured Output",
+            "mean_percent": 83.0,
+            "stddev_percent": 0.0
+          }
+        ],
+        "report": "2026-11-08-glm53-flash-exl3-tensorfold-1104-dflash2-2x-1m-tool-eval.md"
+      }
+    },
+    {
       "id": "deepseek-v41-flash-1017-exl3-eaq-2.9bpw-tensorfold-2x-262k-27741e",
       "model_id": "deepseek-v41-flash-1017",
       "label": "DeepSeek V4.1 Flash 1017 EXL3-EAQ 2.9 bpw (TensorFold native, 2 Sparks TP=2, 262K, 4 streams, recipe 27741e17)",
