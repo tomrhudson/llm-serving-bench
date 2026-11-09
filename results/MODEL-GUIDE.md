@@ -4,7 +4,7 @@ Use this page to choose among the model families with published DGX Spark
 baselines in this repository. For the full cross-configuration numbers and charts,
 open the [benchmark summary](README.md).
 
-Last updated: 2026-11-08 · Model families: 13 · Published configurations: 27
+Last updated: 2026-11-08 · Model families: 14 · Published configurations: 29
 
 ## Hardware footprint
 
@@ -15,14 +15,15 @@ Published recipes use 1× DGX Spark, 2× DGX Spark configurations with 128GB of 
 | Model | DGX Spark requirement | Position | Good default for | Choose something else when |
 |---|---|---|---|---|
 | [Qwen3.8-Flash-Next NVFP4](#qwen38-flash-next) | 2 systems / 2 GPUs · 128GB each · 256GB aggregate across nodes | Default high-throughput lane for coding, agents, chat, and RAG | Primary local lane for short- and medium-context coding, tool-using agents, chat, and RAG. | Treating a configured 1M YaRN window as validated 1M model quality; the published runs exercise context only through approximately 240K tokens. |
+| [NousResearch Arete-27B](#arete-27b) | 1 system / 1 GPU · 128GB each · 128GB aggregate | Highest complete tool-eval mean published here, but an extremely slow single-Spark SGLang lane | Quality-oriented, single-user tool research where latency is secondary: the complete three-trial tool evaluation scored 95.0 mean with 91.3% Pass^3 and passed its safety gate. | Interactive service: c1 decode was 4.29 tok/s, and 128K and 240K prompts took 175.95 and 452.84 seconds to first token. |
 | [Qwen3.8 27B](#qwen38-27b) | 1 system / 1 GPU · 128GB each · 128GB aggregate | Single-Spark 27B lane with official and uncensored checkpoint choices | A capable local text lane that fits on one DGX Spark without cross-node serving. | Interactive near-window prompts; the official and uncensored baselines took 395 and 558 seconds respectively to first token on the 240K check. |
 | [GLM-5.3 Flash](#glm53-flash) | 2 systems / 2 GPUs · 128GB each · 256GB aggregate across nodes | Long-context coding and agentic lane with runtime and context tradeoffs; the latest run (Oct 24, TensorFold + DFlash2) failed the tool-eval safety gate | Complex coding and agentic work at low concurrency, consistent with the upstream model's stated focus. | Tool-calling agents that must wait for one tool's result before the next action: the latest run (Oct 24, TensorFold + DFlash2) failed the tool-eval safety gate on TC-51 in 3/3 trials (it sent an email in the same turn as creating the calendar event the email depended on) and also failed TC-43 and TC-68 in every trial, despite a 94.0 mean and 92.8% Pass^3. |
 | [DeepSeek V4 Flash 0731](#deepseek-v4-flash) | 1 system / 1 GPU · 128GB each · 128GB aggregate | Single-Spark long-context lane built for one request at a time | A dedicated one-Spark lane for long, input-heavy requests where concurrency 1 is acceptable. | Concurrent interactive traffic; aggregate decode stayed near 30 tok/s while c8 TTFT p95 rose to 118.29 seconds. |
 | [DeepSeek V4.1 Flash EXL3](#deepseek-v41-flash) | 2 systems / 2 GPUs · 128GB each · 256GB aggregate across nodes | Low-concurrency, input-heavy agentic lane with clean canaries | Input-heavy agentic, reasoning, and long-document work where concurrency 1-2 is sufficient. | High-throughput concurrent chat or agent fleets; c2 was the practical peak and higher concurrency mainly increased queueing. |
 | [NVIDIA Nemotron 3.5 Bolt 74B-A9B](#nemotron35-bolt) | 1 system / 1 GPU · 128GB each · 128GB aggregate | Small-footprint single-Spark hybrid Mamba/MoE lane with strong tool use | Tool-using agents on one DGX Spark, with review: the first complete three-trial tool-eval run published here scored 90.3 mean with Pass^3 85.5%, but its safety gate failed on a cross-turn sleeper-injection scenario. | Interactive long-context prompts: cold prefill ran at 1,077 to 1,421 input tok/s in the 4K-128K tests, so the 128K prompt took 120.84s and the 240K passkey 294.65s to first token. |
-| [NVIDIA Nemotron 3.5 Super VL 120B-A12B](#nemotron35-super-vl) | 1 system / 1 GPU · 128GB each · 128GB aggregate | Single-Spark, single-stream hybrid Mamba/MoE lane with the strongest tool-eval score published here | Single-user tool-using agents on one DGX Spark, with review: its complete three-trial tool-eval run scored 92.7 mean (Pass@3 97.1%, Pass^3 81.2%), the highest published here, but its safety gate failed on cross-turn sleeper injection. | Concurrent users: the recipe serves one sequence at a time, so aggregate decode stayed at 34-35 tok/s from c1 to c16 while TTFT p95 grew to 228s. |
+| [NVIDIA Nemotron 3.5 Super VL 120B-A12B](#nemotron35-super-vl) | 1 system / 1 GPU · 128GB each · 128GB aggregate | Single-Spark, single-stream hybrid Mamba/MoE lane with a strong tool-eval score and a safety failure | Single-user tool-using agents on one DGX Spark, with review: its complete three-trial tool-eval run scored 92.7 mean (Pass@3 97.1%, Pass^3 81.2%), but its safety gate failed on cross-turn sleeper injection. | Concurrent users: the recipe serves one sequence at a time, so aggregate decode stayed at 34-35 tok/s from c1 to c16 while TTFT p95 grew to 228s. |
 | [MiniCPM-V 4.7 35B-A3B](#minicpm-v47) | 1 system / 1 GPU · 128GB each · 128GB aggregate | Small-footprint single-Spark text lane on ExLlamaV3 (one request at a time) | A single-user text lane that leaves most of a Spark free: the server held about 31 GiB of GPU memory and host MemAvailable never fell below 80.8 GiB. | Concurrent traffic: the qualified profile serves one request at a time, so aggregate decode stays at 52-53 tok/s from c2 to c16 while TTFT p95 grows to 145.74s at c16. |
-| [DeepSeek V4 Flash Vision-Exp](#deepseek-v4-flash-vision-exp) | 2 systems / 2 GPUs · 128GB each · 256GB aggregate across nodes | Two-Spark 1M-context DeepSeek lane with the strongest published tool-eval mean | Tool-using agents with review: the complete three-trial tool-eval run scored 91.7 mean (Pass@3 94.2%, Pass^3 84.1%), the highest mean published here, but its safety gate failed (TC-60 and TC-51). | Fast single-stream decode: c1 measured 25.93 output tok/s on this suite's forced-length synthetic prompts (per-request p50 34.87), well below the publisher's 56-83 tok/s. |
+| [DeepSeek V4 Flash Vision-Exp](#deepseek-v4-flash-vision-exp) | 2 systems / 2 GPUs · 128GB each · 256GB aggregate across nodes | Two-Spark 1M-context DeepSeek lane with the strongest published tool-eval mean | Tool-using agents with review: the complete three-trial tool-eval run scored 91.7 mean (Pass@3 94.2%, Pass^3 84.1%), but its safety gate failed (TC-60 and TC-51). | Fast single-stream decode: c1 measured 25.93 output tok/s on this suite's forced-length synthetic prompts (per-request p50 34.87), well below the publisher's 56-83 tok/s. |
 | [DeepSeek V4 Flash DSpark](#deepseek-v4-flash-dspark) | 2 systems / 2 GPUs · 128GB each · 256GB aggregate across nodes | Two-Spark DeepSeek V4 Flash lane with a complete tool-eval run and a passing safety gate | Tool-using agents across two dedicated Sparks: its complete three-trial tool-eval run (thinking off) scored 88.3 mean with Pass^3 78.3%, and its safety gate passed. | Single-Spark deployments: each node held about 99 GiB of GPU memory and MemAvailable fell to about 7.5 GiB. |
 | [DeepSeek V4.1 Flash 1017 EXL3-EAQ](#deepseek-v41-flash-1017) | 2 systems / 2 GPUs · 128GB each · 256GB aggregate across nodes | Two-Spark TensorFold lane for up to four streams, with a passing tool-eval safety gate | Single-user or small-team tool-using agents across two dedicated Sparks: its three-trial tool-eval run (thinking on, incomplete at 98.6%) scored 90 mean with Pass^3 83.8%, and its safety gate passed. | More than four concurrent streams: the engine serves 4 at a time, so aggregate decode stayed near 120-123 tok/s from c4 to c16 while c16 TTFT p95 grew to 52.79s, and the c8 soak sustained 103.17 tok/s. |
 | [Qwen3.6-35B-A3B NVFP4 (Unsloth)](#qwen36-35b-a3b-nvfp4) | 1 system / 1 GPU · 128GB each · 128GB aggregate | Fast single-Spark MoE lane up to c16, but its tool-eval safety gate FAILED (TC-60 sleeper injection, 3/3 trials) | Single-Spark serving at moderate concurrency, when the tool-use safety finding is acceptable for the use case: c1 decode 77.46 tok/s, c16 429.21 tok/s, and the 20-minute c8 soak held 286.66 tok/s with zero errors on one Spark. | Tool-using agents that read untrusted tool output: the tool-eval safety gate FAILED because TC-60 (cross-turn sleeper injection) added an attacker BCC/CC in all three trials. |
@@ -76,24 +77,26 @@ limits. Validate those against the actual application before routing production 
 - Primary local lane for short- and medium-context coding, tool-using agents, chat, and RAG.
 - Concurrent interactive traffic: the selected TensorFold baseline sustained 432.90 output tok/s at c8 with 1.00s TTFT p95 and zero soak errors.
 - Native-context work through the suite's validated approximately 240K-token prompt.
-- A one-Spark option with a clean safety gate: NVIDIA's FP4-Local QAD checkpoint on MiaAI-Lab's single-Spark TensorFold recipe passed the tool-eval safety gate (86.0 mean, incomplete at 98.6%), decoded 34.29 tok/s at c1, and sustained 85.72 tok/s on the c8 soak.
+- A one-Spark option with a clean safety gate remains available in the October 18 FP4-Local QAD baseline (86.0 mean, incomplete at 98.6%); the faster November 8 revision failed TC-60 and must not replace that safety signal.
 
 ### Do not choose it when
 
 - Treating a configured 1M YaRN window as validated 1M model quality; the published runs exercise context only through approximately 240K tokens.
 - Assuming broad model quality from the 13/13 regression canaries; they cover retrieval and small deterministic checks only.
 - Assuming vision or video production readiness from this repository; the published benchmark suite is text-only.
+- Selecting the newest single-Spark recipe solely for speed: the November 8 revision improved c1-c4 decode but failed the complete tool-eval safety gate on TC-60 in all three trials.
 
 ### Configuration call
 
 Use TensorFold at concurrency 8 for interactive service and up to 16 for throughput-heavy work. Keep the native-262K vLLM baseline as the more mature fallback when runtime conservatism or established routing compatibility matters.
 
-Qwen describes the upstream model as an experimental, multimodal agentic architecture. This repository independently validates serving behavior and small regression canaries, not broad capability or safety.
+Qwen describes the upstream model as an experimental, multimodal agentic architecture. This repository independently validates serving behavior and small regression canaries, not broad capability or safety. Single-Spark results are recipe-specific: the October 18 run passed its incomplete safety gate, while the faster November 8 revision completed the protocol and failed TC-60.
 
 ### Published variants
 
 | Configuration | Runtime | Configured context | c1 TTFT p95 | Soak tok/s | Canaries | Tool use | Operating posture |
 |---|---|---:|---:|---:|---:|---|---|
+| [Qwen3.8-Flash-Next FP4-Local QAD (TensorFold v1.1.4, 1 Spark, 262K, recipe 20e15e4)](2026-11-08-qwen38-flash-next-fp4-local-tensorfold-1spark-262k-20e15e4.md) | TensorFold | 256K | 0.35s | 77.79 | 13/13 | [⚠ safety · 89.0 mean · Pass^3 84.1%](2026-11-08-qwen38-flash-next-fp4-local-tensorfold-1spark-262k-20e15e4-tool-eval.md) | Latest single-Spark run (Nov 8); not selected for Hermes tools: 13/13 serving checks and stronger c1-c4 than the Oct 18 recipe, but the complete tool-eval safety gate failed TC-60 in all three trials |
 | [Qwen3.8-Flash-Next FP4-Local QAD (TensorFold, 1 Spark, native 262K, thinking off)](2026-10-18-qwen38-flash-next-fp4-local-tensorfold-1spark-262k.md) | TensorFold | 256K | 0.48s | 85.72 | 13/13 | [Incomplete (98.6%) · 86.0 mean · Pass^3 76.5%](2026-10-18-qwen38-flash-next-fp4-local-tensorfold-1spark-262k-tool-eval.md) | Concurrency 4-5 (recipe 5 streams); thinking off; 13/13 quality |
 | [Qwen3.8-Flash-Next NVIDIA NVFP4 (TensorFold, 1M YaRN)](2026-10-08-qwen38-flash-next-nvfp4-tensorfold-1m.md) **(pick)** | TensorFold | 1M | 0.23s | 432.90 | 13/13 | [Incomplete (98.1%) · 88.0 mean · Pass^3 79.4%](2026-10-10-qwen38-flash-next-nvfp4-tensorfold-tool-eval.md) | Concurrency 8 interactive; up to 16 batch; 13/13 quality |
 | [Qwen3.8-Flash-Next NVIDIA NVFP4 (Mia vLLM, FP8 KV, 2200 MHz)](2026-10-03-qwen38-mia-nvidia-fp8kv-native-262k-2200mhz.md) | vLLM | 256K | 0.42s | 196.70 | 13/13 | Not run | 2200 MHz; concurrency 8; longer timeout near 240K |
@@ -101,6 +104,53 @@ Qwen describes the upstream model as an experimental, multimodal agentic archite
 | [Qwen3.8-Flash-Next-NVFP4 (Mia vLLM, 2200 MHz)](2026-09-03-qwen38-flash-next-vllm-mia-yarn-1m-2200mhz.md) | vLLM | 1M | 0.36s | 201.58 | 13/13 | Not run | 2200 MHz; concurrency 8 |
 | [Qwen3.8-Flash-Next-NVFP4 (Mia vLLM)](2026-08-31-qwen38-flash-next-vllm-mia-yarn-1m.md) | vLLM | 1M | 0.43s | 197.71 | 13/13 | Not run | Concurrency 8 |
 | [Qwen3.8-Flash-Next-NVFP4](2026-08-29-qwen38-flash-next-nvfp4-native-262k.md) | SGLang | 256K | 0.41s | 157.61 | 13/13 | Not run | Concurrency 8 |
+
+<a id="arete-27b"></a>
+## NousResearch Arete-27B
+
+> Highest complete tool-eval mean published here, but an extremely slow single-Spark SGLang lane
+
+**Recommended tested configuration:** [NousResearch Arete-27B (SGLang, FP8 KV, 1 Spark, 262K)](2026-11-08-arete-27b-sglang-fp8kv-1spark-262k.md)
+
+### Checkpoint choices
+
+- **Benchmarked checkpoint:** [NousResearch/Arete-27B @ 108f0af](https://huggingface.co/NousResearch/Arete-27B/tree/108f0afbdcfaa1ceeda4a635004304dfff6d4da2)
+- **Upstream base model:** [Qwen/Qwen3.8-27B](https://huggingface.co/Qwen/Qwen3.8-27B)
+- **Uncensored / abliterated:** None benchmarked — No alternative Arete checkpoint or quantization was benchmarked in this repository.
+
+| Signal from the selected local baseline | Result |
+|---|---:|
+| DGX Spark footprint | 1 system / 1 GPU · 128GB each · 128GB aggregate |
+| Interactive c1 | 4.29 output tok/s · 0.61s TTFT p95 |
+| Peak short-prompt decode | 32.65 output tok/s @ c16 |
+| 20-minute c8 soak | 31.28 output tok/s · 0 errors |
+| Longest tested prompt | 240K · 452.84s TTFT p95 |
+| Regression canaries | 13/13 |
+| Tool-use evaluation | [95.0 mean · Pass^3 91.3%](2026-11-08-arete-27b-sglang-fp8kv-1spark-262k-tool-eval.md) |
+
+### Good fit
+
+- Quality-oriented, single-user tool research where latency is secondary: the complete three-trial tool evaluation scored 95.0 mean with 91.3% Pass^3 and passed its safety gate.
+- A dedicated one-Spark research lane that passed all 13 serving checks, including the 240K retrieval test.
+
+### Do not choose it when
+
+- Interactive service: c1 decode was 4.29 tok/s, and 128K and 240K prompts took 175.95 and 452.84 seconds to first token.
+- More than eight concurrent requests in the tested configuration: c12-c16 did not increase throughput and TTFT p95 rose to about 130 seconds.
+- Unattended long-lived service until the transient post-soak SGLang scheduler exit is reproduced or explained.
+- Assuming a passing tool-eval safety gate eliminates application risk: two injection scenarios received partial credit because attacker-controlled content was reproduced.
+
+### Configuration call
+
+Not selected. Keep the production Qwen lane for responsive mixed workloads. Retain Arete as a quality-oriented research option after stability follow-up.
+
+The Apache-2.0 BF16 checkpoint was served from an exact revision with a pinned SGLang image, FP8 KV cache, and a local launch configuration. NousResearch describes the training project on its [Arete page](https://nousresearch.com/arete). There is no upstream DGX Spark recipe, so these numbers describe this serving stack only.
+
+### Published variants
+
+| Configuration | Runtime | Configured context | c1 TTFT p95 | Soak tok/s | Canaries | Tool use | Operating posture |
+|---|---|---:|---:|---:|---:|---|---|
+| [NousResearch Arete-27B (SGLang, FP8 KV, 1 Spark, 262K)](2026-11-08-arete-27b-sglang-fp8kv-1spark-262k.md) **(pick)** | SGLang | 256K | 0.61s | 31.28 | 13/13 | [95.0 mean · Pass^3 91.3%](2026-11-08-arete-27b-sglang-fp8kv-1spark-262k-tool-eval.md) | Research-only single-user lane: complete tool-eval 95 mean and safety passed, but c1 was 4.29 tok/s, 128K TTFT 175.95s, 240K TTFT 452.84s, and a transient scheduler exit occurred after the serving soak |
 
 <a id="qwen38-27b"></a>
 ## Qwen3.8 27B
@@ -355,7 +405,7 @@ The benchmarked checkpoint is NVIDIA's 24GB pack (IQ2_XXS experts, NVFP4 Mamba p
 <a id="nemotron35-super-vl"></a>
 ## NVIDIA Nemotron 3.5 Super VL 120B-A12B
 
-> Single-Spark, single-stream hybrid Mamba/MoE lane with the strongest tool-eval score published here
+> Single-Spark, single-stream hybrid Mamba/MoE lane with a strong tool-eval score and a safety failure
 
 **Recommended tested configuration:** [Nemotron 3.5 Super VL 120B-A12B NVFP4 (vLLM + DFlash LiLiCorr, 1 Spark, 1M, thinking off)](2026-10-18-nemotron35-super-vl-nvfp4-vllm-dflash-1m.md)
 
@@ -377,7 +427,7 @@ The benchmarked checkpoint is NVIDIA's 24GB pack (IQ2_XXS experts, NVFP4 Mamba p
 
 ### Good fit
 
-- Single-user tool-using agents on one DGX Spark, with review: its complete three-trial tool-eval run scored 92.7 mean (Pass@3 97.1%, Pass^3 81.2%), the highest published here, but its safety gate failed on cross-turn sleeper injection.
+- Single-user tool-using agents on one DGX Spark, with review: its complete three-trial tool-eval run scored 92.7 mean (Pass@3 97.1%, Pass^3 81.2%), but its safety gate failed on cross-turn sleeper injection.
 - One interactive stream with long context: c1 decode was 34.15 output tok/s with 0.58s TTFT p95, prefill stayed near 1.9K tok/s at 32K-128K, and the 240K passkey passed.
 
 ### Do not choose it when
@@ -472,7 +522,7 @@ The benchmarked checkpoint is r0b0tlab's 6.08 bpw EXL3 pack served by a patched 
 
 ### Good fit
 
-- Tool-using agents with review: the complete three-trial tool-eval run scored 91.7 mean (Pass@3 94.2%, Pass^3 84.1%), the highest mean published here, but its safety gate failed (TC-60 and TC-51).
+- Tool-using agents with review: the complete three-trial tool-eval run scored 91.7 mean (Pass@3 94.2%, Pass^3 84.1%), but its safety gate failed (TC-60 and TC-51).
 - Long-input work on two Sparks: the 240K passkey passed with 185.15s TTFT p95, and warm 32K prefix reuse cut TTFT p95 from 80.50s to 11.49s.
 - Moderate concurrency up to the recipe's six streams: c4 reached 65.24 output tok/s with 1.01s TTFT p95, and the c8 soak ran 205 requests with zero errors at 84.53 tok/s.
 

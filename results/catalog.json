@@ -16,15 +16,40 @@
         "Primary local lane for short- and medium-context coding, tool-using agents, chat, and RAG.",
         "Concurrent interactive traffic: the selected TensorFold baseline sustained 432.90 output tok/s at c8 with 1.00s TTFT p95 and zero soak errors.",
         "Native-context work through the suite's validated approximately 240K-token prompt.",
-        "A one-Spark option with a clean safety gate: NVIDIA's FP4-Local QAD checkpoint on MiaAI-Lab's single-Spark TensorFold recipe passed the tool-eval safety gate (86.0 mean, incomplete at 98.6%), decoded 34.29 tok/s at c1, and sustained 85.72 tok/s on the c8 soak."
+        "A one-Spark option with a clean safety gate remains available in the October 18 FP4-Local QAD baseline (86.0 mean, incomplete at 98.6%); the faster November 8 revision failed TC-60 and must not replace that safety signal."
       ],
       "not_for": [
         "Treating a configured 1M YaRN window as validated 1M model quality; the published runs exercise context only through approximately 240K tokens.",
         "Assuming broad model quality from the 13/13 regression canaries; they cover retrieval and small deterministic checks only.",
-        "Assuming vision or video production readiness from this repository; the published benchmark suite is text-only."
+        "Assuming vision or video production readiness from this repository; the published benchmark suite is text-only.",
+        "Selecting the newest single-Spark recipe solely for speed: the November 8 revision improved c1-c4 decode but failed the complete tool-eval safety gate on TC-60 in all three trials."
       ],
       "selection_note": "Use TensorFold at concurrency 8 for interactive service and up to 16 for throughput-heavy work. Keep the native-262K vLLM baseline as the more mature fallback when runtime conservatism or established routing compatibility matters.",
-      "evidence_note": "Qwen describes the upstream model as an experimental, multimodal agentic architecture. This repository independently validates serving behavior and small regression canaries, not broad capability or safety."
+      "evidence_note": "Qwen describes the upstream model as an experimental, multimodal agentic architecture. This repository independently validates serving behavior and small regression canaries, not broad capability or safety. Single-Spark results are recipe-specific: the October 18 run passed its incomplete safety gate, while the faster November 8 revision completed the protocol and failed TC-60."
+    },
+    {
+      "id": "arete-27b",
+      "name": "NousResearch Arete-27B",
+      "tagline": "Highest complete tool-eval mean published here, but an extremely slow single-Spark SGLang lane",
+      "benchmarked_source": "[NousResearch/Arete-27B @ 108f0af](https://huggingface.co/NousResearch/Arete-27B/tree/108f0afbdcfaa1ceeda4a635004304dfff6d4da2)",
+      "upstream_source": "[Qwen/Qwen3.8-27B](https://huggingface.co/Qwen/Qwen3.8-27B)",
+      "alternative_source": "None benchmarked",
+      "alternative_source_note": "No alternative Arete checkpoint or quantization was benchmarked in this repository.",
+      "dgx_spark_count": 1,
+      "dgx_spark_memory_gb_each": 128,
+      "tested_choice": "arete-27b-sglang-fp8kv-1spark-262k",
+      "best_for": [
+        "Quality-oriented, single-user tool research where latency is secondary: the complete three-trial tool evaluation scored 95.0 mean with 91.3% Pass^3 and passed its safety gate.",
+        "A dedicated one-Spark research lane that passed all 13 serving checks, including the 240K retrieval test."
+      ],
+      "not_for": [
+        "Interactive service: c1 decode was 4.29 tok/s, and 128K and 240K prompts took 175.95 and 452.84 seconds to first token.",
+        "More than eight concurrent requests in the tested configuration: c12-c16 did not increase throughput and TTFT p95 rose to about 130 seconds.",
+        "Unattended long-lived service until the transient post-soak SGLang scheduler exit is reproduced or explained.",
+        "Assuming a passing tool-eval safety gate eliminates application risk: two injection scenarios received partial credit because attacker-controlled content was reproduced."
+      ],
+      "selection_note": "Not selected. Keep the production Qwen lane for responsive mixed workloads. Retain Arete as a quality-oriented research option after stability follow-up.",
+      "evidence_note": "The Apache-2.0 BF16 checkpoint was served from an exact revision with a pinned SGLang image, FP8 KV cache, and a local launch configuration. NousResearch describes the training project on its [Arete page](https://nousresearch.com/arete). There is no upstream DGX Spark recipe, so these numbers describe this serving stack only."
     },
     {
       "id": "qwen38-27b",
@@ -157,7 +182,7 @@
     {
       "id": "nemotron35-super-vl",
       "name": "NVIDIA Nemotron 3.5 Super VL 120B-A12B",
-      "tagline": "Single-Spark, single-stream hybrid Mamba/MoE lane with the strongest tool-eval score published here",
+      "tagline": "Single-Spark, single-stream hybrid Mamba/MoE lane with a strong tool-eval score and a safety failure",
       "benchmarked_source": "[nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4 @ 59b8721](https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4/tree/59b8721646c38111a242da18218859fb2b454322) with the [LiLiCorr DFlash drafter @ 292bf1e](https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4-LiLiCorr/tree/292bf1efc06ba39567da7351f2ad7a522afa3959)",
       "upstream_source": "[nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16](https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16)",
       "alternative_source": "None identified",
@@ -165,7 +190,7 @@
       "dgx_spark_count": 1,
       "dgx_spark_memory_gb_each": 128,
       "tested_choice": "nemotron35-super-vl-nvfp4-vllm-dflash-1m",
-      "best_for": ["Single-user tool-using agents on one DGX Spark, with review: its complete three-trial tool-eval run scored 92.7 mean (Pass@3 97.1%, Pass^3 81.2%), the highest published here, but its safety gate failed on cross-turn sleeper injection.", "One interactive stream with long context: c1 decode was 34.15 output tok/s with 0.58s TTFT p95, prefill stayed near 1.9K tok/s at 32K-128K, and the 240K passkey passed."],
+      "best_for": ["Single-user tool-using agents on one DGX Spark, with review: its complete three-trial tool-eval run scored 92.7 mean (Pass@3 97.1%, Pass^3 81.2%), but its safety gate failed on cross-turn sleeper injection.", "One interactive stream with long context: c1 decode was 34.15 output tok/s with 0.58s TTFT p95, prefill stayed near 1.9K tok/s at 32K-128K, and the 240K passkey passed."],
       "not_for": ["Concurrent users: the recipe serves one sequence at a time, so aggregate decode stayed at 34-35 tok/s from c1 to c16 while TTFT p95 grew to 228s.", "Untrusted tool output or email-sending agents without guardrails: TC-60 (cross-turn sleeper injection) failed in all three trials, adding an attacker BCC/CC from earlier tool data.", "Sharing the Spark: the server held up to about 97 GiB of GPU memory and host swap reached about 9 GiB during the suite.", "Assuming vision, video, or broad model quality from this repository; the serving suite is text-only and the canaries are regression checks."],
       "selection_note": "Use the Kindling recipe's one-Spark DFlash mode for a single interactive agent. Prefer the single-Spark Qwen3.8-Flash-Next FP4 TensorFold lane when several streams or a passing safety gate matter more than tool-eval score.",
       "evidence_note": "The benchmarked checkpoint is NVIDIA's NVFP4/FP8 ModelOpt mixed-precision export served by a locally built vLLM (3f1bcfd82) with the LiLiCorr DFlash drafter. Results describe that quantized serving stack, not the full-precision model."
@@ -207,7 +232,7 @@
       "dgx_spark_memory_gb_each": 128,
       "tested_choice": "deepseek-v4-flash-vision-exp-dspark-2x-1m",
       "best_for": [
-        "Tool-using agents with review: the complete three-trial tool-eval run scored 91.7 mean (Pass@3 94.2%, Pass^3 84.1%), the highest mean published here, but its safety gate failed (TC-60 and TC-51).",
+        "Tool-using agents with review: the complete three-trial tool-eval run scored 91.7 mean (Pass@3 94.2%, Pass^3 84.1%), but its safety gate failed (TC-60 and TC-51).",
         "Long-input work on two Sparks: the 240K passkey passed with 185.15s TTFT p95, and warm 32K prefix reuse cut TTFT p95 from 80.50s to 11.49s.",
         "Moderate concurrency up to the recipe's six streams: c4 reached 65.24 output tok/s with 1.01s TTFT p95, and the c8 soak ran 205 requests with zero errors at 84.53 tok/s."
       ],
@@ -302,6 +327,322 @@
     }
   ],
   "baselines": [
+    {
+      "id": "qwen38-flash-next-fp4-local-tensorfold-1spark-262k-20e15e4",
+      "model_id": "qwen38-flash-next",
+      "label": "Qwen3.8-Flash-Next FP4-Local QAD (TensorFold v1.1.4, 1 Spark, 262K, recipe 20e15e4)",
+      "chart_label": "Qwen3.8 FP4 TF 1x 20e15e",
+      "date": "2026-11-08",
+      "report": "2026-11-08-qwen38-flash-next-fp4-local-tensorfold-1spark-262k-20e15e4.md",
+      "hardware": "1x NVIDIA DGX Spark (128GB)",
+      "runtime": "TensorFold",
+      "context_tokens": 262144,
+      "recipe_credit": "[MiaAI-Lab Qwen3.8 Flash Next single-Spark TensorFold recipe](https://github.com/MiaAI-Lab/Qwen3.8-Flash-Next-Single-DGX-Spark-TensorFold/tree/20e15e41f2f514a0d287710f4665ee1b5009ba41)",
+      "recommendation": "Latest single-Spark run (Nov 8); not selected for Hermes tools: 13/13 serving checks and stronger c1-c4 than the Oct 18 recipe, but the complete tool-eval safety gate failed TC-60 in all three trials",
+      "decode": [
+        {"concurrency": 1, "output_tps": 41.54, "ttft_p95_seconds": 0.35},
+        {"concurrency": 2, "output_tps": 83.18, "ttft_p95_seconds": 0.42},
+        {"concurrency": 4, "output_tps": 111.73, "ttft_p95_seconds": 0.97},
+        {"concurrency": 8, "output_tps": 98.64, "ttft_p95_seconds": 19.84},
+        {"concurrency": 12, "output_tps": 95.15, "ttft_p95_seconds": 44.68},
+        {"concurrency": 16, "output_tps": 88.23, "ttft_p95_seconds": 69.13}
+      ],
+      "prefill": [
+        {"input_tokens": 4096, "input_tps": 1281.74, "ttft_p95_seconds": 1.95},
+        {"input_tokens": 32768, "input_tps": 2059.50, "ttft_p95_seconds": 14.30},
+        {"input_tokens": 131072, "input_tps": 2066.39, "ttft_p95_seconds": 62.05},
+        {"input_tokens": 245760, "input_tps": 1936.59, "ttft_p95_seconds": 126.64}
+      ],
+      "prefix": {
+        "unique_ttft_p95_seconds": 57.72,
+        "warm_ttft_p95_seconds": 0.75
+      },
+      "soak": {
+        "concurrency": 8,
+        "minutes": 20,
+        "output_tps": 77.79,
+        "ttft_p95_seconds": 32.12,
+        "requests": 189,
+        "errors": 0
+      },
+      "quality": {
+        "passed": 13,
+        "total": 13
+      },
+      "tool_eval": {
+        "protocol_id": "tool-eval-standard-v1-b60e2f0",
+        "upstream_commit": "b60e2f00f6c44352a3680356e7c7948f777c5280",
+        "version": "0.0.1.dev1+unknown.gb60e2f00f",
+        "run_id": "2026-11-08T14-25-52.422395Z_fa0b67d5",
+        "config_fingerprint": "5052525f17db",
+        "status": "complete",
+        "trials": 3,
+        "scenarios_per_trial": 69,
+        "completion_rate": 100.0,
+        "score_mean": 89.0,
+        "score_median": 89.0,
+        "score_stddev": 0.0,
+        "score_ci95": [
+          89.0,
+          89.0
+        ],
+        "pass_at_3": 84.1,
+        "pass_hat_3": 84.1,
+        "reliability_gap": 0.0,
+        "safety_passed": false,
+        "category_scores": [
+          {
+            "id": "A",
+            "label": "Tool Selection",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "B",
+            "label": "Parameter Precision",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "C",
+            "label": "Multi-Step Chains",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "D",
+            "label": "Restraint & Refusal",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "E",
+            "label": "Error Recovery",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "F",
+            "label": "Localization",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "G",
+            "label": "Structured Reasoning",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "H",
+            "label": "Instruction Following",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "I",
+            "label": "Context & State",
+            "mean_percent": 90.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "J",
+            "label": "Code Patterns",
+            "mean_percent": 67.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "K",
+            "label": "Safety & Boundaries",
+            "mean_percent": 73.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "L",
+            "label": "Toolset Scale",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "M",
+            "label": "Autonomous Planning",
+            "mean_percent": 83.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "N",
+            "label": "Creative Composition",
+            "mean_percent": 83.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "O",
+            "label": "Structured Output",
+            "mean_percent": 83.0,
+            "stddev_percent": 0.0
+          }
+        ],
+        "report": "2026-11-08-qwen38-flash-next-fp4-local-tensorfold-1spark-262k-20e15e4-tool-eval.md"
+      }
+    },
+    {
+      "id": "arete-27b-sglang-fp8kv-1spark-262k",
+      "model_id": "arete-27b",
+      "label": "NousResearch Arete-27B (SGLang, FP8 KV, 1 Spark, 262K)",
+      "chart_label": "Arete-27B SGLang 1x",
+      "date": "2026-11-08",
+      "report": "2026-11-08-arete-27b-sglang-fp8kv-1spark-262k.md",
+      "hardware": "1x NVIDIA DGX Spark (128GB)",
+      "runtime": "SGLang",
+      "context_tokens": 262144,
+      "recipe_credit": "[NousResearch/Arete-27B model card](https://huggingface.co/NousResearch/Arete-27B/tree/108f0afbdcfaa1ceeda4a635004304dfff6d4da2); local pinned SGLang launch configuration",
+      "recommendation": "Research-only single-user lane: complete tool-eval 95 mean and safety passed, but c1 was 4.29 tok/s, 128K TTFT 175.95s, 240K TTFT 452.84s, and a transient scheduler exit occurred after the serving soak",
+      "decode": [
+        {"concurrency": 1, "output_tps": 4.29, "ttft_p95_seconds": 0.61},
+        {"concurrency": 2, "output_tps": 8.63, "ttft_p95_seconds": 0.88},
+        {"concurrency": 4, "output_tps": 16.95, "ttft_p95_seconds": 1.14},
+        {"concurrency": 8, "output_tps": 32.42, "ttft_p95_seconds": 2.34},
+        {"concurrency": 12, "output_tps": 32.61, "ttft_p95_seconds": 130.35},
+        {"concurrency": 16, "output_tps": 32.65, "ttft_p95_seconds": 130.41}
+      ],
+      "prefill": [
+        {"input_tokens": 4096, "input_tps": 225.16, "ttft_p95_seconds": 3.48},
+        {"input_tokens": 32768, "input_tps": 719.69, "ttft_p95_seconds": 30.60},
+        {"input_tokens": 131072, "input_tps": 683.41, "ttft_p95_seconds": 175.95},
+        {"input_tokens": 245760, "input_tps": 539.69, "ttft_p95_seconds": 452.84}
+      ],
+      "prefix": {
+        "unique_ttft_p95_seconds": 114.02,
+        "warm_ttft_p95_seconds": 1.49
+      },
+      "soak": {
+        "concurrency": 8,
+        "minutes": 20,
+        "output_tps": 31.28,
+        "ttft_p95_seconds": 6.84,
+        "requests": 80,
+        "errors": 0
+      },
+      "quality": {
+        "passed": 13,
+        "total": 13
+      },
+      "tool_eval": {
+        "protocol_id": "tool-eval-standard-v1-b60e2f0",
+        "upstream_commit": "b60e2f00f6c44352a3680356e7c7948f777c5280",
+        "version": "0.0.1.dev1+unknown.gb60e2f00f",
+        "run_id": "2026-11-08T22-02-58.257784Z_57aba306",
+        "config_fingerprint": "078e4c55627b",
+        "status": "complete",
+        "trials": 3,
+        "scenarios_per_trial": 69,
+        "completion_rate": 100.0,
+        "score_mean": 95.0,
+        "score_median": 95.0,
+        "score_stddev": 0.0,
+        "score_ci95": [
+          95.0,
+          95.0
+        ],
+        "pass_at_3": 91.3,
+        "pass_hat_3": 91.3,
+        "reliability_gap": 0.0,
+        "safety_passed": true,
+        "category_scores": [
+          {
+            "id": "A",
+            "label": "Tool Selection",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "B",
+            "label": "Parameter Precision",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "C",
+            "label": "Multi-Step Chains",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "D",
+            "label": "Restraint & Refusal",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "E",
+            "label": "Error Recovery",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "F",
+            "label": "Localization",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "G",
+            "label": "Structured Reasoning",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "H",
+            "label": "Instruction Following",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "I",
+            "label": "Context & State",
+            "mean_percent": 90.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "J",
+            "label": "Code Patterns",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "K",
+            "label": "Safety & Boundaries",
+            "mean_percent": 92.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "L",
+            "label": "Toolset Scale",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "M",
+            "label": "Autonomous Planning",
+            "mean_percent": 83.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "N",
+            "label": "Creative Composition",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "O",
+            "label": "Structured Output",
+            "mean_percent": 83.0,
+            "stddev_percent": 0.0
+          }
+        ],
+        "report": "2026-11-08-arete-27b-sglang-fp8kv-1spark-262k-tool-eval.md"
+      }
+    },
     {
       "id": "glm53-flash-exl3-tensorfold-1104-dflash2-2x-1m",
       "model_id": "glm53-flash",
