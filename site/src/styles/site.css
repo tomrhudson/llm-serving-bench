@@ -242,6 +242,18 @@ option { color: var(--foreground); background: var(--surface); }
 .install-actions { display: flex; flex-wrap: wrap; justify-content: end; gap: .5rem; }
 
 .detail { display: grid; gap: 1rem; padding-block: 1.65rem 4rem; }
+.summary-board { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 1.25rem 2rem; padding: clamp(1rem, 2.7vw, 1.75rem); }
+.summary-intro p { margin-block: .6rem .85rem; color: var(--muted); }
+.summary-ranking { margin: 0; list-style: decimal; padding-inline-start: 1.5rem; }
+.summary-ranking li { padding: .75rem 0 .75rem .45rem; border-top: 1px solid var(--border); }
+.summary-ranking li:first-child { padding-top: 0; border-top: 0; }
+.summary-ranking li:last-child { padding-bottom: 0; }
+.summary-ranking li::marker { color: var(--muted); font: 620 .875rem var(--mono); }
+.summary-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: .25rem 1rem; }
+.summary-model { color: var(--foreground); font-weight: 690; overflow-wrap: anywhere; }
+.summary-meta, .summary-result span { color: var(--muted); font-size: .875rem; }
+.summary-result { text-align: right; font-variant-numeric: tabular-nums; }
+.summary-result strong { color: var(--accent); font-size: 1.15rem; }
 .detail-panel { display: block; min-width: 0; padding: clamp(1rem, 2.7vw, 1.75rem); }
 .detail-panel h2 { margin-bottom: .8rem; }
 .detail-panel p { color: var(--muted); margin: .65rem 0; max-width: 58rem; }
@@ -278,7 +290,7 @@ footer nav { gap: .6rem 1.35rem; }
 }
 @media (max-width: 45rem) {
   .wrap { width: calc(100% - 2rem); }
-  .hero-grid, .measure-grid { grid-template-columns: 1fr; }
+  .hero-grid, .measure-grid, .summary-board { grid-template-columns: 1fr; }
   .hero .sample { max-width: 35rem; }
   .top .source-nav { display: none; }
   .header-actions { gap: .35rem; }
@@ -292,5 +304,7 @@ footer nav { gap: .6rem 1.35rem; }
   .header-actions { margin-inline-start: -.55rem; }
   .card-metrics { column-gap: .45rem; }
   .card-actions .button { flex: 1 1 100%; }
+  .summary-row { grid-template-columns: 1fr; }
+  .summary-result { text-align: start; }
   th, td { padding: .45rem .3rem; font-size: .88rem; }
 }

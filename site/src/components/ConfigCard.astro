@@ -1,7 +1,7 @@
 ---
 import EvaluationBadges from './EvaluationBadges.astro';
 import InstallModelButton from './InstallModelButton.astro';
-import { displayDate, modelUrl, number, rate, unavailable } from '../lib/benchmarks.js';
+import { displayDate, modelUrl, number, peakDecode, rate, unavailable } from '../lib/benchmarks.js';
 
 const { config } = Astro.props;
 const { c1, soak, recipe, sparks } = config;
@@ -11,10 +11,7 @@ const profile = profileLabel?.[2];
 const headingId = `card-${config.id}`;
 const profileId = `${headingId}-profile`;
 
-let peak;
-for (const point of config.decode ?? []) {
-  if (point.output_tps != null && (!peak || point.output_tps > peak.output_tps)) peak = point;
-}
+const peak = peakDecode(config.decode);
 const prefill32k = config.prefill.find((point) => point.input_tokens === 32768);
 const benchmarkLabel = `View benchmark for ${config.label}`;
 const sourceLabel = recipe.label === 'Recipe' ? 'View recipe' : 'View model card';
