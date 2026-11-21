@@ -225,7 +225,7 @@ The two reports share the same single-Spark SGLang runtime family but use differ
 | 20-minute c8 soak | 65.01 output tok/s · 0 errors |
 | Longest tested prompt | 128K · 105.73s TTFT p95 |
 | Regression canaries | 13/13 |
-| Tool-use evaluation | Not run |
+| Tool-use evaluation | [⚠ safety · 91.0 mean · Pass^3 88.4%](2026-11-20-glm53-flash-exl3-tensorfold-130-dflash2-p4-2x-1m-tool-eval.md) |
 
 ### Good fit
 
@@ -251,7 +251,7 @@ Z.ai positions GLM-5.3 Flash for coding, agents, multimodal input, and long cont
 
 | Configuration | Runtime | Configured context | c1 TTFT p95 | Soak tok/s | Canaries | Tool use | Operating posture |
 |---|---|---:|---:|---:|---:|---|---|
-| [GLM-5.3 Flash EXL3 4 bpw (TensorFold 1.3.0, DFlash2, P4, recipe a691916c)](2026-11-20-glm53-flash-exl3-tensorfold-130-dflash2-p4-2x-1m.md) **(pick)** | TensorFold | 1M | 0.51s | 65.01 | 13/13 | Not run | Latest run (Nov 20); use c1 interactive or c4 bounded batch: 13/13 checks and 240K passkey passed, warm-prefix caching was effective, but c4 was 71.69 tok/s, c8 soak was 65.01 tok/s, this exact stack has no tool-eval result, and DFlash2 is non-commercial |
+| [GLM-5.3 Flash EXL3 4 bpw (TensorFold 1.3.0, DFlash2, P4, recipe a691916c)](2026-11-20-glm53-flash-exl3-tensorfold-130-dflash2-p4-2x-1m.md) **(pick)** | TensorFold | 1M | 0.51s | 65.01 | 13/13 | [⚠ safety · 91.0 mean · Pass^3 88.4%](2026-11-20-glm53-flash-exl3-tensorfold-130-dflash2-p4-2x-1m-tool-eval.md) | Latest run (Nov 20); use c1 interactive or c4 bounded batch for non-tool workloads: 13/13 serving checks and the 240K passkey passed, but the complete three-trial tool evaluation scored 91 and failed TC-51 in all three trials; DFlash2 is non-commercial |
 | [GLM-5.3 Flash EXL3 4 bpw (TensorFold 1.1.9, DFlash2, recipe 13f2464)](2026-11-08-glm53-flash-exl3-tensorfold-1104-dflash2-2x-1m.md) | TensorFold | 1M | 0.37s | 62.29 | 13/13 | [⚠ safety · 93.0 mean · Pass^3 91.3%](2026-11-08-glm53-flash-exl3-tensorfold-1104-dflash2-2x-1m-tool-eval.md) | Latest run (Nov 8); not selected: stable and 13/13 checks passed, but c1 42.67 / c8 102.96 / c16 121.04 tok/s, the c8 soak was 62.29 tok/s, 240K TTFT was 391.26s, the tool safety gate failed, and the DFlash2 drafter is non-commercial |
 | [GLM-5.3 Flash EXL3 4 bpw (TensorFold v0.6.0, DFlash2, recipe 3fd60dfc)](2026-10-24-glm53-flash-exl3-tensorfold-v060-dflash2-2x-1m.md) | TensorFold | 1M | 0.44s | 80.18 | 12/12 | [⚠ safety · 94.0 mean · Pass^3 92.8%](2026-10-24-glm53-flash-exl3-tensorfold-v060-dflash2-2x-1m-tool-eval.md) | Latest run (Oct 24); not selected: tool-eval safety gate FAILED (TC-51 3/3, plus TC-43 and TC-68 3/3) despite a 94 mean; c1 54.53 / c4 93.20 tok/s (parallel 4); 12/12 canaries; 240K passkey not measured |
 | [GLM-5.3 Flash NVFP4 (vLLM, low reasoning)](2026-10-03-glm53-flash-nvfp4-vllm-native-262k-low-reasoning.md) | vLLM | 256K | 0.45s | 60.90 | 13/13 | Not run | Concurrency 1 interactive; 8 batch; 13/13 with accuracy warning |

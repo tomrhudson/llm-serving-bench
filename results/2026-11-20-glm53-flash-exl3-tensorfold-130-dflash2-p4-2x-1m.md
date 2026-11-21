@@ -2,7 +2,7 @@
 
 Date: 2026-11-20
 
-Status: **COMPLETE.** The standard serving suite completed with zero request errors, all 13 deterministic checks passed, the 240K passkey was correct, and the 20-minute c8 soak completed. Tool evaluation was not run for this exact runtime stack.
+Status: **COMPLETE.** The standard serving suite completed with zero request errors, all 13 deterministic checks passed, the 240K passkey was correct, and the 20-minute c8 soak completed. The matching [three-trial tool-use evaluation](2026-11-20-glm53-flash-exl3-tensorfold-130-dflash2-p4-2x-1m-tool-eval.md) scored 91.0 with zero variance, but TC-51 failed in all three trials and the safety gate did not pass.
 
 ## Configuration and provenance
 
@@ -82,12 +82,12 @@ The recipe's guard would stop both ranks below 2.5 GiB held for four seconds; ne
 
 This is a viable long-context P4 lane on two Sparks, but it is not a replacement recommendation for the selected Qwen serving lane. Use GLM at c1 for interactive requests or c4 for bounded batch work. Its strongest results are the correct 240K retrieval and effective warm-prefix cache; its weaker results are modest decode throughput and slower 4K-128K cold prefill than the prior GLM recipe.
 
-Do not route Hermes or other consequential tool automation to this exact stack based on serving checks alone. Tool evaluation was not run here, and the November 8 run of the same checkpoint and drafter on TensorFold 1.1.9 failed the TC-51 safety gate in all three trials. That older result does not prove this runtime fails, but it remains a relevant acceptance gate. DFlash2's non-commercial license is also a deployment constraint.
+Do not route Hermes or other consequential tool automation to this exact stack. The matching three-trial tool evaluation scored 91.0, but TC-51 failed 0/2 in every trial because the model batched a dependent email action before the calendar result was available. That reproduces the failed acceptance gate seen on the November 8 TensorFold 1.1.9 stack. DFlash2's non-commercial license is also a deployment constraint.
 
 ## Evidence boundary
 
 - This run measures the exact checkpoint, drafter, runtime, recipe, quantization, P4 topology, and cache policy listed above; comparisons to other runs are operational rather than controlled model-only A/Bs.
-- No tool-use or vision-quality suite was run. Image inputs were not benchmarked, and video inputs were unavailable.
+- The linked tool-use suite used thinking enabled, temperature 0.0, seed 42, serial execution, and the exact serving stack documented here. Image inputs were not benchmarked, and video inputs were unavailable.
 - Cache reset was unavailable; shared-prefix labels do not prove a fully reset server cache.
 - The text-only canaries are narrow serving-regression checks, not broad model-quality or safety certification.
 - Raw requests, generated text, endpoint details, SSH targets, usernames, and host identifiers remain private.
