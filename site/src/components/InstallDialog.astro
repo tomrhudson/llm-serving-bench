@@ -1,0 +1,44 @@
+<dialog id="install-model" class="install-dialog" aria-labelledby="install-heading" aria-describedby="install-help">
+  <h2 id="install-heading">Install model</h2>
+  <p id="install-configuration" class="install-configuration"></p>
+  <p id="install-help">Copy this prompt and paste it into an AI assistant with access to your DGX Spark.</p>
+  <textarea id="install-prompt" aria-label="Installation prompt" readonly></textarea>
+  <p id="install-status" role="status"></p>
+  <form method="dialog" class="install-actions">
+    <button type="submit" class="button button--outline">Close</button>
+    <button id="copy-install-prompt" type="button" class="button button--primary" autofocus>Copy prompt</button>
+  </form>
+</dialog>
+
+<script>
+  const dialog = document.querySelector<HTMLDialogElement>('#install-model')!;
+  const configuration = document.querySelector<HTMLElement>('#install-configuration')!;
+  const prompt = document.querySelector<HTMLTextAreaElement>('#install-prompt')!;
+  const status = document.querySelector<HTMLElement>('#install-status')!;
+  const copy = document.querySelector<HTMLButtonElement>('#copy-install-prompt')!;
+
+  if (typeof dialog.showModal === 'function') {
+    for (const button of document.querySelectorAll<HTMLButtonElement>('[data-install-model]')) {
+      button.hidden = false;
+      button.addEventListener('click', () => {
+        configuration.textContent = button.dataset.installModel!;
+        prompt.value = button.dataset.installPrompt!;
+        prompt.scrollTop = 0;
+        status.textContent = '';
+        button.focus();
+        dialog.showModal();
+      });
+    }
+  }
+
+  copy.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(prompt.value);
+      status.textContent = 'Copied to clipboard.';
+    } catch {
+      prompt.focus();
+      prompt.select();
+      status.textContent = 'Copy the selected text using your device’s copy command.';
+    }
+  });
+</script>

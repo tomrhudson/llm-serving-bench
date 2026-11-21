@@ -29,6 +29,13 @@ layout defaults to the browser's system color preference. Visitors can choose
 Light or Dark in the header, and that override is saved in their browser.
 Choose System to resume following the device setting.
 
+## Installation prompts
+
+The model catalog’s **Install model** button opens a prompt visitors can copy
+and give to an AI assistant. Prompts use the tested configuration, recipe and
+benchmark report. Where the report supplies launch settings in place of a
+recipe repository, the prompt uses the report and model card.
+
 ## Cloudflare Pages
 
 [Production](https://tomrhudson-ai.com/) also serves from

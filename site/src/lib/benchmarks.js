@@ -123,6 +123,42 @@ function runtimeProvenance(report, runtime) {
   return [first && first !== runtime ? first : '', plain(image)].filter(Boolean).join(' · ') || unavailable;
 }
 
+export function installPrompt(config) {
+  const report = readReport(config.report);
+  const hasRecipe = config.recipe.label === 'Recipe';
+  const settings = field(report, 'Serving configuration|Serving settings|Serving');
+  if (!hasRecipe && !settings) return;
+
+  const checkpoint = field(report, 'Checkpoint') ?? field(report, 'Model');
+  const weights = checkpoint?.match(/\]\((https:\/\/huggingface\.co\/[^)\s]+)\)/)?.[1] ?? plain(checkpoint);
+  const drafter = field(report, 'Drafter');
+  const configuration = [
+    `Configuration: ${config.label}`,
+    `Hardware: ${config.hardware}`,
+    `Runtime: ${config.runtime}`,
+    config.runtimeProvenance !== unavailable && `Tested runtime: ${config.runtimeProvenance}`,
+    config.configuredTokens && `Configured context: ${number(config.configuredTokens)} tokens`,
+    config.recipe.href && `${hasRecipe ? 'Serving recipe' : 'Model card'}: ${config.recipe.href}`,
+    weights && weights !== config.recipe.href && `Tested checkpoint: ${weights}`,
+    drafter && `Tested drafter: ${drafter}`,
+    settings && `Tested serving settings: ${plain(settings)}`,
+    `Benchmark report: ${reportUrl(config.report)}`,
+  ].filter(Boolean).join('\n');
+
+  const followSources = hasRecipe
+    ? 'Read the recipe README at the linked revision and the benchmark report. Use the recipe’s install and launch steps with the checkpoint and serving settings documented for this run.'
+    : 'Read the benchmark report and model card. Use the reported runtime, checkpoint revision, and launch settings to reproduce this configuration.';
+
+  return `Install and serve this Spark Bench configuration on my NVIDIA DGX Spark setup.
+
+${configuration}
+
+1. Inspect the target host or hosts first. Check the Spark count, available memory and disk, runtime prerequisites, and any port or GPU conflicts. For a multi-Spark setup, verify the node-to-node links and SSH access. Tell me what is missing if the machine or cluster does not meet the requirements.
+2. ${followSources} Check the checkpoint and any drafter license for my intended use. If a documented revision or setting is unavailable, explain the difference before substituting it.
+3. Install and start the model using host-specific paths and settings. Ask before interrupting an existing service or exposing the endpoint beyond the local network.
+4. Verify that the API lists the model and completes a short inference request. Report the endpoint, model ID, changes made, and how to stop or restart the service.`;
+}
+
 if (catalog.schema_version !== 6) throw new Error('Unsupported benchmark catalog schema');
 const models = new Map(catalog.models.map((model) => [model.id, model]));
 

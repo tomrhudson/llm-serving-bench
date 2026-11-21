@@ -1,6 +1,7 @@
 ---
 import Layout from '../../components/Layout.astro';
 import ConfigCard from '../../components/ConfigCard.astro';
+import InstallDialog from '../../components/InstallDialog.astro';
 import { baselines, decodeWorkload, engines, families, sparkCounts } from '../../lib/benchmarks.js';
 ---
 <Layout title="Model catalog" description="Compare tested DGX Spark serving configurations by hardware count and engine." catalog>
@@ -44,6 +45,7 @@ import { baselines, decodeWorkload, engines, families, sparkCounts } from '../..
       </section>
     ))}
   </div>
+  <InstallDialog />
 </Layout>
 <script>
   const sparks = document.querySelector<HTMLSelectElement>('#sparks')!;
