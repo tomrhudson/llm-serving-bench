@@ -327,6 +327,139 @@
   ],
   "baselines": [
     {
+      "id": "qwen38-flash-next-nvfp4-vllm034-2x-262k",
+      "model_id": "qwen38-flash-next",
+      "label": "Qwen3.8-Flash-Next NVIDIA NVFP4 (vLLM 0.34.0, tool eval)",
+      "chart_label": "Qwen3.8 NVIDIA vLLM 0.34.0",
+      "date": "2026-11-21",
+      "report": "2026-11-21-qwen38-flash-next-nvfp4-vllm034-2x-262k.md",
+      "hardware": "2x NVIDIA DGX Spark (128GB each)",
+      "runtime": "vLLM 0.34.0",
+      "context_tokens": 262144,
+      "recipe_credit": "[MiaAI-Lab dual-Spark topology](https://github.com/MiaAI-Lab/Qwen3.8-Flash-Next-Dual-DGX-Sparks/tree/cd839d0b62f6c737178a0c2037733420e0524ebf)",
+      "recommendation": "Tool-use evaluation",
+      "decode": [],
+      "prefill": [],
+      "prefix": null,
+      "soak": null,
+      "quality": null,
+      "tool_eval": {
+        "protocol_id": "tool-eval-standard-v1-b60e2f0",
+        "upstream_commit": "b60e2f00f6c44352a3680356e7c7948f777c5280",
+        "version": "0.0.1.dev1+unknown.gb60e2f00f",
+        "run_id": "2026-11-21T23-33-41.516399Z_211f4871",
+        "config_fingerprint": "4b8819b1bf0c",
+        "status": "complete",
+        "trials": 3,
+        "scenarios_per_trial": 69,
+        "completion_rate": 100.0,
+        "score_mean": 92.0,
+        "score_median": 92.0,
+        "score_stddev": 1.0,
+        "score_ci95": [
+          91.0,
+          93.0
+        ],
+        "pass_at_3": 97.1,
+        "pass_hat_3": 84.1,
+        "reliability_gap": 13.0,
+        "safety_passed": false,
+        "category_scores": [
+          {
+            "id": "A",
+            "label": "Tool Selection",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "B",
+            "label": "Parameter Precision",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "C",
+            "label": "Multi-Step Chains",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "D",
+            "label": "Restraint & Refusal",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "E",
+            "label": "Error Recovery",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "F",
+            "label": "Localization",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "G",
+            "label": "Structured Reasoning",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "H",
+            "label": "Instruction Following",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "I",
+            "label": "Context & State",
+            "mean_percent": 90.0,
+            "stddev_percent": 10.0
+          },
+          {
+            "id": "J",
+            "label": "Code Patterns",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "K",
+            "label": "Safety & Boundaries",
+            "mean_percent": 79.7,
+            "stddev_percent": 6.1
+          },
+          {
+            "id": "L",
+            "label": "Toolset Scale",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "M",
+            "label": "Autonomous Planning",
+            "mean_percent": 83.3,
+            "stddev_percent": 16.5
+          },
+          {
+            "id": "N",
+            "label": "Creative Composition",
+            "mean_percent": 88.7,
+            "stddev_percent": 9.8
+          },
+          {
+            "id": "O",
+            "label": "Structured Output",
+            "mean_percent": 83.0,
+            "stddev_percent": 0.0
+          }
+        ],
+        "report": "2026-11-21-qwen38-flash-next-nvfp4-vllm034-2x-262k-tool-eval.md"
+      }
+    },
+    {
       "id": "qwen38-flash-next-fp4-local-tensorfold-1spark-262k-20e15e4",
       "model_id": "qwen38-flash-next",
       "label": "Qwen3.8-Flash-Next FP4-Local QAD (TensorFold v1.1.4, 1 Spark, 262K, recipe 20e15e4)",

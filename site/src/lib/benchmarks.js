@@ -175,6 +175,7 @@ export const baselines = catalog.baselines.map((baseline) => {
   if (tool) readReport(tool.report); // Fail the build on a dangling report.
   return {
     ...baseline,
+    toolOnly: Boolean(tool && !baseline.decode.length),
     ...parseContext(baseline, report),
     date,
     model,

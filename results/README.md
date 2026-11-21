@@ -6,12 +6,13 @@ same tables and charts without hand-editing this page.
 
 Choosing a model for a workload? Open the [model selection dashboard](MODEL-GUIDE.md).
 
-Last updated: 2026-11-20 · Published baselines: 30
+Last updated: 2026-11-21 · Published baselines: 31
 
 ## At a glance
 
 | Model | Hardware / runtime | Configured context | Peak decode tok/s | c1 TTFT p95 | Longest-context TTFT p95 | Soak tok/s | Canaries | Tool use | Recommended concurrency | Recipe credit |
 |---|---|---:|---:|---:|---:|---:|---:|---|---|---|
+| [Qwen3.8-Flash-Next NVIDIA NVFP4 (vLLM 0.34.0, tool eval)](2026-11-21-qwen38-flash-next-nvfp4-vllm034-2x-262k.md) | 2x NVIDIA DGX Spark (128GB each) / vLLM 0.34.0 | 256K | — | — | — | — | — | [⚠ safety · 92.0 mean · Pass^3 84.1%](2026-11-21-qwen38-flash-next-nvfp4-vllm034-2x-262k-tool-eval.md) | Tool-use evaluation | [MiaAI-Lab dual-Spark topology](https://github.com/MiaAI-Lab/Qwen3.8-Flash-Next-Dual-DGX-Sparks/tree/cd839d0b62f6c737178a0c2037733420e0524ebf) |
 | [Qwen3.8-Flash-Next FP4-Local QAD (TensorFold v1.1.4, 1 Spark, 262K, recipe 20e15e4)](2026-11-08-qwen38-flash-next-fp4-local-tensorfold-1spark-262k-20e15e4.md) | 1x NVIDIA DGX Spark (128GB) / TensorFold | 256K | 111.73 @ c4 | 0.35s | 126.64s | 77.79 | 13/13 | [⚠ safety · 89.0 mean · Pass^3 84.1%](2026-11-08-qwen38-flash-next-fp4-local-tensorfold-1spark-262k-20e15e4-tool-eval.md) | Latest single-Spark run (Nov 8); not selected for Hermes tools: 13/13 serving checks and stronger c1-c4 than the Oct 18 recipe, but the complete tool-eval safety gate failed TC-60 in all three trials | [MiaAI-Lab Qwen3.8 Flash Next single-Spark TensorFold recipe](https://github.com/MiaAI-Lab/Qwen3.8-Flash-Next-Single-DGX-Spark-TensorFold/tree/20e15e41f2f514a0d287710f4665ee1b5009ba41) |
 | [NousResearch Arete-27B (SGLang, FP8 KV, 1 Spark, 262K)](2026-11-08-arete-27b-sglang-fp8kv-1spark-262k.md) | 1x NVIDIA DGX Spark (128GB) / SGLang | 256K | 32.65 @ c16 | 0.61s | 452.84s | 31.28 | 13/13 | [95.0 mean · Pass^3 91.3%](2026-11-08-arete-27b-sglang-fp8kv-1spark-262k-tool-eval.md) | Research-only single-user lane: complete tool-eval 95 mean and safety passed, but c1 was 4.29 tok/s, 128K TTFT 175.95s, 240K TTFT 452.84s, and a transient scheduler exit occurred after the serving soak | [NousResearch/Arete-27B model card](https://huggingface.co/NousResearch/Arete-27B/tree/108f0afbdcfaa1ceeda4a635004304dfff6d4da2); local pinned SGLang launch configuration |
 | [GLM-5.3 Flash EXL3 4 bpw (TensorFold 1.3.0, DFlash2, P4, recipe a691916c)](2026-11-20-glm53-flash-exl3-tensorfold-130-dflash2-p4-2x-1m.md) | 2x NVIDIA DGX Spark (128GB each) / TensorFold | 1M | 77.02 @ c8 | 0.51s | 105.73s | 65.01 | 13/13 | [⚠ safety · 91.0 mean · Pass^3 88.4%](2026-11-20-glm53-flash-exl3-tensorfold-130-dflash2-p4-2x-1m-tool-eval.md) | Latest run (Nov 20); use c1 interactive or c4 bounded batch for non-tool workloads: 13/13 serving checks and the 240K passkey passed, but the complete three-trial tool evaluation scored 91 and failed TC-51 in all three trials; DFlash2 is non-commercial | [MiaAI-Lab GLM-5.3 Flash 1104 recipe](https://github.com/MiaAI-Lab/GLM-5.3-Flash-DGX-Sparks-1104/tree/a691916c16b6287ebb79ef8ee37ea182b5240a29) |
@@ -46,6 +47,7 @@ Last updated: 2026-11-20 · Published baselines: 30
 Peak decode throughput is useful for batch capacity; c1 TTFT is the better
 interactive-latency signal. The longest-context column uses the largest shared
 prefill scenario available in the standard suite (currently 240K tokens).
+A dash in a serving column indicates an unmeasured result.
 
 ## Model checkpoints
 
@@ -104,6 +106,7 @@ retained as explicitly qualified pilot evidence.
 
 | Serving baseline | Protocol | Status | Completion | Mean score | Pass@3 | Pass^3 | Safety gate |
 |---|---|---|---:|---:|---:|---:|---|
+| [Qwen3.8-Flash-Next NVIDIA NVFP4 (vLLM 0.34.0, tool eval)](2026-11-21-qwen38-flash-next-nvfp4-vllm034-2x-262k-tool-eval.md) | `tool-eval-standard-v1-b60e2f0` | complete | 100.0% | 92.0 | 97.1% | 84.1% | **FAILED** |
 | [Qwen3.8-Flash-Next FP4-Local QAD (TensorFold v1.1.4, 1 Spark, 262K, recipe 20e15e4)](2026-11-08-qwen38-flash-next-fp4-local-tensorfold-1spark-262k-20e15e4-tool-eval.md) | `tool-eval-standard-v1-b60e2f0` | complete | 100.0% | 89.0 | 84.1% | 84.1% | **FAILED** |
 | [NousResearch Arete-27B (SGLang, FP8 KV, 1 Spark, 262K)](2026-11-08-arete-27b-sglang-fp8kv-1spark-262k-tool-eval.md) | `tool-eval-standard-v1-b60e2f0` | complete | 100.0% | 95.0 | 91.3% | 91.3% | pass |
 | [GLM-5.3 Flash EXL3 4 bpw (TensorFold 1.3.0, DFlash2, P4, recipe a691916c)](2026-11-20-glm53-flash-exl3-tensorfold-130-dflash2-p4-2x-1m-tool-eval.md) | `tool-eval-standard-v1-b60e2f0` | complete | 100.0% | 91.0 | 88.4% | 88.4% | **FAILED** |

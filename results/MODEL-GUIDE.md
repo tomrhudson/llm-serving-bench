@@ -4,7 +4,7 @@ Use this page to choose among the model families with published DGX Spark
 baselines in this repository. For the full cross-configuration numbers and charts,
 open the [benchmark summary](README.md).
 
-Last updated: 2026-11-20 · Model families: 14 · Published configurations: 30
+Last updated: 2026-11-21 · Model families: 14 · Published configurations: 31
 
 ## Hardware footprint
 
@@ -96,6 +96,7 @@ Qwen describes the upstream model as an experimental, multimodal agentic archite
 
 | Configuration | Runtime | Configured context | c1 TTFT p95 | Soak tok/s | Canaries | Tool use | Operating posture |
 |---|---|---:|---:|---:|---:|---|---|
+| [Qwen3.8-Flash-Next NVIDIA NVFP4 (vLLM 0.34.0, tool eval)](2026-11-21-qwen38-flash-next-nvfp4-vllm034-2x-262k.md) | vLLM 0.34.0 | 256K | — | — | — | [⚠ safety · 92.0 mean · Pass^3 84.1%](2026-11-21-qwen38-flash-next-nvfp4-vllm034-2x-262k-tool-eval.md) | Tool-use evaluation |
 | [Qwen3.8-Flash-Next FP4-Local QAD (TensorFold v1.1.4, 1 Spark, 262K, recipe 20e15e4)](2026-11-08-qwen38-flash-next-fp4-local-tensorfold-1spark-262k-20e15e4.md) | TensorFold | 256K | 0.35s | 77.79 | 13/13 | [⚠ safety · 89.0 mean · Pass^3 84.1%](2026-11-08-qwen38-flash-next-fp4-local-tensorfold-1spark-262k-20e15e4-tool-eval.md) | Latest single-Spark run (Nov 8); not selected for Hermes tools: 13/13 serving checks and stronger c1-c4 than the Oct 18 recipe, but the complete tool-eval safety gate failed TC-60 in all three trials |
 | [Qwen3.8-Flash-Next FP4-Local QAD (TensorFold, 1 Spark, native 262K, thinking off)](2026-10-18-qwen38-flash-next-fp4-local-tensorfold-1spark-262k.md) | TensorFold | 256K | 0.48s | 85.72 | 13/13 | [Incomplete (98.6%) · 86.0 mean · Pass^3 76.5%](2026-10-18-qwen38-flash-next-fp4-local-tensorfold-1spark-262k-tool-eval.md) | Concurrency 4-5 (recipe 5 streams); thinking off; 13/13 quality |
 | [Qwen3.8-Flash-Next NVIDIA NVFP4 (TensorFold, 1M YaRN)](2026-10-08-qwen38-flash-next-nvfp4-tensorfold-1m.md) **(pick)** | TensorFold | 1M | 0.23s | 432.90 | 13/13 | [Incomplete (98.1%) · 88.0 mean · Pass^3 79.4%](2026-11-21-qwen38-flash-next-nvfp4-tensorfold-tool-eval.md) | Concurrency 8 interactive; up to 16 batch; 13/13 quality |

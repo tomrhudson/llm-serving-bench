@@ -5,8 +5,8 @@ import InstallModelButton from '../components/InstallModelButton.astro';
 import Layout from '../components/Layout.astro';
 import { baselines, displayDate, families, decodeWorkload, modelUrl, rate, repository } from '../lib/benchmarks.js';
 
-const latest = baselines[0];
-const measuredDecode = (latest.decode ?? []).filter((row) => row.output_tps != null);
+const latest = baselines.find((config) => config.decode.length);
+const measuredDecode = (latest?.decode ?? []).filter((row) => row.output_tps != null);
 const maxRate = Math.max(1, ...measuredDecode.map((row) => row.output_tps));
 ---
 <Layout title="DGX Spark benchmarks" description="Independent, configuration-level LLM serving benchmarks for NVIDIA DGX Spark.">
@@ -24,7 +24,7 @@ const maxRate = Math.max(1, ...measuredDecode.map((row) => row.output_tps));
       {measuredDecode.length > 0 && (
         <figure class="card sample">
           <figcaption>
-            <span class="kicker">Latest benchmark · <time datetime={latest.date}>{displayDate(latest.date)}</time></span>
+            <span class="kicker">Latest serving benchmark · <time datetime={latest.date}>{displayDate(latest.date)}</time></span>
             <a href={modelUrl(latest.id)}>{latest.model.name}</a>
             <span>{latest.sparks}× DGX Spark · {latest.runtime} · Decode sweep</span>
           </figcaption>
