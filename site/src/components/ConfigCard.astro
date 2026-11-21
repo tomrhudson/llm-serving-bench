@@ -20,7 +20,8 @@ const sourceLabel = recipe.label === 'Recipe' ? 'View recipe' : 'View model card
 ---
 <article class="card config-card" aria-labelledby={profile ? `${headingId} ${profileId}` : headingId}
   data-configuration data-sparks={sparks} data-engine={config.engine}
-  data-safety={config.safetyGate} data-tool={config.toolStatus}>
+  data-safety={config.safetyGate} data-tool={config.toolStatus}
+  data-decode={c1?.output_tps} data-sustained={soak?.output_tps} data-newest={Date.parse(config.date)}>
   <div class="card-top">
     <span class="chip chip--soft chip--accent hardware"><span class="hardware-icon" aria-hidden="true"></span>{sparks}× DGX Spark</span>
     <span class="chip chip--soft chip--default card-engine">{config.runtime}</span>
