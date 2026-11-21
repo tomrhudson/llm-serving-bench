@@ -14,7 +14,7 @@ const toolOptions = Object.entries({ complete: 'Complete', incomplete: 'Incomple
     <div class="wrap">
       <p class="kicker">DGX Spark benchmarks</p>
       <h1>Model catalog</h1>
-      <p class="hero-lead">Filter by hardware, serving engine, and evaluation results. Configurations are grouped by model so you can compare runs directly.</p>
+      <p class="hero-lead">Filter by hardware, serving engine, and evaluation results. Browse by model or sort across configurations by speed or date.</p>
     </div>
   </div>
   <div class="wrap catalog">
@@ -43,6 +43,14 @@ const toolOptions = Object.entries({ complete: 'Complete', incomplete: 'Incomple
           {toolOptions.map(([value, label]) => <option value={value}>{label}</option>)}
         </select>
       </label>
+      <label class="select-label" for="sort">Sort by
+        <select id="sort">
+          <option value="">Model groups</option>
+          <option value="decode">Single-stream decode</option>
+          <option value="sustained">Sustained throughput</option>
+          <option value="newest">Newest benchmark</option>
+        </select>
+      </label>
       <button id="clear" class="button button--outline" type="button">Reset filters</button>
     </div>
     <div class="catalog-summary">
@@ -50,13 +58,14 @@ const toolOptions = Object.entries({ complete: 'Complete', incomplete: 'Incomple
       <p>Decode sweep · {decodeWorkload}</p>
     </div>
     <p id="empty" class="card empty" hidden>No configurations match these filters.</p>
+    <div id="sorted-configurations" class="card-grid" hidden></div>
     {families.map((family) => (
       <section id={family.id} class="family" aria-labelledby={`${family.id}-heading`} data-family>
         <div class="family-heading">
           <h2 id={`${family.id}-heading`}>{family.name}</h2>
           <p data-family-count>{family.configs.length} {family.configs.length === 1 ? 'configuration' : 'configurations'}</p>
         </div>
-        <div class="card-grid">
+        <div class="card-grid" data-family-cards>
           {family.configs.map((config) => <ConfigCard config={config} />)}
         </div>
       </section>
@@ -66,26 +75,45 @@ const toolOptions = Object.entries({ complete: 'Complete', incomplete: 'Incomple
 </Layout>
 <script>
   const filters = document.querySelector<HTMLElement>('#filters')!;
-  const selects = Array.from(filters.querySelectorAll('select'));
+  const sort = filters.querySelector<HTMLSelectElement>('#sort')!;
+  const controls = Array.from(filters.querySelectorAll('select'));
+  const selects = controls.filter((select) => select !== sort);
   const count = document.querySelector<HTMLElement>('#result-count')!;
   const empty = document.querySelector<HTMLElement>('#empty')!;
   const reset = document.querySelector<HTMLButtonElement>('#clear')!;
+  const sorted = document.querySelector<HTMLElement>('#sorted-configurations')!;
   const families = Array.from(document.querySelectorAll<HTMLElement>('[data-family]'), (group) => ({
     group,
-    cards: group.querySelectorAll<HTMLElement>('[data-configuration]'),
+    grid: group.querySelector<HTMLElement>('[data-family-cards]')!,
+    cards: Array.from(group.querySelectorAll<HTMLElement>('[data-configuration]')),
     count: group.querySelector<HTMLElement>('[data-family-count]')!,
   }));
+  const cards = families.flatMap((family) => family.cards);
+  let currentSort = '';
 
-  function readFilters() {
+  function readControls() {
     const params = new URLSearchParams(location.search);
-    for (const select of selects) {
+    for (const select of controls) {
       select.value = params.get(select.id) ?? '';
       if (select.selectedIndex < 0) select.value = '';
     }
     render();
   }
 
+  function arrangeCards() {
+    if (currentSort === sort.value) return;
+    currentSort = sort.value;
+    if (currentSort) {
+      // Missing measurements sort after measured results, even when a rate is zero.
+      const value = (card: HTMLElement) => Number(card.dataset[currentSort] ?? Number.MIN_SAFE_INTEGER);
+      sorted.replaceChildren(...[...cards].sort((a, b) => value(b) - value(a)));
+    } else {
+      for (const family of families) family.grid.append(...family.cards);
+    }
+  }
+
   function render() {
+    arrangeCards();
     const activeFilters = selects.filter((select) => select.value);
     let total = 0;
     let models = 0;
@@ -95,18 +123,19 @@ const toolOptions = Object.entries({ complete: 'Complete', incomplete: 'Incomple
         card.hidden = activeFilters.some((select) => card.dataset[select.id] !== select.value);
         if (!card.hidden) matches++;
       }
-      family.group.hidden = matches === 0;
+      family.group.hidden = Boolean(currentSort) || matches === 0;
       family.count.textContent = `${matches} ${matches === 1 ? 'configuration' : 'configurations'}`;
       if (matches) models++;
       total += matches;
     }
     count.textContent = `${total} ${total === 1 ? 'configuration' : 'configurations'} across ${models} ${models === 1 ? 'model' : 'models'}`;
     empty.hidden = total > 0;
+    sorted.hidden = !currentSort || total === 0;
   }
 
-  function updateFilters() {
+  function updateControls() {
     const url = new URL(location.href);
-    for (const select of selects) {
+    for (const select of controls) {
       if (select.value) url.searchParams.set(select.id, select.value);
       else url.searchParams.delete(select.id);
     }
@@ -115,11 +144,11 @@ const toolOptions = Object.entries({ complete: 'Complete', incomplete: 'Incomple
   }
 
   filters.hidden = false;
-  readFilters();
-  filters.addEventListener('change', updateFilters);
+  readControls();
+  filters.addEventListener('change', updateControls);
   reset.addEventListener('click', () => {
     for (const select of selects) select.value = '';
-    updateFilters();
+    updateControls();
   });
-  window.addEventListener('popstate', readFilters);
+  window.addEventListener('popstate', readControls);
 </script>
