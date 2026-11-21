@@ -81,29 +81,28 @@
     {
       "id": "glm53-flash",
       "name": "GLM-5.3 Flash",
-      "tagline": "Long-context coding and agentic lane with runtime and context tradeoffs; the latest run (Oct 24, TensorFold + DFlash2) failed the tool-eval safety gate",
-      "benchmarked_source": "[Mia-AiLab/GLM-5.3-Flash-EXL3-TR3-4bpw @ 9eaebb7](https://huggingface.co/Mia-AiLab/GLM-5.3-Flash-EXL3-TR3-4bpw/tree/9eaebb7c4e96d983dcd538e18624622ba5b820a8)",
+      "tagline": "Long-context coding lane; the current TensorFold 1.3.0 P4 run passed 13/13 checks and the 240K passkey, but this exact stack still needs tool-use acceptance",
+      "benchmarked_source": "[Mia-AiLab/GLM-5.3-Flash-EXL3-4bpw-TensorFold @ 76c0b51](https://huggingface.co/Mia-AiLab/GLM-5.3-Flash-EXL3-4bpw-TensorFold/tree/76c0b5173166d2795dd48860f45d8224817f894c)",
       "upstream_source": "[zai-org/GLM-5.3-Flash](https://huggingface.co/zai-org/GLM-5.3-Flash)",
       "alternative_source": "[Uncensored EXL3 checkpoint, rank-sliced for two DGX Sparks](https://huggingface.co/cbert33/GLM-5.3-Flash-Uncensored-EXL3-DGX-Sliced)",
       "alternative_source_note": "Community uncensored/abliterated EXL3 checkpoint for its linked custom two-Spark vLLM runner; not benchmarked in this repository and not compatible with stock vLLM.",
       "dgx_spark_count": 2,
       "dgx_spark_memory_gb_each": 128,
-      "tested_choice": "glm53-flash-exl3-tensorfold-v060-1m",
+      "tested_choice": "glm53-flash-exl3-tensorfold-130-dflash2-p4-2x-1m",
       "best_for": [
-        "Complex coding and agentic work at low concurrency, consistent with the upstream model's stated focus.",
-        "Long-context interactive or small-batch work: TensorFold delivered 51.49 output tok/s at c1 and 92.68 at c4, while the 240K passkey check passed.",
-        "Tool, thinking, or multimodal workflows after application-specific validation; the serving recipe exposes those features."
+        "Long-context interactive and small-batch work: the current P4 run passed the 240K retrieval check with 199.29s TTFT.",
+        "Repeated large-prefix workloads: the 32K c4 warm-prefix TTFT fell to 1.84s from 112.26s for unique prompts.",
+        "A current, reproducible two-Spark TensorFold lane with all 13 narrow serving checks passing and zero errors through a 20-minute soak."
       ],
       "not_for": [
-        "Tool-calling agents that must wait for one tool's result before the next action: the latest run (Oct 24, TensorFold + DFlash2) failed the tool-eval safety gate on TC-51 in 3/3 trials (it sent an email in the same turn as creating the calendar event the email depended on) and also failed TC-43 and TC-68 in every trial, despite a 94.0 mean and 92.8% Pass^3.",
-        "Exact-string or deterministic transformation workloads on the TensorFold lane until the repeatable reverse-marker regression is understood; its combined result was 10/13.",
+        "Consequential tool automation without a new acceptance run: this exact TensorFold 1.3.0 stack was not tool-evaluated, while the November 8 run of the same checkpoint and drafter on TensorFold 1.1.9 failed TC-51 in 3/3 trials.",
         "Latency-sensitive traffic above concurrency 4; c8 and higher mostly added queueing.",
-        "Treating the NVFP4 vLLM lane's 13/13 canaries as broad assurance while its runtime still reports the documented weight-scale accuracy warning.",
-        "Treating vision or tool quality as benchmarked here; the published suite is text-only.",
-        "Commercial use of the tested TensorFold recipe: its DFlash2 drafter (incoai/GLM-5.3-Flash-DFlash2) is licensed CC BY-NC-ND 4.0 (non-commercial, no derivatives), and the Oct 24 run used it for personal benchmarking only."
+        "A general decode-throughput replacement for the selected Qwen lane; the current GLM run reached 41.85 tok/s at c1 and 71.69 at c4.",
+        "Treating vision or tool quality as benchmarked here; the current published suite is text-only.",
+        "Commercial use of the tested TensorFold recipe with DFlash2: the drafter is licensed CC BY-NC-ND 4.0 (non-commercial, no derivatives)."
       ],
-      "selection_note": "Choose TensorFold when throughput and the 1M request window are the priority and the workload tolerates its documented canary caveat. The vLLM/NVFP4 low-reasoning baseline passed 13/13 checks and has lower c8 queue latency, but its runtime weight-scale warning must be resolved before treating it as the assurance choice. Latest run: 2026-10-24, TensorFold v0.6.0 with the DFlash2 drafter (recipe 3fd60dfc). It was not selected because its tool-eval safety gate failed, and its 240K passkey stage was not run. Its decode was close to the Oct 1 run (54.53 tok/s at c1, 93.20 at c4) and its canaries were 12/12. The Oct 1 TensorFold run stays the recommended tested configuration and is kept as history.",
-      "evidence_note": "Z.ai positions GLM-5.3 Flash for coding, agents, multimodal input, and long context. The local results prove performance, stability, and a 240K retrieval check for these quantized recipes only. The Oct 24 run served [Mia-AiLab/GLM-5.3-Flash-EXL3-4bpw-TensorFold @ 078455f](https://huggingface.co/Mia-AiLab/GLM-5.3-Flash-EXL3-4bpw-TensorFold/tree/078455ffe6472f9a52fbc1139f58b9db2881b25c) from a read-only weights mount. It also used a lab-only TensorFold comm.py patch that binds rank 0's rendezvous TCPStore to the inter-Spark master address instead of every interface; the patch does not change inference."
+      "selection_note": "The current tested configuration is the November 20 TensorFold 1.3.0 P4 recipe at a691916c. Use c1 for interactive work and c4 for bounded batches. It passed all 13 serving checks, cut the 240K TTFT to 199.29s, and demonstrated effective prompt-cache reuse, but it did not improve short-to-medium cold prefill or c4 decode over every prior GLM run. Keep it out of consequential tool routing until this exact stack passes tool-eval; the older same-checkpoint TensorFold 1.1.9 run failed its safety gate.",
+      "evidence_note": "Z.ai positions GLM-5.3 Flash for coding, agents, multimodal input, and long context. The current result serves [Mia-AiLab/GLM-5.3-Flash-EXL3-4bpw-TensorFold @ 76c0b51](https://huggingface.co/Mia-AiLab/GLM-5.3-Flash-EXL3-4bpw-TensorFold/tree/76c0b5173166d2795dd48860f45d8224817f894c) with TensorFold 1.3.0 plus the recipe's 16 patches, q8 dense/head, FP8 paged KV, P4, and DFlash2. The measurements establish serving performance and narrow regression checks for that exact stack only; raw prompts and operational details remain private."
     },
     {
       "id": "deepseek-v4-flash",
@@ -641,6 +640,84 @@
           }
         ],
         "report": "2026-11-08-arete-27b-sglang-fp8kv-1spark-262k-tool-eval.md"
+      }
+    },
+    {
+      "id": "glm53-flash-exl3-tensorfold-130-dflash2-p4-2x-1m",
+      "model_id": "glm53-flash",
+      "label": "GLM-5.3 Flash EXL3 4 bpw (TensorFold 1.3.0, DFlash2, P4, recipe a691916c)",
+      "chart_label": "GLM-5.3 TF 1.3 P4",
+      "date": "2026-11-20",
+      "report": "2026-11-20-glm53-flash-exl3-tensorfold-130-dflash2-p4-2x-1m.md",
+      "hardware": "2x NVIDIA DGX Spark (128GB each)",
+      "runtime": "TensorFold",
+      "context_tokens": 1048576,
+      "recipe_credit": "[MiaAI-Lab GLM-5.3 Flash 1104 recipe](https://github.com/MiaAI-Lab/GLM-5.3-Flash-DGX-Sparks-1104/tree/a691916c16b6287ebb79ef8ee37ea182b5240a29)",
+      "recommendation": "Latest run (Nov 20); use c1 interactive or c4 bounded batch: 13/13 checks and 240K passkey passed, warm-prefix caching was effective, but c4 was 71.69 tok/s, c8 soak was 65.01 tok/s, this exact stack has no tool-eval result, and DFlash2 is non-commercial",
+      "decode": [
+        {
+          "concurrency": 1,
+          "output_tps": 41.85,
+          "ttft_p95_seconds": 0.51
+        },
+        {
+          "concurrency": 2,
+          "output_tps": 54.7,
+          "ttft_p95_seconds": 0.86
+        },
+        {
+          "concurrency": 4,
+          "output_tps": 71.69,
+          "ttft_p95_seconds": 1.63
+        },
+        {
+          "concurrency": 8,
+          "output_tps": 77.02,
+          "ttft_p95_seconds": 30.08
+        },
+        {
+          "concurrency": 12,
+          "output_tps": 71.98,
+          "ttft_p95_seconds": 60.51
+        },
+        {
+          "concurrency": 16,
+          "output_tps": 73.07,
+          "ttft_p95_seconds": 94.0
+        }
+      ],
+      "prefill": [
+        {
+          "input_tokens": 4096,
+          "input_tps": 772.71,
+          "ttft_p95_seconds": 3.63
+        },
+        {
+          "input_tokens": 32768,
+          "input_tps": 1170.32,
+          "ttft_p95_seconds": 26.18
+        },
+        {
+          "input_tokens": 131072,
+          "input_tps": 1226.52,
+          "ttft_p95_seconds": 105.73
+        }
+      ],
+      "prefix": {
+        "unique_ttft_p95_seconds": 112.26,
+        "warm_ttft_p95_seconds": 1.84
+      },
+      "soak": {
+        "concurrency": 8,
+        "minutes": 20,
+        "output_tps": 65.01,
+        "ttft_p95_seconds": 37.75,
+        "requests": 158,
+        "errors": 0
+      },
+      "quality": {
+        "passed": 13,
+        "total": 13
       }
     },
     {
