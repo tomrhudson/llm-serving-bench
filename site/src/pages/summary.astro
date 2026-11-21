@@ -1,4 +1,5 @@
 ---
+import EvaluationBadges from '../components/EvaluationBadges.astro';
 import Layout from '../components/Layout.astro';
 import {
   benchmarkLeaders, decodeWorkload, modelUrl, number, passkeyTokens, rate, repository, soakConcurrency, soakMinutes,
@@ -21,7 +22,7 @@ const boards = [
   },
 ];
 ---
-<Layout title="Benchmark summary" description="Top five DGX Spark model families by peak decode throughput, long-context prefill latency, and sustained throughput.">
+<Layout title="Top 5" description="Top five DGX Spark model families by peak decode throughput, long-context prefill latency, and sustained throughput.">
   <div class="mast">
     <div class="wrap">
       <h1>Top 5 models by benchmark</h1>
@@ -45,6 +46,7 @@ const boards = [
                   <div>
                     <a class="summary-model" href={modelUrl(config.id)}>{config.model.name}</a>
                     <p class="summary-meta">{config.sparks}× DGX Spark · {config.runtime}</p>
+                    <EvaluationBadges config={config} showUnavailableSafety />
                   </div>
                   <div class="summary-result">
                     <p><strong>{rate(value)}</strong> <span>{unit}</span></p>
