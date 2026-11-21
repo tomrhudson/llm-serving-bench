@@ -1,4 +1,6 @@
 ---
+import InstallDialog from '../../components/InstallDialog.astro';
+import InstallModelButton from '../../components/InstallModelButton.astro';
 import Layout from '../../components/Layout.astro';
 import {
   baselines, decodeWorkload, displayDate, modelUrl, number, rate, reportUrl, soakWorkload, unavailable,
@@ -26,6 +28,7 @@ const percent = (value) => value == null ? unavailable : `${value}%`;
       <p class="hero-lead">{config.sparks}× DGX Spark · {config.runtime} · <time datetime={config.date}>{displayDate(config.date)}</time></p>
       <div class="actions">
         <a class="button button--primary" href={reportUrl(config.report)}>Read the benchmark report</a>
+        <InstallModelButton config={config} />
         {recipe.href && <a class="button button--outline" href={recipe.href}>{recipe.revision ? 'Open pinned recipe' : `Open ${recipe.label.toLowerCase()}`}</a>}
       </div>
     </div>
@@ -141,4 +144,5 @@ const percent = (value) => value == null ? unavailable : `${value}%`;
       </section>
     )}
   </div>
+  <InstallDialog />
 </Layout>
