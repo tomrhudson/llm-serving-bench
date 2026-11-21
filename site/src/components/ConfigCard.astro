@@ -2,41 +2,91 @@
 import { displayDate, modelUrl, number, rate, unavailable } from '../lib/benchmarks.js';
 
 const { config } = Astro.props;
-const { c1, soak, tool_eval: tool, sparks } = config;
+const { c1, soak, recipe, tool_eval: tool, sparks } = config;
+const profileLabel = config.label.match(/^(.+?) \((.+)\)$/);
+const name = profileLabel?.[1] ?? config.label;
+const profile = profileLabel?.[2];
+const headingId = `card-${config.id}`;
+const profileId = `${headingId}-profile`;
+
+let peak;
+for (const point of config.decode ?? []) {
+  if (point.output_tps != null && (!peak || point.output_tps > peak.output_tps)) peak = point;
+}
+const prefill32k = config.prefill.find((point) => point.input_tokens === 32768);
+const benchmarkLabel = `View benchmark for ${config.label}`;
+const sourceLabel = recipe.label === 'Recipe' ? 'View recipe' : 'View model card';
 ---
-<article class="config-card" data-configuration data-sparks={sparks} data-engine={config.engine}>
+<article class="config-card" aria-labelledby={profile ? `${headingId} ${profileId}` : headingId}
+  data-configuration data-sparks={sparks} data-engine={config.engine}>
   <div class="card-top">
     <span class="hardware"><span class="hardware-icon" aria-hidden="true"></span>{sparks}× DGX Spark</span>
-    <time datetime={config.date}>{displayDate(config.date)}</time>
+    <span class="card-engine">{config.runtime}</span>
   </div>
-  <h3><a href={modelUrl(config.id)}>{config.label}</a></h3>
-  <p class="card-runtime">{config.runtime}</p>
-  <dl class="card-metrics">
+
+  <h3 id={headingId}>{name}</h3>
+  {profile && <p class="card-profile" id={profileId}>{profile}</p>}
+
+  <dl class="card-lead">
     <div>
       <dt>Single-stream decode</dt>
-      <dd>{rate(c1?.output_tps)}<small>{c1 ? 'output tok/s · c1' : 'Decode sweep'}</small></dd>
+      <dd class:list={['card-lead-value', { 'card-unavailable': c1?.output_tps == null }]}>
+        <strong>{rate(c1?.output_tps)}</strong>
+        {c1?.output_tps != null && <span>output tok/s</span>}
+      </dd>
     </div>
-    <div>
-      <dt>Sustained throughput</dt>
-      <dd>{rate(soak?.output_tps)}<small>{soak ? `output tok/s · c${soak.concurrency} · ${soak.minutes} min` : 'Soak test'}</small></dd>
-    </div>
-    <div>
-      <dt>Longest tested prompt</dt>
-      <dd>{number(config.testedTokens)}<small>{config.testedTokens ? 'target input tokens · c1' : 'Context test'}</small></dd>
+    <div class="card-latency">
+      <dt>TTFT p95 · c1</dt>
+      <dd>{c1?.ttft_p95_seconds == null ? unavailable : `${rate(c1.ttft_p95_seconds)} s`}</dd>
     </div>
   </dl>
-  <p class="card-context"><strong>Configured</strong> {config.configuredTokens ? `${number(config.configuredTokens)} tokens` : unavailable} <span aria-hidden="true">·</span>
-    <strong>Validated</strong> {config.validatedTokens ? '≈240K passkey' : unavailable}</p>
+
+  <dl class="card-metrics">
+    <div>
+      <dt>Peak decode</dt>
+      <dd><strong>{rate(peak?.output_tps)}</strong>{peak && <small>output tok/s<br />c{peak.concurrency}</small>}</dd>
+    </div>
+    <div>
+      <dt>Sustained decode</dt>
+      <dd><strong>{rate(soak?.output_tps)}</strong>
+        {soak?.output_tps != null && <small>output tok/s<br />c{soak.concurrency} · {soak.minutes} min soak</small>}
+      </dd>
+    </div>
+    <div>
+      <dt>Prefill</dt>
+      <dd><strong>{rate(prefill32k?.input_tps)}</strong>
+        {prefill32k?.input_tps != null && <small>input tok/s<br />32K prompt · c1</small>}
+      </dd>
+    </div>
+  </dl>
+
+  <div class="card-context">
+    <h4>Context</h4>
+    <dl>
+      <div><dt>Configured</dt><dd>{config.configuredTokens ? `${number(config.configuredTokens)} tokens` : unavailable}</dd></div>
+      <div><dt>Longest tested prompt</dt><dd>{config.testedTokens ? `${number(config.testedTokens)} target tokens` : unavailable}</dd></div>
+      <div><dt>Validated retrieval</dt><dd>{config.validatedTokens ? '≈240K passkey' : unavailable}</dd></div>
+    </dl>
+  </div>
+
   <div class="card-bottom">
-    {tool ? (
-      <>
-        <span class:list={['status', config.comparativeTool ? 'neutral' : 'caution']}>
-          {tool.status === 'incomplete' ? 'Tool eval incomplete' : `Tool eval ${tool.status}`}
-        </span>
-        <span class:list={['status', tool.safety_passed === false ? 'danger' : 'neutral']}>
-          Safety gate {tool.safety_passed == null ? 'unavailable' : tool.safety_passed ? 'passed' : 'failed'}
-        </span>
-      </>
-    ) : <span class="status neutral">Tool eval unavailable</span>}
+    <p class="card-date">Tested <time datetime={config.date}>{displayDate(config.date)}</time></p>
+    <div class="card-status">
+      {tool ? (
+        <>
+          <span class:list={['status', config.comparativeTool ? 'neutral' : 'caution']}>
+            {tool.status === 'incomplete' ? 'Tool eval incomplete' : `Tool eval ${tool.status}`}
+          </span>
+          <span class:list={['status', tool.safety_passed === false ? 'danger' : 'neutral']}>
+            Safety gate {tool.safety_passed == null ? 'unavailable' : tool.safety_passed ? 'passed' : 'failed'}
+          </span>
+        </>
+      ) : <span class="status neutral">Tool eval unavailable</span>}
+    </div>
+  </div>
+
+  <div class="card-actions">
+    <a class="button card-benchmark" href={modelUrl(config.id)} aria-label={benchmarkLabel}>View benchmark</a>
+    {recipe.href && <a class="button secondary" href={recipe.href} aria-label={`${sourceLabel} for ${config.label}`}>{sourceLabel}</a>}
   </div>
 </article>
