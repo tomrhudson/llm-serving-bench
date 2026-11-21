@@ -1,0 +1,17 @@
+---
+import { installPrompt } from '../lib/benchmarks.js';
+
+const { config } = Astro.props;
+const prompt = installPrompt(config);
+---
+{prompt && (
+  <button
+    class="button button--secondary"
+    type="button"
+    hidden
+    aria-haspopup="dialog"
+    aria-label={`Install model: ${config.label}`}
+    data-install-model={config.label}
+    data-install-prompt={prompt}
+  >Install model</button>
+)}

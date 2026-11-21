@@ -1,5 +1,6 @@
 ---
-import { displayDate, installPrompt, modelUrl, number, rate, unavailable } from '../lib/benchmarks.js';
+import InstallModelButton from './InstallModelButton.astro';
+import { displayDate, modelUrl, number, rate, unavailable } from '../lib/benchmarks.js';
 
 const { config } = Astro.props;
 const { c1, soak, recipe, tool_eval: tool, sparks } = config;
@@ -16,7 +17,6 @@ for (const point of config.decode ?? []) {
 const prefill32k = config.prefill.find((point) => point.input_tokens === 32768);
 const benchmarkLabel = `View benchmark for ${config.label}`;
 const sourceLabel = recipe.label === 'Recipe' ? 'View recipe' : 'View model card';
-const prompt = installPrompt(config);
 ---
 <article class="card config-card" aria-labelledby={profile ? `${headingId} ${profileId}` : headingId}
   data-configuration data-sparks={sparks} data-engine={config.engine}>
@@ -88,8 +88,7 @@ const prompt = installPrompt(config);
 
   <div class="card-actions">
     <a class="button button--primary card-benchmark" href={modelUrl(config.id)} aria-label={benchmarkLabel}>View benchmark</a>
-    {prompt && <button class="button button--secondary" type="button" hidden aria-haspopup="dialog"
-      aria-label={`Install model: ${config.label}`} data-install-model={config.label} data-install-prompt={prompt}>Install model</button>}
+    <InstallModelButton config={config} />
     {recipe.href && <a class="button button--outline" href={recipe.href} aria-label={`${sourceLabel} for ${config.label}`}>{sourceLabel}</a>}
   </div>
 </article>

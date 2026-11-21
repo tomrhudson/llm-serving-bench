@@ -31,10 +31,11 @@ Choose System to resume following the device setting.
 
 ## Installation prompts
 
-The model catalog’s **Install model** button opens a prompt visitors can copy
-and give to an AI assistant. Prompts use the tested configuration, recipe and
-benchmark report. Where the report supplies launch settings in place of a
-recipe repository, the prompt uses the report and model card.
+The **Install model** button on catalog cards and benchmark pages opens a
+prompt visitors can copy and give to an AI assistant. Prompts use the tested
+configuration, recipe and benchmark report. Where the report supplies launch
+settings in place of a recipe repository, the prompt uses the report and model
+card.
 
 ## Cloudflare Pages
 
