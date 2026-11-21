@@ -24,21 +24,32 @@ recipe link in `recipe_credit` when the exact revision was known.
 
 ## Cloudflare Pages
 
-Use the existing GitHub repository with these settings.
+[Production](https://tomrhudson-ai.com/) also serves from
+[llm-serving-bench.pages.dev](https://llm-serving-bench.pages.dev/).
 
-| Setting | Value |
+| Setting | Live value |
 |---|---|
-| Production branch | `main` |
+| Pages project | `llm-serving-bench` |
+| Git provider and repository | GitHub · `tomrhudson/llm-serving-bench` |
+| Production branch | `main`, automatic deployments enabled |
+| Preview branches | All non-production branches |
+| Pull request comments | Enabled |
 | Framework preset | None |
 | Root directory | Repository root |
 | Build command | `npm --prefix site ci && npm --prefix site run build` |
 | Build output directory | `site/dist` |
-| Production and preview variables | `NODE_VERSION=22`, `ASTRO_TELEMETRY_DISABLED=1` |
+| Production and preview variables | `NODE_VERSION=22.23.5`, `ASTRO_TELEMETRY_DISABLED=1`, `SKIP_DEPENDENCY_INSTALL=1` |
 | Build watch includes | `site/*`, `results/*`, `configs/qwen-native-standard.json` |
 | Build watch excludes | Empty |
+| Pages custom domain | `tomrhudson-ai.com` |
+| Apex DNS record | Proxied CNAME `@` → `llm-serving-bench.pages.dev`, TTL Auto |
 
-Verify the site branch's preview and open a configuration URL directly before
-merging the PR. After the production deployment serves those same routes over
-HTTPS on the project's `pages.dev` hostname, check the Cloudflare zone and
-existing apex DNS. Attach `tomrhudson-ai.com` through Pages Custom domains and
-verify the certificate, catalog, and a configuration route on the custom host.
+The build command installs the pinned dependencies under `site/`. The
+Cloudflare Workers & Pages GitHub app needs access to
+`tomrhudson/llm-serving-bench` in its selected repositories for pushes to
+trigger builds.
+
+For a pull request, open its Pages preview and load the catalog and a
+configuration link directly. After merging, confirm Pages records a
+`github:push` production deployment for the merge commit, then check HTTPS
+and those same routes at `tomrhudson-ai.com`.
