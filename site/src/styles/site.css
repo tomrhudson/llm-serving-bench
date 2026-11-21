@@ -204,6 +204,37 @@ option { color: var(--foreground); background: var(--surface); }
 .card-actions .card-benchmark { flex: 1; }
 .status { padding-inline: .58rem; }
 
+.install-dialog {
+  width: min(42rem, calc(100% - 2rem));
+  max-height: calc(100dvh - 2rem);
+  margin: auto;
+  padding: clamp(1rem, 4vw, 1.75rem);
+  border: 1px solid var(--border);
+  border-radius: 1.25rem;
+  background: var(--surface);
+  color: var(--foreground);
+  box-shadow: var(--hero-shadow);
+  overflow: auto;
+}
+.install-dialog::backdrop { background: #0c0b19aa; }
+.install-configuration { margin-top: .5rem; font-weight: 650; overflow-wrap: anywhere; }
+#install-help { margin-block: .45rem 1rem; color: var(--muted); }
+#install-prompt {
+  display: block;
+  width: 100%;
+  height: min(19rem, 42dvh);
+  padding: .75rem;
+  border: 1px solid var(--outline);
+  border-radius: var(--field-radius);
+  background: var(--background);
+  color: var(--foreground);
+  font: .875rem / 1.5 var(--mono);
+  overflow-wrap: anywhere;
+  resize: none;
+}
+#install-status { min-height: 1.5em; margin-block: .5rem; color: var(--accent-soft-foreground); font-size: .875rem; }
+.install-actions { display: flex; flex-wrap: wrap; justify-content: end; gap: .5rem; }
+
 .detail { display: grid; gap: 1rem; padding-block: 1.65rem 4rem; }
 .detail-panel { display: block; min-width: 0; padding: clamp(1rem, 2.7vw, 1.75rem); }
 .detail-panel h2 { margin-bottom: .8rem; }
