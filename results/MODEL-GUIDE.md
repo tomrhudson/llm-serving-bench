@@ -70,7 +70,7 @@ limits. Validate those against the actual application before routing production 
 | 20-minute c8 soak | 432.90 output tok/s · 0 errors |
 | Longest tested prompt | 240K · 98.98s TTFT p95 |
 | Regression canaries | 13/13 |
-| Tool-use evaluation | [Incomplete (98.1%) · 88.0 mean · Pass^3 79.4%](2026-10-10-qwen38-flash-next-nvfp4-tensorfold-tool-eval.md) |
+| Tool-use evaluation | [Incomplete (98.1%) · 88.0 mean · Pass^3 79.4%](2026-11-21-qwen38-flash-next-nvfp4-tensorfold-tool-eval.md) |
 
 ### Good fit
 
@@ -98,7 +98,7 @@ Qwen describes the upstream model as an experimental, multimodal agentic archite
 |---|---|---:|---:|---:|---:|---|---|
 | [Qwen3.8-Flash-Next FP4-Local QAD (TensorFold v1.1.4, 1 Spark, 262K, recipe 20e15e4)](2026-11-08-qwen38-flash-next-fp4-local-tensorfold-1spark-262k-20e15e4.md) | TensorFold | 256K | 0.35s | 77.79 | 13/13 | [⚠ safety · 89.0 mean · Pass^3 84.1%](2026-11-08-qwen38-flash-next-fp4-local-tensorfold-1spark-262k-20e15e4-tool-eval.md) | Latest single-Spark run (Nov 8); not selected for Hermes tools: 13/13 serving checks and stronger c1-c4 than the Oct 18 recipe, but the complete tool-eval safety gate failed TC-60 in all three trials |
 | [Qwen3.8-Flash-Next FP4-Local QAD (TensorFold, 1 Spark, native 262K, thinking off)](2026-10-18-qwen38-flash-next-fp4-local-tensorfold-1spark-262k.md) | TensorFold | 256K | 0.48s | 85.72 | 13/13 | [Incomplete (98.6%) · 86.0 mean · Pass^3 76.5%](2026-10-18-qwen38-flash-next-fp4-local-tensorfold-1spark-262k-tool-eval.md) | Concurrency 4-5 (recipe 5 streams); thinking off; 13/13 quality |
-| [Qwen3.8-Flash-Next NVIDIA NVFP4 (TensorFold, 1M YaRN)](2026-10-08-qwen38-flash-next-nvfp4-tensorfold-1m.md) **(pick)** | TensorFold | 1M | 0.23s | 432.90 | 13/13 | [Incomplete (98.1%) · 88.0 mean · Pass^3 79.4%](2026-10-10-qwen38-flash-next-nvfp4-tensorfold-tool-eval.md) | Concurrency 8 interactive; up to 16 batch; 13/13 quality |
+| [Qwen3.8-Flash-Next NVIDIA NVFP4 (TensorFold, 1M YaRN)](2026-10-08-qwen38-flash-next-nvfp4-tensorfold-1m.md) **(pick)** | TensorFold | 1M | 0.23s | 432.90 | 13/13 | [Incomplete (98.1%) · 88.0 mean · Pass^3 79.4%](2026-11-21-qwen38-flash-next-nvfp4-tensorfold-tool-eval.md) | Concurrency 8 interactive; up to 16 batch; 13/13 quality |
 | [Qwen3.8-Flash-Next NVIDIA NVFP4 (Mia vLLM, FP8 KV, 2200 MHz)](2026-10-03-qwen38-mia-nvidia-fp8kv-native-262k-2200mhz.md) | vLLM | 256K | 0.42s | 196.70 | 13/13 | Not run | 2200 MHz; concurrency 8; longer timeout near 240K |
 | [Qwen3.8-Flash-Next NVIDIA NVFP4 (Mia vLLM, FP8 KV)](2026-09-07-qwen38-mia-nvidia-fp8kv-native-262k.md) | vLLM | 256K | 0.40s | 197.42 | 13/13 | Not run | Concurrency 8; faster prefill, larger KV pool |
 | [Qwen3.8-Flash-Next-NVFP4 (Mia vLLM, 2200 MHz)](2026-09-03-qwen38-flash-next-vllm-mia-yarn-1m-2200mhz.md) | vLLM | 1M | 0.36s | 201.58 | 13/13 | Not run | 2200 MHz; concurrency 8 |

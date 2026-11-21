@@ -76,6 +76,14 @@ The closest published comparison uses the same two-Spark hardware and NVIDIA NVF
 
 TensorFold is the new throughput choice for this model. Keep the vLLM lane available as a rollback and compatibility fallback until application routing and workload-specific tool, vision, and exact-output behavior have been validated against the new served model identifier.
 
+## Tool-use evaluation
+
+The [November 21 three-trial rerun](2026-11-21-qwen38-flash-next-nvfp4-tensorfold-tool-eval.md)
+matched the October pilot at **88.0 mean**, **79.4% Pass^3**, and a passing
+safety gate. The harness graded **203 of 207 attempts (98.1%)**. TensorFold
+rejected the JSON-schema request in TC-64 on each trial, and the harness
+also recorded one ungraded TC-45 attempt.
+
 ## Validation and method limits
 
 - Both rank containers remained running after the suite with zero restarts and no OOM flag; queues drained to zero.

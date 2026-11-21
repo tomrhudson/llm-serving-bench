@@ -2998,8 +2998,8 @@
         "protocol_id": "tool-eval-standard-v1-b60e2f0",
         "upstream_commit": "b60e2f00f6c44352a3680356e7c7948f777c5280",
         "version": "0.0.1.dev1+unknown.gb60e2f00f",
-        "run_id": "2026-10-10T23-37-29.940681Z_5237fb4c",
-        "config_fingerprint": "b1a4d10ff3c2",
+        "run_id": "2026-11-21T21-12-59.895805Z_6c8b53bf",
+        "config_fingerprint": "cc59507fcb1c",
         "status": "incomplete",
         "trials": 3,
         "scenarios_per_trial": 69,
@@ -3107,7 +3107,7 @@
             "stddev_percent": 0.0
           }
         ],
-        "report": "2026-10-10-qwen38-flash-next-nvfp4-tensorfold-tool-eval.md"
+        "report": "2026-11-21-qwen38-flash-next-nvfp4-tensorfold-tool-eval.md"
       }
     },
     {
