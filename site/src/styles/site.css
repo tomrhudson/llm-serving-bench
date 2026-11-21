@@ -147,6 +147,7 @@ option { color: var(--foreground); background: var(--surface); }
 .track { height: .58rem; background: var(--surface-secondary); border-radius: 1rem; }
 .track span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--chart-fill), var(--accent)); }
 .sample-unit { font-size: .875rem; color: var(--muted); margin-top: 1rem; padding-top: .85rem; border-top: 1px solid var(--border); }
+.sample > .button { margin-top: .85rem; }
 
 .home-section { padding-block: clamp(2.6rem, 6vw, 4.5rem); }
 .home-section > h1 { margin-bottom: 1rem; }

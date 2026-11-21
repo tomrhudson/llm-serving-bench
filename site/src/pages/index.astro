@@ -1,4 +1,6 @@
 ---
+import InstallDialog from '../components/InstallDialog.astro';
+import InstallModelButton from '../components/InstallModelButton.astro';
 import Layout from '../components/Layout.astro';
 import { baselines, displayDate, families, decodeWorkload, modelUrl, rate, repository } from '../lib/benchmarks.js';
 
@@ -34,6 +36,7 @@ const maxRate = Math.max(1, ...measuredDecode.map((row) => row.output_tps));
             ))}
           </dl>
           <p class="sample-unit">Aggregate output tok/s by concurrency · {decodeWorkload}</p>
+          <InstallModelButton config={latest} />
         </figure>
       )}
     </div>
@@ -53,4 +56,5 @@ const maxRate = Math.max(1, ...measuredDecode.map((row) => row.output_tps));
       <div class="card"><h3>Context and tool use</h3><p>Prompt lengths actually exercised, passkey retrieval, and published mock-tool evaluations with completion and safety-gate status.</p></div>
     </div>
   </section>
+  <InstallDialog />
 </Layout>
