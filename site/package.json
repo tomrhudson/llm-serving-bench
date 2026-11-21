@@ -1,0 +1,12 @@
+{
+  "name": "dgx-spark-benchmarks",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22.12.0" },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": { "astro": "7.3.3" }
+}

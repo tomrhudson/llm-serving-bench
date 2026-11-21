@@ -1,0 +1,56 @@
+---
+import Layout from '../components/Layout.astro';
+import { baselines, displayDate, families, decodeWorkload, modelUrl, rate, repository } from '../lib/benchmarks.js';
+
+const latest = baselines[0];
+const measuredDecode = (latest.decode ?? []).filter((row) => row.output_tps != null);
+const maxRate = Math.max(1, ...measuredDecode.map((row) => row.output_tps));
+---
+<Layout title="DGX Spark benchmarks" description="Independent, configuration-level LLM serving benchmarks for NVIDIA DGX Spark.">
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <p class="kicker">Independent benchmarks by Tom Hudson</p>
+        <h1>DGX Spark<br />serving benchmarks</h1>
+        <p class="hero-lead">Find what runs on your DGX Spark setup and see how the exact configuration performed under load.</p>
+        <div class="actions">
+          <a class="button primary" href="/models/">Browse the model catalog</a>
+          <a class="light-link" href={`${repository}#standard-suite`}>Benchmark methodology</a>
+        </div>
+      </div>
+      {measuredDecode.length > 0 && (
+        <figure class="sample">
+          <figcaption>
+            <span class="kicker">Latest benchmark · <time datetime={latest.date}>{displayDate(latest.date)}</time></span>
+            <a href={modelUrl(latest.id)}>{latest.model.name}</a>
+            <span>{latest.sparks}× DGX Spark · {latest.runtime} · Decode sweep</span>
+          </figcaption>
+          <dl class="sample-rows">
+            {measuredDecode.map((row) => (
+              <div>
+                <dt>c{row.concurrency}</dt>
+                <dd><span class="track" aria-hidden="true"><span style={`width:${row.output_tps / maxRate * 100}%`}></span></span>{rate(row.output_tps)}</dd>
+              </div>
+            ))}
+          </dl>
+          <p class="sample-unit">Aggregate output tok/s by concurrency · {decodeWorkload}</p>
+        </figure>
+      )}
+    </div>
+  </section>
+
+  <section class="wrap home-section" aria-labelledby="measured-heading">
+    <div class="section-intro">
+      <div>
+        <p class="kicker">{families.length} model families · {baselines.length} configurations</p>
+        <h2 id="measured-heading">What the benchmarks measure</h2>
+      </div>
+      <a class="text-link" href="/models/">Explore all configurations</a>
+    </div>
+    <div class="measure-grid">
+      <div><h3>Interactive speed</h3><p>Single-stream generation speed and time to first token across a sweep of request concurrency.</p></div>
+      <div><h3>Throughput under load</h3><p>Aggregate output rate, latency and errors during a sustained serving test.</p></div>
+      <div><h3>Context and tool use</h3><p>Prompt lengths actually exercised, passkey retrieval, and published mock-tool evaluations with completion and safety-gate status.</p></div>
+    </div>
+  </section>
+</Layout>

@@ -1,0 +1,107 @@
+---
+import Layout from '../../components/Layout.astro';
+import ConfigCard from '../../components/ConfigCard.astro';
+import { baselines, decodeWorkload, engines, families, sparkCounts } from '../../lib/benchmarks.js';
+---
+<Layout title="Model catalog" description="Compare tested DGX Spark serving configurations by hardware count and engine." catalog>
+  <div class="mast">
+    <div class="wrap">
+      <p class="kicker">DGX Spark benchmarks</p>
+      <h1>Model catalog</h1>
+      <p class="hero-lead">Filter by hardware and serving engine. Configurations are grouped by model so you can compare runs directly.</p>
+    </div>
+  </div>
+  <div class="wrap catalog">
+    <div class="filters" id="filters" hidden>
+      <label for="sparks">DGX Spark count
+        <select id="sparks">
+          <option value="">Any Spark count</option>
+          {sparkCounts.map((count) => <option value={count}>{count}× DGX Spark</option>)}
+        </select>
+      </label>
+      <label for="engine">Serving engine
+        <select id="engine">
+          <option value="">Any engine</option>
+          {engines.map((engine) => <option value={engine}>{engine}</option>)}
+        </select>
+      </label>
+      <button id="clear" class="button secondary" type="button">Reset filters</button>
+    </div>
+    <div class="catalog-summary">
+      <p id="result-count" role="status">{baselines.length} configurations across {families.length} models</p>
+      <p>Decode sweep · {decodeWorkload}</p>
+    </div>
+    <p id="empty" class="empty" hidden>No configurations match these filters.</p>
+    {families.map((family) => (
+      <section id={family.id} class="family" aria-labelledby={`${family.id}-heading`} data-family>
+        <div class="family-heading">
+          <h2 id={`${family.id}-heading`}>{family.name}</h2>
+          <p data-family-count>{family.configs.length} {family.configs.length === 1 ? 'configuration' : 'configurations'}</p>
+        </div>
+        <div class="card-grid">
+          {family.configs.map((config) => <ConfigCard config={config} />)}
+        </div>
+      </section>
+    ))}
+  </div>
+</Layout>
+<script>
+  const sparks = document.querySelector<HTMLSelectElement>('#sparks')!;
+  const engine = document.querySelector<HTMLSelectElement>('#engine')!;
+  const filters = document.querySelector<HTMLElement>('#filters')!;
+  const count = document.querySelector<HTMLElement>('#result-count')!;
+  const empty = document.querySelector<HTMLElement>('#empty')!;
+  const reset = document.querySelector<HTMLButtonElement>('#clear')!;
+  const families = Array.from(document.querySelectorAll<HTMLElement>('[data-family]'), (group) => ({
+    group,
+    cards: group.querySelectorAll<HTMLElement>('[data-configuration]'),
+    count: group.querySelector<HTMLElement>('[data-family-count]')!,
+  }));
+
+  function readFilters() {
+    const params = new URLSearchParams(location.search);
+    for (const select of [sparks, engine]) {
+      select.value = params.get(select.id) ?? '';
+      if (select.selectedIndex < 0) select.value = '';
+    }
+    render();
+  }
+
+  function render() {
+    let total = 0;
+    let models = 0;
+    for (const family of families) {
+      let matches = 0;
+      for (const card of family.cards) {
+        card.hidden = Boolean((sparks.value && card.dataset.sparks !== sparks.value)
+          || (engine.value && card.dataset.engine !== engine.value));
+        if (!card.hidden) matches++;
+      }
+      family.group.hidden = matches === 0;
+      family.count.textContent = `${matches} ${matches === 1 ? 'configuration' : 'configurations'}`;
+      if (matches) models++;
+      total += matches;
+    }
+    count.textContent = `${total} ${total === 1 ? 'configuration' : 'configurations'} across ${models} ${models === 1 ? 'model' : 'models'}`;
+    empty.hidden = total > 0;
+  }
+
+  function updateFilters() {
+    const url = new URL(location.href);
+    for (const select of [sparks, engine]) {
+      if (select.value) url.searchParams.set(select.id, select.value);
+      else url.searchParams.delete(select.id);
+    }
+    history.replaceState(null, '', url);
+    render();
+  }
+
+  filters.hidden = false;
+  readFilters();
+  filters.addEventListener('change', updateFilters);
+  reset.addEventListener('click', () => {
+    sparks.value = engine.value = '';
+    updateFilters();
+  });
+  window.addEventListener('popstate', readFilters);
+</script>
