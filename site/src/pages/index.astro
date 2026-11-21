@@ -1,4 +1,5 @@
 ---
+import EvaluationBadges from '../components/EvaluationBadges.astro';
 import InstallDialog from '../components/InstallDialog.astro';
 import InstallModelButton from '../components/InstallModelButton.astro';
 import Layout from '../components/Layout.astro';
@@ -27,6 +28,7 @@ const maxRate = Math.max(1, ...measuredDecode.map((row) => row.output_tps));
             <a href={modelUrl(latest.id)}>{latest.model.name}</a>
             <span>{latest.sparks}× DGX Spark · {latest.runtime} · Decode sweep</span>
           </figcaption>
+          <EvaluationBadges config={latest} />
           <dl class="sample-rows">
             {measuredDecode.map((row) => (
               <div>

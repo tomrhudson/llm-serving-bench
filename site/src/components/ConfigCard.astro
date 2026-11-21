@@ -1,10 +1,10 @@
 ---
-import EvaluationChip from './EvaluationChip.astro';
+import EvaluationBadges from './EvaluationBadges.astro';
 import InstallModelButton from './InstallModelButton.astro';
 import { displayDate, modelUrl, number, rate, unavailable } from '../lib/benchmarks.js';
 
 const { config } = Astro.props;
-const { c1, soak, recipe, tool_eval: tool, sparks } = config;
+const { c1, soak, recipe, sparks } = config;
 const profileLabel = config.label.match(/^(.+?) \((.+)\)$/);
 const name = profileLabel?.[1] ?? config.label;
 const profile = profileLabel?.[2];
@@ -75,10 +75,7 @@ const sourceLabel = recipe.label === 'Recipe' ? 'View recipe' : 'View model card
 
   <div class="card-bottom">
     <p class="card-date">Tested <time datetime={config.date}>{displayDate(config.date)}</time></p>
-    <div class="card-status">
-      <EvaluationChip status={config.toolStatus}>Tool eval {config.toolStatus}</EvaluationChip>
-      {tool && <EvaluationChip status={config.safetyGate}>Safety gate {config.safetyGate}</EvaluationChip>}
-    </div>
+    <EvaluationBadges config={config} />
   </div>
 
   <div class="card-actions">

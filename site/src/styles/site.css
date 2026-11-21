@@ -142,6 +142,7 @@ option { color: var(--foreground); background: var(--surface); }
 .sample figcaption { display: grid; gap: .3rem; color: var(--muted); font-size: .94rem; }
 .sample .kicker { margin: 0 0 .15rem; }
 .sample figcaption a { font-size: clamp(1.25rem, 2.5vw, 1.7rem); font-weight: 690; color: var(--foreground); letter-spacing: -.035em; line-height: 1.15; }
+.sample > .card-status { margin-top: .85rem; }
 .sample-rows { display: grid; margin-top: 1.2rem; gap: .55rem; font: 560 .875rem / 1.4 var(--mono); font-variant-numeric: tabular-nums; }
 .sample-rows div { display: grid; align-items: center; grid-template-columns: 2.15rem 1fr; gap: .5rem; }
 .sample-rows dt { color: var(--muted); }
