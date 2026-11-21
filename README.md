@@ -48,7 +48,8 @@ and SSH targets are deliberately omitted from persisted output.
 ## Combined serving and tool-use run
 
 New published baselines should run the serving suite first and the pinned
-`tool-eval-bench` profile second:
+[`tool-eval-bench`](https://github.com/SeraphimSerapis/tool-eval-bench) profile
+second:
 
 ```bash
 python3 scripts/run_combined_benchmark.py \
