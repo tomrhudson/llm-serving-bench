@@ -1,4 +1,5 @@
 ---
+import EvaluationChip from '../../components/EvaluationChip.astro';
 import InstallDialog from '../../components/InstallDialog.astro';
 import InstallModelButton from '../../components/InstallModelButton.astro';
 import Layout from '../../components/Layout.astro';
@@ -113,12 +114,10 @@ const percent = (value) => value == null ? unavailable : `${value}%`;
       {tool ? (
         <>
           <div class="tool-flags">
-            <span class:list={['chip chip--soft status', config.comparativeTool ? 'chip--default' : 'chip--warning']}>
+            <EvaluationChip status={config.toolStatus}>
               {tool.status === 'incomplete' ? 'Incomplete pilot' : tool.status === 'complete' ? 'Complete' : 'Unsupported'} · {percent(tool.completion_rate)} completion
-            </span>
-            <span class:list={['chip chip--soft status', config.safetyGate === 'failed' ? 'chip--danger' : 'chip--default']}>
-              Safety gate {config.safetyGate}
-            </span>
+            </EvaluationChip>
+            <EvaluationChip status={config.safetyGate}>Safety gate {config.safetyGate}</EvaluationChip>
           </div>
           <p>{config.comparativeTool
             ? 'Compare only against complete results with 100% completion under the same protocol ID.'
