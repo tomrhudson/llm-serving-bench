@@ -242,6 +242,7 @@ option { color: var(--foreground); background: var(--surface); }
 .install-actions { display: flex; flex-wrap: wrap; justify-content: end; gap: .5rem; }
 
 .detail { display: grid; gap: 1rem; padding-block: 1.65rem 4rem; }
+.summary-filters { margin-bottom: 0; }
 .summary-board { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 1.25rem 2rem; padding: clamp(1rem, 2.7vw, 1.75rem); }
 .summary-intro p { margin-block: .6rem .85rem; color: var(--muted); }
 .summary-ranking { margin: 0; list-style: decimal; padding-inline-start: 1.5rem; }

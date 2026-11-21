@@ -217,15 +217,17 @@ export const passkeyTokens = passkey.prompt_tokens;
 export const soakMinutes = soak.duration_seconds / 60;
 export const soakConcurrency = soak.concurrency;
 
-export function benchmarkLeaders() {
+export function benchmarkLeaders(sparks) {
   const configs = new Map(baselines.map((config) => [config.id, config]));
 
   function rank(measure, direction = -1) {
     // Read the same catalog series as the README charts. The site may enrich
     // individual detail pages with additional passkey evidence from reports.
     const ranked = catalog.baselines.flatMap((baseline) => {
+      const config = configs.get(baseline.id);
+      if (sparks != null && config.sparks !== sparks) return [];
       const result = measure(baseline);
-      return Number.isFinite(result?.value) ? [{ ...result, config: configs.get(baseline.id) }] : [];
+      return Number.isFinite(result?.value) ? [{ ...result, config }] : [];
     }).sort((a, b) => direction * (a.value - b.value) || b.config.date.localeCompare(a.config.date) || a.config.id.localeCompare(b.config.id));
 
     const seen = new Set();
