@@ -138,7 +138,8 @@ committing a curated report; CI also scans the full reachable history.
 ## Published baselines
 
 [Build the Spark Bench website](site/README.md) for a browsable catalog of the
-published serving configurations.
+published serving configurations. The website uses [HeroUI](https://heroui.com/)
+for its design, including buttons, cards, and status chips.
 
 [Compare all published baselines](results/README.md) for the cross-model table,
 decode and prefill charts, and the process for adding future results.
