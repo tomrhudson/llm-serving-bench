@@ -73,6 +73,11 @@ def _load_catalog() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         if not (RESULTS / baseline["report"]).is_file():
             raise ValueError(f"missing report: {baseline['report']}")
         _validate_tool_eval(baseline)
+        if not baseline["decode"] and (
+            not baseline.get("tool_eval")
+            or any(baseline[field] for field in ("prefill", "prefix", "soak", "quality"))
+        ):
+            raise ValueError(f"{baseline['id']} needs serving data or a standalone tool evaluation")
     for model in models:
         if model["tested_choice"] not in seen:
             raise ValueError(
@@ -83,6 +88,8 @@ def _load_catalog() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
             raise ValueError(
                 f"{model['id']} tested choice belongs to {selected['model_id']}"
             )
+        if not selected["decode"]:
+            raise ValueError(f"{model['id']} tested choice needs serving measurements")
         if not any(item["model_id"] == model["id"] for item in baselines):
             raise ValueError(f"{model['id']} has no published baselines")
     return models, baselines
@@ -358,20 +365,23 @@ def _model_guide_markdown(
         not_for = "\n".join(f'- {item}' for item in model["not_for"])
         variants = []
         for item in (entry for entry in baselines if entry["model_id"] == model["id"]):
-            variant_c1 = next(
-                point for point in item["decode"] if point["concurrency"] == 1
-            )
-            variant_quality = item["quality"]
+            serving_columns = "— | — | —"
+            if item["decode"]:
+                variant_c1 = next(
+                    point for point in item["decode"] if point["concurrency"] == 1
+                )
+                variant_quality = item["quality"]
+                serving_columns = (
+                    f'{variant_c1["ttft_p95_seconds"]:.2f}s | '
+                    f'{item["soak"]["output_tps"]:.2f} | '
+                    f'{variant_quality["passed"]}/{variant_quality["total"]}'
+                )
             variant_tool = _tool_eval_signal(item)
             marker = " **(pick)**" if item["id"] == model["tested_choice"] else ""
             variants.append(
                 f'| [{item["label"]}]({item["report"]}){marker} | {item["runtime"]} | '
-                f'{_fmt_context(item["context_tokens"])} | '
-                f'{variant_c1["ttft_p95_seconds"]:.2f}s | '
-                f'{item["soak"]["output_tps"]:.2f} | '
-                f'{variant_quality["passed"]}/{variant_quality["total"]} | '
-                f'{variant_tool} | '
-                f'{item["recommendation"]} |'
+                f'{_fmt_context(item["context_tokens"])} | {serving_columns} | '
+                f'{variant_tool} | {item["recommendation"]} |'
             )
 
         sections.append(
@@ -475,17 +485,21 @@ def _summary_markdown(
 ) -> str:
     rows = []
     for item in baselines:
-        peak = max(item["decode"], key=lambda point: point["output_tps"])
-        c1 = next(point for point in item["decode"] if point["concurrency"] == 1)
-        long_context = max(item["prefill"], key=lambda point: point["input_tokens"])
-        quality = item["quality"]
+        serving_columns = "— | — | — | — | —"
+        if item["decode"]:
+            peak = max(item["decode"], key=lambda point: point["output_tps"])
+            c1 = next(point for point in item["decode"] if point["concurrency"] == 1)
+            long_context = max(item["prefill"], key=lambda point: point["input_tokens"])
+            quality = item["quality"]
+            serving_columns = (
+                f'{peak["output_tps"]:.2f} @ c{peak["concurrency"]} | '
+                f'{c1["ttft_p95_seconds"]:.2f}s | {long_context["ttft_p95_seconds"]:.2f}s | '
+                f'{item["soak"]["output_tps"]:.2f} | {quality["passed"]}/{quality["total"]}'
+            )
         tool_signal = _tool_eval_signal(item)
         rows.append(
             f'| [{item["label"]}]({item["report"]}) | {item["hardware"]} / {item["runtime"]} | '
-            f'{_fmt_context(item["context_tokens"])} | {peak["output_tps"]:.2f} @ c{peak["concurrency"]} | '
-            f'{c1["ttft_p95_seconds"]:.2f}s | {long_context["ttft_p95_seconds"]:.2f}s | '
-            f'{item["soak"]["output_tps"]:.2f} | {quality["passed"]}/{quality["total"]} | '
-            f'{tool_signal} | '
+            f'{_fmt_context(item["context_tokens"])} | {serving_columns} | {tool_signal} | '
             f'{item["recommendation"]} | {item["recipe_credit"]} |'
         )
 
@@ -533,6 +547,7 @@ Last updated: {newest} · Published baselines: {len(baselines)}
 Peak decode throughput is useful for batch capacity; c1 TTFT is the better
 interactive-latency signal. The longest-context column uses the largest shared
 prefill scenario available in the standard suite (currently 240K tokens).
+A dash in a serving column indicates an unmeasured result.
 
 ## Model checkpoints
 
@@ -611,11 +626,12 @@ is current without changing files.
 def _outputs(
     models: list[dict[str, Any]], baselines: list[dict[str, Any]]
 ) -> dict[Path, str]:
+    serving_baselines = [baseline for baseline in baselines if baseline["decode"]]
     return {
         SUMMARY: _summary_markdown(models, baselines),
         MODEL_GUIDE: _model_guide_markdown(models, baselines),
         ASSETS / "decode-throughput.svg": _line_chart(
-            baselines,
+            serving_baselines,
             title="Decode throughput by offered concurrency",
             subtitle="Higher is better; approximately 256 input and 512 output tokens per request",
             field="decode",
@@ -626,7 +642,7 @@ def _outputs(
             x_format=lambda value: str(int(value)),
         ),
         ASSETS / "prefill-ttft.svg": _line_chart(
-            baselines,
+            serving_baselines,
             title="Long-context prefill latency",
             subtitle="Lower is better; c1 unique prompts and a 240K passkey check",
             field="prefill",
@@ -637,7 +653,7 @@ def _outputs(
             x_format=lambda value: _fmt_context(int(value)),
             log_x=True,
         ),
-        ASSETS / "soak-throughput.svg": _bar_chart(baselines),
+        ASSETS / "soak-throughput.svg": _bar_chart(serving_baselines),
     }
 
 

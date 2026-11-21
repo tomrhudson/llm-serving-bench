@@ -17,7 +17,7 @@ const related = baselines.filter((other) => other.model_id === config.model_id &
 const measurement = (value, unit) => value == null ? unavailable : `${rate(value)} ${unit}`;
 const percent = (value) => value == null ? unavailable : `${value}%`;
 ---
-<Layout title={config.label} description={`Serving results for ${config.label} on ${config.sparks} NVIDIA DGX Spark systems.`}>
+<Layout title={config.label} description={`${config.toolOnly ? 'Tool-use evaluation' : 'Serving results'} for ${config.label} on ${config.sparks} NVIDIA DGX Spark systems.`}>
   <div class="mast detail-mast">
     <div class="wrap">
       <nav class="crumb" aria-label="Breadcrumb">
@@ -43,6 +43,7 @@ const percent = (value) => value == null ? unavailable : `${value}%`;
         <div><dt>Serving runtime</dt><dd>{config.runtime}</dd></div>
         <div><dt>Runtime version or build</dt><dd>{config.runtimeProvenance}</dd></div>
         <div><dt>Weight quantization or precision</dt><dd>{config.quantization}</dd></div>
+        {config.toolOnly && <div><dt>Configured context</dt><dd>{number(config.configuredTokens)} tokens</dd></div>}
         <div><dt>Benchmark date</dt><dd><time datetime={config.date}>{displayDate(config.date)}</time></dd></div>
         <div><dt>Recipe credit</dt><dd>
           {recipe.href ? (
@@ -57,7 +58,7 @@ const percent = (value) => value == null ? unavailable : `${value}%`;
       </dl>
     </section>
 
-    <section class="card detail-panel" aria-labelledby="decode">
+    <section class="card detail-panel" aria-labelledby="decode" hidden={config.toolOnly}>
       <h2 id="decode">Decode sweep</h2>
       <p>{decodeWorkload}. Output throughput is aggregate across concurrent requests. TTFT means time to first token.</p>
       {config.decode?.length ? (
@@ -70,7 +71,7 @@ const percent = (value) => value == null ? unavailable : `${value}%`;
       ) : <p>{unavailable}</p>}
     </section>
 
-    <section class="card detail-panel" aria-labelledby="context">
+    <section class="card detail-panel" aria-labelledby="context" hidden={config.toolOnly}>
       <h2 id="context">Prefill and context</h2>
       <dl class="facts context-facts">
         <div><dt>Configured request window</dt><dd>{config.configuredTokens ? `${number(config.configuredTokens)} tokens` : unavailable}</dd></div>
@@ -93,7 +94,7 @@ const percent = (value) => value == null ? unavailable : `${value}%`;
       ) : <p>{unavailable}</p>}
     </section>
 
-    <section class="card detail-panel" aria-labelledby="soak">
+    <section class="card detail-panel" aria-labelledby="soak" hidden={config.toolOnly}>
       <h2 id="soak">Sustained load</h2>
       {soak ? (
         <>

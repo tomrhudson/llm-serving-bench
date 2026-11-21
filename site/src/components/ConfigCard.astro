@@ -4,7 +4,7 @@ import InstallModelButton from './InstallModelButton.astro';
 import { displayDate, modelUrl, number, peakDecode, rate, unavailable } from '../lib/benchmarks.js';
 
 const { config } = Astro.props;
-const { c1, soak, recipe, sparks } = config;
+const { c1, soak, recipe, tool_eval: tool, sparks } = config;
 const profileLabel = config.label.match(/^(.+?) \((.+)\)$/);
 const name = profileLabel?.[1] ?? config.label;
 const profile = profileLabel?.[2];
@@ -28,7 +28,20 @@ const sourceLabel = recipe.label === 'Recipe' ? 'View recipe' : 'View model card
   <h3 id={headingId}>{name}</h3>
   {profile && <p class="card-profile" id={profileId}>{profile}</p>}
 
-  <dl class="card-lead">
+  {config.toolOnly && (
+    <dl class="card-lead">
+      <div>
+        <dt>Tool-eval mean</dt>
+        <dd class="card-lead-value"><strong>{Number(tool.score_mean).toFixed(1)}</strong><span>/ 100</span></dd>
+      </div>
+      <div class="card-latency">
+        <dt>Graded attempts</dt>
+        <dd>{tool.completion_rate}%</dd>
+      </div>
+    </dl>
+  )}
+
+  <dl class="card-lead" hidden={config.toolOnly}>
     <div>
       <dt>Single-stream decode</dt>
       <dd class:list={['card-lead-value', { 'card-unavailable': c1?.output_tps == null }]}>
@@ -42,7 +55,7 @@ const sourceLabel = recipe.label === 'Recipe' ? 'View recipe' : 'View model card
     </div>
   </dl>
 
-  <dl class="card-metrics">
+  <dl class="card-metrics" hidden={config.toolOnly}>
     <div>
       <dt>Peak decode</dt>
       <dd><strong>{rate(peak?.output_tps)}</strong>{peak && <small>output tok/s<br />c{peak.concurrency}</small>}</dd>
@@ -61,7 +74,7 @@ const sourceLabel = recipe.label === 'Recipe' ? 'View recipe' : 'View model card
     </div>
   </dl>
 
-  <div class="card-context">
+  <div class="card-context" hidden={config.toolOnly}>
     <h4>Context</h4>
     <dl>
       <div><dt>Configured</dt><dd>{config.configuredTokens ? `${number(config.configuredTokens)} tokens` : unavailable}</dd></div>
