@@ -1,0 +1,16 @@
+---
+interface Props {
+  status: string;
+}
+
+const { status } = Astro.props;
+const tones: Record<string, string> = {
+  complete: 'success',
+  passed: 'success',
+  incomplete: 'warning',
+  unsupported: 'warning',
+  failed: 'danger',
+};
+const tone = tones[status] ?? 'default';
+---
+<span class={`chip chip--soft chip--${tone} status`}><slot /></span>

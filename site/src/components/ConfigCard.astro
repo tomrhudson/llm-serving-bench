@@ -1,4 +1,5 @@
 ---
+import EvaluationChip from './EvaluationChip.astro';
 import InstallModelButton from './InstallModelButton.astro';
 import { displayDate, modelUrl, number, rate, unavailable } from '../lib/benchmarks.js';
 
@@ -75,14 +76,8 @@ const sourceLabel = recipe.label === 'Recipe' ? 'View recipe' : 'View model card
   <div class="card-bottom">
     <p class="card-date">Tested <time datetime={config.date}>{displayDate(config.date)}</time></p>
     <div class="card-status">
-      <span class:list={['chip chip--soft status', tool && !config.comparativeTool ? 'chip--warning' : 'chip--default']}>
-        Tool eval {config.toolStatus}
-      </span>
-      {tool && (
-        <span class:list={['chip chip--soft status', config.safetyGate === 'failed' ? 'chip--danger' : 'chip--default']}>
-          Safety gate {config.safetyGate}
-        </span>
-      )}
+      <EvaluationChip status={config.toolStatus}>Tool eval {config.toolStatus}</EvaluationChip>
+      {tool && <EvaluationChip status={config.safetyGate}>Safety gate {config.safetyGate}</EvaluationChip>}
     </div>
   </div>
 

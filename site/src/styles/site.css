@@ -24,6 +24,8 @@
   --default-foreground: var(--muted);
   --default-soft: var(--surface-secondary);
   --default-soft-foreground: var(--muted);
+  --success-soft: light-dark(#d9f5e7, #193c2d);
+  --success-soft-foreground: light-dark(#11613a, #a3ecc2);
   --danger-soft: light-dark(#fce8ee, #3e222f);
   --danger-soft-foreground: light-dark(#8c2145, #ffadc6);
   --warning-soft: light-dark(#fff0d8, #3c2d1b);
