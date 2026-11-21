@@ -1,5 +1,7 @@
 ---
 import EvaluationBadges from '../components/EvaluationBadges.astro';
+import InstallDialog from '../components/InstallDialog.astro';
+import InstallModelButton from '../components/InstallModelButton.astro';
 import Layout from '../components/Layout.astro';
 import {
   benchmarkLeaders, decodeWorkload, modelUrl, number, passkeyTokens, rate, repository, soakConcurrency, soakMinutes,
@@ -51,6 +53,7 @@ const boards = [
                   <div class="summary-result">
                     <p><strong>{rate(value)}</strong> <span>{unit}</span></p>
                     {concurrency != null && <p class="summary-meta">Concurrency {concurrency}</p>}
+                    <InstallModelButton config={config} />
                   </div>
                 </div>
               </li>
@@ -60,4 +63,5 @@ const boards = [
       </section>
     ))}
   </div>
+  <InstallDialog />
 </Layout>

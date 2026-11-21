@@ -32,8 +32,9 @@ Choose System to resume following the device setting.
 ## Installation prompts
 
 The **Install model** button on the homepage’s latest benchmark card, catalog
-cards, and benchmark pages opens a prompt visitors can copy and give to an AI
-assistant. Prompts use the tested configuration, recipe and benchmark report.
+cards, Top 5 rows, and benchmark pages opens a prompt visitors can copy and give
+to an AI assistant. Prompts use the tested configuration, recipe and benchmark
+report.
 Where the report supplies launch settings in place of a recipe repository, the
 prompt uses the report and model card.
 
