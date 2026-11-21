@@ -255,6 +255,7 @@ option { color: var(--foreground); background: var(--surface); }
 .summary-meta, .summary-result span { color: var(--muted); font-size: .875rem; }
 .summary-result { text-align: right; font-variant-numeric: tabular-nums; }
 .summary-result strong { color: var(--accent); font-size: 1.15rem; }
+.summary-result > .button { margin-top: .45rem; }
 .detail-panel { display: block; min-width: 0; padding: clamp(1rem, 2.7vw, 1.75rem); }
 .detail-panel h2 { margin-bottom: .8rem; }
 .detail-panel p { color: var(--muted); margin: .65rem 0; max-width: 58rem; }
