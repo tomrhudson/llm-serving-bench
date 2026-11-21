@@ -156,7 +156,8 @@ option { color: var(--foreground); background: var(--surface); }
 .home-section > h1 { margin-bottom: 1rem; }
 .section-intro { display: flex; justify-content: space-between; align-items: end; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.35rem; }
 .text-link { font-weight: 650; }
-.measure-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.measure-grid { display: grid; grid-template-columns: repeat(var(--measure-columns, 3), minmax(0, 1fr)); gap: 1rem; }
+.measure-definitions { --measure-columns: 2; margin-top: 1rem; }
 .measure-grid .card { padding: 1.35rem; }
 .measure-grid p { color: var(--muted); margin-top: .6rem; }
 
