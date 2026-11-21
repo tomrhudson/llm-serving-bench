@@ -1,9 +1,9 @@
 ---
 import EvaluationChip from './EvaluationChip.astro';
 
-const { config } = Astro.props;
+const { config, showUnavailableSafety = false } = Astro.props;
 ---
 <div class="card-status">
   <EvaluationChip status={config.toolStatus}>Tool eval {config.toolStatus}</EvaluationChip>
-  {config.tool_eval && <EvaluationChip status={config.safetyGate}>Safety gate {config.safetyGate}</EvaluationChip>}
+  {(config.tool_eval || showUnavailableSafety) && <EvaluationChip status={config.safetyGate}>Safety gate {config.safetyGate}</EvaluationChip>}
 </div>

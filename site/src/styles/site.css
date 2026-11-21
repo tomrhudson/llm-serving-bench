@@ -250,6 +250,7 @@ option { color: var(--foreground); background: var(--surface); }
 .summary-ranking li:last-child { padding-bottom: 0; }
 .summary-ranking li::marker { color: var(--muted); font: 620 .875rem var(--mono); }
 .summary-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: .25rem 1rem; }
+.summary-row .card-status { margin-top: .4rem; }
 .summary-model { color: var(--foreground); font-weight: 690; overflow-wrap: anywhere; }
 .summary-meta, .summary-result span { color: var(--muted); font-size: .875rem; }
 .summary-result { text-align: right; font-variant-numeric: tabular-nums; }
