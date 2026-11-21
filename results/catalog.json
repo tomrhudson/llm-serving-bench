@@ -653,7 +653,7 @@
       "runtime": "TensorFold",
       "context_tokens": 1048576,
       "recipe_credit": "[MiaAI-Lab GLM-5.3 Flash 1104 recipe](https://github.com/MiaAI-Lab/GLM-5.3-Flash-DGX-Sparks-1104/tree/a691916c16b6287ebb79ef8ee37ea182b5240a29)",
-      "recommendation": "Latest run (Nov 20); use c1 interactive or c4 bounded batch: 13/13 checks and 240K passkey passed, warm-prefix caching was effective, but c4 was 71.69 tok/s, c8 soak was 65.01 tok/s, this exact stack has no tool-eval result, and DFlash2 is non-commercial",
+      "recommendation": "Latest run (Nov 20); use c1 interactive or c4 bounded batch for non-tool workloads: 13/13 serving checks and the 240K passkey passed, but the complete three-trial tool evaluation scored 91 and failed TC-51 in all three trials; DFlash2 is non-commercial",
       "decode": [
         {
           "concurrency": 1,
@@ -718,6 +718,121 @@
       "quality": {
         "passed": 13,
         "total": 13
+      },
+      "tool_eval": {
+        "protocol_id": "tool-eval-standard-v1-b60e2f0",
+        "upstream_commit": "b60e2f00f6c44352a3680356e7c7948f777c5280",
+        "version": "0.0.1.dev1+unknown.gb60e2f00f",
+        "run_id": "2026-11-21T04-27-26.295781Z_fe24efbc",
+        "config_fingerprint": "45793d3ef47d",
+        "status": "complete",
+        "trials": 3,
+        "scenarios_per_trial": 69,
+        "completion_rate": 100.0,
+        "score_mean": 91.0,
+        "score_median": 91.0,
+        "score_stddev": 0.0,
+        "score_ci95": [
+          91.0,
+          91.0
+        ],
+        "pass_at_3": 88.4,
+        "pass_hat_3": 88.4,
+        "reliability_gap": 0.0,
+        "safety_passed": false,
+        "category_scores": [
+          {
+            "id": "A",
+            "label": "Tool Selection",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "B",
+            "label": "Parameter Precision",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "C",
+            "label": "Multi-Step Chains",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "D",
+            "label": "Restraint & Refusal",
+            "mean_percent": 83.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "E",
+            "label": "Error Recovery",
+            "mean_percent": 83.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "F",
+            "label": "Localization",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "G",
+            "label": "Structured Reasoning",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "H",
+            "label": "Instruction Following",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "I",
+            "label": "Context & State",
+            "mean_percent": 85.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "J",
+            "label": "Code Patterns",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "K",
+            "label": "Safety & Boundaries",
+            "mean_percent": 92.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "L",
+            "label": "Toolset Scale",
+            "mean_percent": 88.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "M",
+            "label": "Autonomous Planning",
+            "mean_percent": 67.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "N",
+            "label": "Creative Composition",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "O",
+            "label": "Structured Output",
+            "mean_percent": 83.0,
+            "stddev_percent": 0.0
+          }
+        ],
+        "report": "2026-11-20-glm53-flash-exl3-tensorfold-130-dflash2-p4-2x-1m-tool-eval.md"
       }
     },
     {
