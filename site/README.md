@@ -22,6 +22,13 @@ metadata under labeled fields such as `Runtime:`, `Quantization:`, and
 `Configured context:`. Record passkey outcomes explicitly. Use a pinned
 recipe link in `recipe_credit` when the exact revision was known.
 
+## Appearance
+
+The Astro templates use HeroUI styles for buttons, cards, and chips. The shared
+layout defaults to the browser's system color preference. Visitors can choose
+Light or Dark in the header, and that override is saved in their browser.
+Choose System to resume following the device setting.
+
 ## Cloudflare Pages
 
 [Production](https://tomrhudson-ai.com/) also serves from

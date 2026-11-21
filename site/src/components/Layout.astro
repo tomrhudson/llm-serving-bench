@@ -10,7 +10,56 @@ const { title, description, catalog = false } = Astro.props;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#101d30" />
+    <meta name="color-scheme" content="light dark" />
+    <script is:inline>
+      (() => {
+        const key = 'spark-bench-appearance';
+        const system = window.matchMedia('(prefers-color-scheme: dark)');
+        let preference = 'system';
+        let control;
+
+        function readPreference() {
+          try {
+            const saved = localStorage.getItem(key);
+            return saved === 'light' || saved === 'dark' ? saved : 'system';
+          } catch {
+            return 'system';
+          }
+        }
+
+        function applyTheme() {
+          document.documentElement.dataset.theme =
+            preference === 'system' ? (system.matches ? 'dark' : 'light') : preference;
+        }
+
+        preference = readPreference();
+        applyTheme();
+        system.addEventListener('change', applyTheme);
+
+        document.addEventListener('DOMContentLoaded', () => {
+          control = document.querySelector('#appearance');
+          control.value = preference;
+          control.closest('label').hidden = false;
+          control.addEventListener('change', () => {
+            preference = control.value;
+            applyTheme();
+            try {
+              if (preference === 'system') localStorage.removeItem(key);
+              else localStorage.setItem(key, preference);
+            } catch {
+              // Keep the selected theme for this page when storage is unavailable.
+            }
+          });
+        });
+
+        window.addEventListener('storage', (event) => {
+          if (event.key !== key && event.key !== null) return;
+          preference = readPreference();
+          if (control) control.value = preference;
+          applyTheme();
+        });
+      })();
+    </script>
     <link rel="icon" type="image/png" href="/icon.png" />
     <title>{title} · Spark Bench</title>
   </head>
@@ -21,10 +70,20 @@ const { title, description, catalog = false } = Astro.props;
         <a class="brand" href="/" aria-current={Astro.url.pathname === '/' ? 'page' : undefined}>
           <span class="mark" aria-hidden="true"></span> Spark Bench
         </a>
-        <nav aria-label="Primary">
-          <a href="/models/" aria-current={catalog ? 'page' : undefined}>Model catalog</a>
-          <a class="source-nav" href={repository}>GitHub</a>
-        </nav>
+        <div class="header-actions">
+          <nav aria-label="Primary">
+            <a class="button button--ghost button--sm" href="/models/" aria-current={catalog ? 'page' : undefined}>Model catalog</a>
+            <a class="button button--ghost button--sm source-nav" href={repository}>GitHub</a>
+          </nav>
+          <label class="appearance" for="appearance" hidden>
+            <span>Appearance</span>
+            <select id="appearance">
+              <option value="system">System</option>
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
+          </label>
+        </div>
       </div>
     </header>
     <main id="main"><slot /></main>
