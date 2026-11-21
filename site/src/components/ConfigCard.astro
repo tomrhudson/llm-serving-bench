@@ -19,7 +19,8 @@ const benchmarkLabel = `View benchmark for ${config.label}`;
 const sourceLabel = recipe.label === 'Recipe' ? 'View recipe' : 'View model card';
 ---
 <article class="card config-card" aria-labelledby={profile ? `${headingId} ${profileId}` : headingId}
-  data-configuration data-sparks={sparks} data-engine={config.engine}>
+  data-configuration data-sparks={sparks} data-engine={config.engine}
+  data-safety={config.safetyGate} data-tool={config.toolStatus}>
   <div class="card-top">
     <span class="chip chip--soft chip--accent hardware"><span class="hardware-icon" aria-hidden="true"></span>{sparks}× DGX Spark</span>
     <span class="chip chip--soft chip--default card-engine">{config.runtime}</span>
@@ -73,16 +74,14 @@ const sourceLabel = recipe.label === 'Recipe' ? 'View recipe' : 'View model card
   <div class="card-bottom">
     <p class="card-date">Tested <time datetime={config.date}>{displayDate(config.date)}</time></p>
     <div class="card-status">
-      {tool ? (
-        <>
-          <span class:list={['chip chip--soft status', config.comparativeTool ? 'chip--default' : 'chip--warning']}>
-            {tool.status === 'incomplete' ? 'Tool eval incomplete' : `Tool eval ${tool.status}`}
-          </span>
-          <span class:list={['chip chip--soft status', tool.safety_passed === false ? 'chip--danger' : 'chip--default']}>
-            Safety gate {tool.safety_passed == null ? 'unavailable' : tool.safety_passed ? 'passed' : 'failed'}
-          </span>
-        </>
-      ) : <span class="chip chip--soft chip--default status">Tool eval unavailable</span>}
+      <span class:list={['chip chip--soft status', tool && !config.comparativeTool ? 'chip--warning' : 'chip--default']}>
+        Tool eval {config.toolStatus}
+      </span>
+      {tool && (
+        <span class:list={['chip chip--soft status', config.safetyGate === 'failed' ? 'chip--danger' : 'chip--default']}>
+          Safety gate {config.safetyGate}
+        </span>
+      )}
     </div>
   </div>
 

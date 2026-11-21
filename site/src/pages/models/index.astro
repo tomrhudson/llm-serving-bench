@@ -3,13 +3,18 @@ import Layout from '../../components/Layout.astro';
 import ConfigCard from '../../components/ConfigCard.astro';
 import InstallDialog from '../../components/InstallDialog.astro';
 import { baselines, decodeWorkload, engines, families, sparkCounts } from '../../lib/benchmarks.js';
+
+const safetyOptions = Object.entries({ passed: 'Passed', failed: 'Failed', unavailable: 'Unavailable' })
+  .filter(([value]) => baselines.some((config) => config.safetyGate === value));
+const toolOptions = Object.entries({ complete: 'Complete', incomplete: 'Incomplete', unsupported: 'Unsupported', unavailable: 'Unavailable' })
+  .filter(([value]) => baselines.some((config) => config.toolStatus === value));
 ---
-<Layout title="Model catalog" description="Compare tested DGX Spark serving configurations by hardware count and engine." catalog>
+<Layout title="Model catalog" description="Compare tested DGX Spark serving configurations by hardware, engine, safety gate, and tool evaluation status." catalog>
   <div class="mast">
     <div class="wrap">
       <p class="kicker">DGX Spark benchmarks</p>
       <h1>Model catalog</h1>
-      <p class="hero-lead">Filter by hardware and serving engine. Configurations are grouped by model so you can compare runs directly.</p>
+      <p class="hero-lead">Filter by hardware, serving engine, and evaluation results. Configurations are grouped by model so you can compare runs directly.</p>
     </div>
   </div>
   <div class="wrap catalog">
@@ -24,6 +29,18 @@ import { baselines, decodeWorkload, engines, families, sparkCounts } from '../..
         <select id="engine">
           <option value="">Any engine</option>
           {engines.map((engine) => <option value={engine}>{engine}</option>)}
+        </select>
+      </label>
+      <label class="select-label" for="safety">Safety gate
+        <select id="safety">
+          <option value="">Any safety result</option>
+          {safetyOptions.map(([value, label]) => <option value={value}>{label}</option>)}
+        </select>
+      </label>
+      <label class="select-label" for="tool">Tool evaluation
+        <select id="tool">
+          <option value="">Any tool status</option>
+          {toolOptions.map(([value, label]) => <option value={value}>{label}</option>)}
         </select>
       </label>
       <button id="clear" class="button button--outline" type="button">Reset filters</button>
@@ -48,9 +65,8 @@ import { baselines, decodeWorkload, engines, families, sparkCounts } from '../..
   <InstallDialog />
 </Layout>
 <script>
-  const sparks = document.querySelector<HTMLSelectElement>('#sparks')!;
-  const engine = document.querySelector<HTMLSelectElement>('#engine')!;
   const filters = document.querySelector<HTMLElement>('#filters')!;
+  const selects = Array.from(filters.querySelectorAll('select'));
   const count = document.querySelector<HTMLElement>('#result-count')!;
   const empty = document.querySelector<HTMLElement>('#empty')!;
   const reset = document.querySelector<HTMLButtonElement>('#clear')!;
@@ -62,7 +78,7 @@ import { baselines, decodeWorkload, engines, families, sparkCounts } from '../..
 
   function readFilters() {
     const params = new URLSearchParams(location.search);
-    for (const select of [sparks, engine]) {
+    for (const select of selects) {
       select.value = params.get(select.id) ?? '';
       if (select.selectedIndex < 0) select.value = '';
     }
@@ -70,13 +86,13 @@ import { baselines, decodeWorkload, engines, families, sparkCounts } from '../..
   }
 
   function render() {
+    const activeFilters = selects.filter((select) => select.value);
     let total = 0;
     let models = 0;
     for (const family of families) {
       let matches = 0;
       for (const card of family.cards) {
-        card.hidden = Boolean((sparks.value && card.dataset.sparks !== sparks.value)
-          || (engine.value && card.dataset.engine !== engine.value));
+        card.hidden = activeFilters.some((select) => card.dataset[select.id] !== select.value);
         if (!card.hidden) matches++;
       }
       family.group.hidden = matches === 0;
@@ -90,7 +106,7 @@ import { baselines, decodeWorkload, engines, families, sparkCounts } from '../..
 
   function updateFilters() {
     const url = new URL(location.href);
-    for (const select of [sparks, engine]) {
+    for (const select of selects) {
       if (select.value) url.searchParams.set(select.id, select.value);
       else url.searchParams.delete(select.id);
     }
@@ -102,7 +118,7 @@ import { baselines, decodeWorkload, engines, families, sparkCounts } from '../..
   readFilters();
   filters.addEventListener('change', updateFilters);
   reset.addEventListener('click', () => {
-    sparks.value = engine.value = '';
+    for (const select of selects) select.value = '';
     updateFilters();
   });
   window.addEventListener('popstate', readFilters);

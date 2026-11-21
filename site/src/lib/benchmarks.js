@@ -185,6 +185,8 @@ export const baselines = catalog.baselines.map((baseline) => {
     quantization: quantization(report, title, baseline.label),
     runtimeProvenance: runtimeProvenance(report, baseline.runtime),
     recipe: recipe(baseline.recipe_credit ?? '', report),
+    safetyGate: tool?.safety_passed == null ? 'unavailable' : tool.safety_passed ? 'passed' : 'failed',
+    toolStatus: tool?.status ?? 'unavailable',
     comparativeTool: tool?.status === 'complete' && tool.completion_rate === 100,
   };
 }).sort((a, b) => b.date.localeCompare(a.date));

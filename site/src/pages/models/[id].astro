@@ -116,8 +116,8 @@ const percent = (value) => value == null ? unavailable : `${value}%`;
             <span class:list={['chip chip--soft status', config.comparativeTool ? 'chip--default' : 'chip--warning']}>
               {tool.status === 'incomplete' ? 'Incomplete pilot' : tool.status === 'complete' ? 'Complete' : 'Unsupported'} · {percent(tool.completion_rate)} completion
             </span>
-            <span class:list={['chip chip--soft status', tool.safety_passed === false ? 'chip--danger' : 'chip--default']}>
-              Safety gate {tool.safety_passed == null ? 'unavailable' : tool.safety_passed ? 'passed' : 'failed'}
+            <span class:list={['chip chip--soft status', config.safetyGate === 'failed' ? 'chip--danger' : 'chip--default']}>
+              Safety gate {config.safetyGate}
             </span>
           </div>
           <p>{config.comparativeTool
