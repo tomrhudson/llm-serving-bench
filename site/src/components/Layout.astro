@@ -73,6 +73,7 @@ const { title, description, catalog = false } = Astro.props;
         <div class="header-actions">
           <nav aria-label="Primary">
             <a class="button button--ghost button--sm" href="/models/" aria-current={catalog ? 'page' : undefined}>Model catalog</a>
+            <a class="button button--ghost button--sm" href="/summary/" aria-current={Astro.url.pathname === '/summary/' ? 'page' : undefined}>Summary</a>
             <a class="button button--ghost button--sm source-nav" href={repository}>GitHub</a>
           </nav>
           <label class="appearance" for="appearance" hidden>

@@ -200,7 +200,58 @@ export const families = [...models.values()].map((model) => ({
 export const engines = [...new Set(baselines.map((baseline) => baseline.engine))].sort();
 export const sparkCounts = [...new Set(baselines.map((baseline) => baseline.sparks))].sort((a, b) => a - b);
 
+export function peakDecode(points) {
+  let peak;
+  for (const point of points ?? []) {
+    if (point.output_tps != null && (!peak || point.output_tps > peak.output_tps)) peak = point;
+  }
+  return peak;
+}
+
 const decode = suite.scenarios.find((scenario) => scenario.name === 'decode-c1');
 const soak = suite.scenarios.find((scenario) => scenario.name.startsWith('soak-'));
+const passkey = suite.scenarios.find((scenario) => scenario.name === 'needle-240k-c1');
 export const decodeWorkload = `~${decode.prompt_tokens} input / ${decode.output_tokens} output tokens per request`;
 export const soakWorkload = `~${soak.prompt_tokens} input / ${soak.output_tokens} output tokens per request`;
+export const passkeyTokens = passkey.prompt_tokens;
+export const soakMinutes = soak.duration_seconds / 60;
+export const soakConcurrency = soak.concurrency;
+
+export function benchmarkLeaders() {
+  const configs = new Map(baselines.map((config) => [config.id, config]));
+
+  function rank(measure, direction = -1) {
+    // Read the same catalog series as the README charts. The site may enrich
+    // individual detail pages with additional passkey evidence from reports.
+    const ranked = catalog.baselines.flatMap((baseline) => {
+      const result = measure(baseline);
+      return Number.isFinite(result?.value) ? [{ ...result, config: configs.get(baseline.id) }] : [];
+    }).sort((a, b) => direction * (a.value - b.value) || b.config.date.localeCompare(a.config.date) || a.config.id.localeCompare(b.config.id));
+
+    const seen = new Set();
+    const leaders = [];
+    for (const row of ranked) {
+      if (seen.has(row.config.model_id)) continue;
+      seen.add(row.config.model_id);
+      leaders.push(row);
+      if (leaders.length === 5) break;
+    }
+    return leaders;
+  }
+
+  return {
+    decode: rank((baseline) => {
+      const peak = peakDecode(baseline.decode);
+      return { value: peak?.output_tps, concurrency: peak?.concurrency };
+    }),
+    prefill: rank((baseline) => ({
+      value: baseline.prefill?.find((point) => point.input_tokens === passkeyTokens)?.ttft_p95_seconds,
+    }), 1),
+    soak: rank((baseline) => {
+      const result = baseline.soak;
+      if (result?.minutes === soakMinutes && result.concurrency === soakConcurrency && result.errors === 0) {
+        return { value: result.output_tps };
+      }
+    }),
+  };
+}

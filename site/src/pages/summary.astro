@@ -1,0 +1,61 @@
+---
+import Layout from '../components/Layout.astro';
+import {
+  benchmarkLeaders, decodeWorkload, modelUrl, number, passkeyTokens, rate, repository, soakConcurrency, soakMinutes,
+} from '../lib/benchmarks.js';
+
+const leaders = benchmarkLeaders();
+const results = `${repository}/blob/main/results/README.md`;
+const boards = [
+  {
+    id: 'decode-scaling', title: 'Decode scaling', rows: leaders.decode, unit: 'output tok/s',
+    description: `Highest aggregate throughput at any measured concurrency using ${decodeWorkload}. Higher concurrency can include queueing.`,
+  },
+  {
+    id: 'long-context-prefill', title: 'Long-context prefill', rows: leaders.prefill, unit: 's',
+    description: `Lowest p95 time to first token on the ${number(passkeyTokens)}-token passkey workload at concurrency 1.`,
+  },
+  {
+    id: 'sustained-load', title: 'Sustained load', rows: leaders.soak, unit: 'output tok/s',
+    description: `Highest aggregate throughput in the ${soakMinutes}-minute test at concurrency ${soakConcurrency}, with zero request errors.`,
+  },
+];
+---
+<Layout title="Benchmark summary" description="Top five DGX Spark model families by peak decode throughput, long-context prefill latency, and sustained throughput.">
+  <div class="mast">
+    <div class="wrap">
+      <h1>Top 5 models by benchmark</h1>
+      <p class="hero-lead">Each ranking uses the best measured configuration per model family. Spark count and serving runtime can vary across entries.</p>
+    </div>
+  </div>
+
+  <div class="wrap detail">
+    {boards.map(({ id, title, description, rows, unit }) => (
+      <section id={id} class="card summary-board" aria-labelledby={`${id}-heading`}>
+        <div class="summary-intro">
+          <h2 id={`${id}-heading`}>{title}</h2>
+          <p>{description}</p>
+          <a class="text-link" href={`${results}#${id}`}>View {title.toLowerCase()} chart</a>
+        </div>
+        {rows.length ? (
+          <ol class="summary-ranking">
+            {rows.map(({ config, value, concurrency }) => (
+              <li>
+                <div class="summary-row">
+                  <div>
+                    <a class="summary-model" href={modelUrl(config.id)}>{config.model.name}</a>
+                    <p class="summary-meta">{config.sparks}× DGX Spark · {config.runtime}</p>
+                  </div>
+                  <div class="summary-result">
+                    <p><strong>{rate(value)}</strong> <span>{unit}</span></p>
+                    {concurrency != null && <p class="summary-meta">Concurrency {concurrency}</p>}
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ol>
+        ) : <p>No published measurements for this workload.</p>}
+      </section>
+    ))}
+  </div>
+</Layout>
