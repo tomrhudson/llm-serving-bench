@@ -1,0 +1,42 @@
+---
+import { displayDate, modelUrl, number, rate, unavailable } from '../lib/benchmarks.js';
+
+const { config } = Astro.props;
+const { c1, soak, tool_eval: tool, sparks } = config;
+---
+<article class="config-card" data-configuration data-sparks={sparks} data-engine={config.engine}>
+  <div class="card-top">
+    <span class="hardware"><span class="hardware-icon" aria-hidden="true"></span>{sparks}× DGX Spark</span>
+    <time datetime={config.date}>{displayDate(config.date)}</time>
+  </div>
+  <h3><a href={modelUrl(config.id)}>{config.label}</a></h3>
+  <p class="card-runtime">{config.runtime}</p>
+  <dl class="card-metrics">
+    <div>
+      <dt>Single-stream decode</dt>
+      <dd>{rate(c1?.output_tps)}<small>{c1 ? 'output tok/s · c1' : 'Decode sweep'}</small></dd>
+    </div>
+    <div>
+      <dt>Sustained throughput</dt>
+      <dd>{rate(soak?.output_tps)}<small>{soak ? `output tok/s · c${soak.concurrency} · ${soak.minutes} min` : 'Soak test'}</small></dd>
+    </div>
+    <div>
+      <dt>Longest tested prompt</dt>
+      <dd>{number(config.testedTokens)}<small>{config.testedTokens ? 'target input tokens · c1' : 'Context test'}</small></dd>
+    </div>
+  </dl>
+  <p class="card-context"><strong>Configured</strong> {config.configuredTokens ? `${number(config.configuredTokens)} tokens` : unavailable} <span aria-hidden="true">·</span>
+    <strong>Validated</strong> {config.validatedTokens ? '≈240K passkey' : unavailable}</p>
+  <div class="card-bottom">
+    {tool ? (
+      <>
+        <span class:list={['status', config.comparativeTool ? 'neutral' : 'caution']}>
+          {tool.status === 'incomplete' ? 'Tool eval incomplete' : `Tool eval ${tool.status}`}
+        </span>
+        <span class:list={['status', tool.safety_passed === false ? 'danger' : 'neutral']}>
+          Safety gate {tool.safety_passed == null ? 'unavailable' : tool.safety_passed ? 'passed' : 'failed'}
+        </span>
+      </>
+    ) : <span class="status neutral">Tool eval unavailable</span>}
+  </div>
+</article>

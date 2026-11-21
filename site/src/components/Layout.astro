@@ -1,0 +1,42 @@
+---
+import '../styles/site.css';
+import { repository } from '../lib/benchmarks.js';
+
+const { title, description, catalog = false } = Astro.props;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#101d30" />
+    <link rel="icon" type="image/png" href="/icon.png" />
+    <title>{title} · Spark Bench</title>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="top">
+      <div class="wrap top-inner">
+        <a class="brand" href="/" aria-current={Astro.url.pathname === '/' ? 'page' : undefined}>
+          <span class="mark" aria-hidden="true"></span> Spark Bench
+        </a>
+        <nav aria-label="Primary">
+          <a href="/models/" aria-current={catalog ? 'page' : undefined}>Model catalog</a>
+          <a class="source-nav" href={repository}>GitHub</a>
+        </nav>
+      </div>
+    </header>
+    <main id="main"><slot /></main>
+    <footer>
+      <div class="wrap footer-inner">
+        <span>Spark Bench <span class="footer-by">by Tom Hudson</span></span>
+        <nav aria-label="Sources">
+          <a href={`${repository}#fair-comparisons`}>Methodology</a>
+          <a href={`${repository}/blob/main/results/MODEL-GUIDE.md`}>Model guide</a>
+          <a href={repository}>Source on GitHub</a>
+        </nav>
+      </div>
+    </footer>
+  </body>
+</html>

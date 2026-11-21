@@ -1,0 +1,144 @@
+---
+import Layout from '../../components/Layout.astro';
+import {
+  baselines, decodeWorkload, displayDate, modelUrl, number, rate, reportUrl, soakWorkload, unavailable,
+} from '../../lib/benchmarks.js';
+
+export function getStaticPaths() {
+  return baselines.map((config) => ({ params: { id: config.id }, props: { config } }));
+}
+
+const { config } = Astro.props;
+const { recipe, soak, tool_eval: tool, quality } = config;
+const related = baselines.filter((other) => other.model_id === config.model_id && other.id !== config.id);
+const measurement = (value, unit) => value == null ? unavailable : `${rate(value)} ${unit}`;
+const percent = (value) => value == null ? unavailable : `${value}%`;
+---
+<Layout title={config.label} description={`Serving results for ${config.label} on ${config.sparks} NVIDIA DGX Spark systems.`}>
+  <div class="mast detail-mast">
+    <div class="wrap">
+      <nav class="crumb" aria-label="Breadcrumb">
+        <a href="/models/">Model catalog</a>
+        <span aria-hidden="true">/</span>
+        <a href={`/models/#${config.model_id}`}>{config.model.name}</a>
+      </nav>
+      <h1>{config.title}</h1>
+      <p class="hero-lead">{config.sparks}× DGX Spark · {config.runtime} · <time datetime={config.date}>{displayDate(config.date)}</time></p>
+      <div class="actions">
+        <a class="button primary" href={reportUrl(config.report)}>Read the benchmark report</a>
+        {recipe.href && <a class="light-link" href={recipe.href}>{recipe.revision ? 'Open pinned recipe' : `Open ${recipe.label.toLowerCase()}`}</a>}
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap detail">
+    <section class="detail-panel" aria-labelledby="configuration">
+      <h2 id="configuration">Tested configuration</h2>
+      <dl class="facts">
+        <div><dt>Hardware</dt><dd>{config.hardware}</dd></div>
+        <div><dt>Serving runtime</dt><dd>{config.runtime}</dd></div>
+        <div><dt>Runtime version or build</dt><dd>{config.runtimeProvenance}</dd></div>
+        <div><dt>Weight quantization or precision</dt><dd>{config.quantization}</dd></div>
+        <div><dt>Benchmark date</dt><dd><time datetime={config.date}>{displayDate(config.date)}</time></dd></div>
+        <div><dt>Recipe credit</dt><dd>
+          {recipe.href ? (
+            <>
+              <a href={recipe.href}>{recipe.title}</a>
+              {recipe.author && <span class="fact-note">By {recipe.author}</span>}
+              {recipe.revision && <code class="fact-note">{recipe.revision}</code>}
+              {recipe.text !== recipe.title && <span class="fact-note">{recipe.text}</span>}
+            </>
+          ) : recipe.text}
+        </dd></div>
+      </dl>
+    </section>
+
+    <section class="detail-panel" aria-labelledby="decode">
+      <h2 id="decode">Decode sweep</h2>
+      <p>{decodeWorkload}. Output throughput is aggregate across concurrent requests. TTFT means time to first token.</p>
+      {config.decode?.length ? (
+        <table>
+          <thead><tr><th scope="col">Concurrency</th><th scope="col">Output tok/s</th><th scope="col">TTFT p95 (s)</th></tr></thead>
+          <tbody>{config.decode.map((row) => (
+            <tr><th scope="row">{row.concurrency}</th><td>{rate(row.output_tps)}</td><td>{rate(row.ttft_p95_seconds)}</td></tr>
+          ))}</tbody>
+        </table>
+      ) : <p>{unavailable}</p>}
+    </section>
+
+    <section class="detail-panel" aria-labelledby="context">
+      <h2 id="context">Prefill and context</h2>
+      <dl class="facts context-facts">
+        <div><dt>Configured request window</dt><dd>{config.configuredTokens ? `${number(config.configuredTokens)} tokens` : unavailable}</dd></div>
+        <div><dt>Longest tested prompt</dt><dd>{config.testedTokens ? `${number(config.testedTokens)} target input tokens` : unavailable}</dd></div>
+        <div><dt>Validated retrieval</dt><dd>{config.validatedTokens ? '≈240K input tokens · passkey passed' : unavailable}
+          {!config.validatedTokens && config.validation !== unavailable && <span class="fact-note">{config.validation}</span>}
+        </dd></div>
+      </dl>
+      <p>Input throughput uses full request wall time. The passkey measures retrieval from one long prompt.</p>
+      {config.prefill.length ? (
+        <table>
+          <thead><tr><th scope="col">Workload (c1)</th><th scope="col">Input tok/s</th><th scope="col">TTFT p95 (s)</th></tr></thead>
+          <tbody>{config.prefill.map((row) => (
+            <tr>
+              <th scope="row">{number(row.input_tokens)} input tokens{row.input_tokens === 245760 && <small>Passkey prompt</small>}</th>
+              <td>{rate(row.input_tps)}</td><td>{rate(row.ttft_p95_seconds)}</td>
+            </tr>
+          ))}</tbody>
+        </table>
+      ) : <p>{unavailable}</p>}
+    </section>
+
+    <section class="detail-panel" aria-labelledby="soak">
+      <h2 id="soak">Sustained load</h2>
+      {soak ? (
+        <>
+          <p>{soak.minutes}-minute soak at concurrency {soak.concurrency} · {soakWorkload}.</p>
+          <dl class="facts">
+            <div><dt>Aggregate throughput</dt><dd>{measurement(soak.output_tps, 'output tok/s')}</dd></div>
+            <div><dt>TTFT p95</dt><dd>{measurement(soak.ttft_p95_seconds, 's')}</dd></div>
+            <div><dt>Completed requests</dt><dd>{number(soak.requests)}</dd></div>
+            <div><dt>Request errors</dt><dd>{number(soak.errors)}</dd></div>
+          </dl>
+        </>
+      ) : <p>{unavailable}</p>}
+      <p>Serving regression checks <strong>{quality?.passed == null || quality?.total == null ? unavailable : `${quality.passed}/${quality.total} passed`}</strong></p>
+    </section>
+
+    <section class="detail-panel" aria-labelledby="tools">
+      <h2 id="tools">Tool-use evaluation</h2>
+      {tool ? (
+        <>
+          <div class="tool-flags">
+            <span class:list={['status', config.comparativeTool ? 'neutral' : 'caution']}>
+              {tool.status === 'incomplete' ? 'Incomplete pilot' : tool.status === 'complete' ? 'Complete' : 'Unsupported'} · {percent(tool.completion_rate)} completion
+            </span>
+            <span class:list={['status', tool.safety_passed === false ? 'danger' : 'neutral']}>
+              Safety gate {tool.safety_passed == null ? 'unavailable' : tool.safety_passed ? 'passed' : 'failed'}
+            </span>
+          </div>
+          <p>{config.comparativeTool
+            ? 'Compare only against complete results with 100% completion under the same protocol ID.'
+            : 'Comparisons require complete results with 100% completion under the same protocol ID. This run is retained as individual evidence.'}</p>
+          <dl class="facts">
+            <div><dt>Protocol ID</dt><dd><code>{tool.protocol_id}</code></dd></div>
+            <div><dt>Workload</dt><dd>{number(tool.scenarios_per_trial)} mock-tool scenarios per trial · {number(tool.trials)} trials</dd></div>
+            <div><dt>Mean score</dt><dd>{tool.score_mean == null ? unavailable : `${Number(tool.score_mean).toFixed(1)} / 100`}</dd></div>
+            <div><dt>Pass@3 · passed at least once</dt><dd>{percent(tool.pass_at_3)}</dd></div>
+            <div><dt>Pass³ · passed every trial</dt><dd>{percent(tool.pass_hat_3)}</dd></div>
+          </dl>
+          <p><a class="text-link" href={reportUrl(tool.report)}>Read the tool-eval report and scenario findings</a></p>
+        </>
+      ) : <p>{unavailable} · no published tool-eval result for this configuration.</p>}
+    </section>
+
+    {related.length > 0 && (
+      <section class="detail-panel" aria-labelledby="other-configs">
+        <h2 id="other-configs">Other configurations for {config.model.name}</h2>
+        <ul class="related">{related.map((other) => (
+          <li><a href={modelUrl(other.id)}>{other.label}</a><span>{other.sparks}× DGX Spark · {other.runtime}</span></li>
+        ))}</ul>
+      </section>
+    )}
+  </div>
+</Layout>
