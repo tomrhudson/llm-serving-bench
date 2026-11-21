@@ -12,26 +12,26 @@ import { baselines, decodeWorkload, engines, families, sparkCounts } from '../..
     </div>
   </div>
   <div class="wrap catalog">
-    <div class="filters" id="filters" hidden>
-      <label for="sparks">DGX Spark count
+    <div class="card filters" id="filters" hidden>
+      <label class="select-label" for="sparks">DGX Spark count
         <select id="sparks">
           <option value="">Any Spark count</option>
           {sparkCounts.map((count) => <option value={count}>{count}× DGX Spark</option>)}
         </select>
       </label>
-      <label for="engine">Serving engine
+      <label class="select-label" for="engine">Serving engine
         <select id="engine">
           <option value="">Any engine</option>
           {engines.map((engine) => <option value={engine}>{engine}</option>)}
         </select>
       </label>
-      <button id="clear" class="button secondary" type="button">Reset filters</button>
+      <button id="clear" class="button button--outline" type="button">Reset filters</button>
     </div>
     <div class="catalog-summary">
       <p id="result-count" role="status">{baselines.length} configurations across {families.length} models</p>
       <p>Decode sweep · {decodeWorkload}</p>
     </div>
-    <p id="empty" class="empty" hidden>No configurations match these filters.</p>
+    <p id="empty" class="card empty" hidden>No configurations match these filters.</p>
     {families.map((family) => (
       <section id={family.id} class="family" aria-labelledby={`${family.id}-heading`} data-family>
         <div class="family-heading">

@@ -17,11 +17,11 @@ const prefill32k = config.prefill.find((point) => point.input_tokens === 32768);
 const benchmarkLabel = `View benchmark for ${config.label}`;
 const sourceLabel = recipe.label === 'Recipe' ? 'View recipe' : 'View model card';
 ---
-<article class="config-card" aria-labelledby={profile ? `${headingId} ${profileId}` : headingId}
+<article class="card config-card" aria-labelledby={profile ? `${headingId} ${profileId}` : headingId}
   data-configuration data-sparks={sparks} data-engine={config.engine}>
   <div class="card-top">
-    <span class="hardware"><span class="hardware-icon" aria-hidden="true"></span>{sparks}× DGX Spark</span>
-    <span class="card-engine">{config.runtime}</span>
+    <span class="chip chip--soft chip--accent hardware"><span class="hardware-icon" aria-hidden="true"></span>{sparks}× DGX Spark</span>
+    <span class="chip chip--soft chip--default card-engine">{config.runtime}</span>
   </div>
 
   <h3 id={headingId}>{name}</h3>
@@ -74,19 +74,19 @@ const sourceLabel = recipe.label === 'Recipe' ? 'View recipe' : 'View model card
     <div class="card-status">
       {tool ? (
         <>
-          <span class:list={['status', config.comparativeTool ? 'neutral' : 'caution']}>
+          <span class:list={['chip chip--soft status', config.comparativeTool ? 'chip--default' : 'chip--warning']}>
             {tool.status === 'incomplete' ? 'Tool eval incomplete' : `Tool eval ${tool.status}`}
           </span>
-          <span class:list={['status', tool.safety_passed === false ? 'danger' : 'neutral']}>
+          <span class:list={['chip chip--soft status', tool.safety_passed === false ? 'chip--danger' : 'chip--default']}>
             Safety gate {tool.safety_passed == null ? 'unavailable' : tool.safety_passed ? 'passed' : 'failed'}
           </span>
         </>
-      ) : <span class="status neutral">Tool eval unavailable</span>}
+      ) : <span class="chip chip--soft chip--default status">Tool eval unavailable</span>}
     </div>
   </div>
 
   <div class="card-actions">
-    <a class="button card-benchmark" href={modelUrl(config.id)} aria-label={benchmarkLabel}>View benchmark</a>
-    {recipe.href && <a class="button secondary" href={recipe.href} aria-label={`${sourceLabel} for ${config.label}`}>{sourceLabel}</a>}
+    <a class="button button--primary card-benchmark" href={modelUrl(config.id)} aria-label={benchmarkLabel}>View benchmark</a>
+    {recipe.href && <a class="button button--outline" href={recipe.href} aria-label={`${sourceLabel} for ${config.label}`}>{sourceLabel}</a>}
   </div>
 </article>

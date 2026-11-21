@@ -25,14 +25,14 @@ const percent = (value) => value == null ? unavailable : `${value}%`;
       <h1>{config.title}</h1>
       <p class="hero-lead">{config.sparks}× DGX Spark · {config.runtime} · <time datetime={config.date}>{displayDate(config.date)}</time></p>
       <div class="actions">
-        <a class="button primary" href={reportUrl(config.report)}>Read the benchmark report</a>
-        {recipe.href && <a class="light-link" href={recipe.href}>{recipe.revision ? 'Open pinned recipe' : `Open ${recipe.label.toLowerCase()}`}</a>}
+        <a class="button button--primary" href={reportUrl(config.report)}>Read the benchmark report</a>
+        {recipe.href && <a class="button button--outline" href={recipe.href}>{recipe.revision ? 'Open pinned recipe' : `Open ${recipe.label.toLowerCase()}`}</a>}
       </div>
     </div>
   </div>
 
   <div class="wrap detail">
-    <section class="detail-panel" aria-labelledby="configuration">
+    <section class="card detail-panel" aria-labelledby="configuration">
       <h2 id="configuration">Tested configuration</h2>
       <dl class="facts">
         <div><dt>Hardware</dt><dd>{config.hardware}</dd></div>
@@ -53,7 +53,7 @@ const percent = (value) => value == null ? unavailable : `${value}%`;
       </dl>
     </section>
 
-    <section class="detail-panel" aria-labelledby="decode">
+    <section class="card detail-panel" aria-labelledby="decode">
       <h2 id="decode">Decode sweep</h2>
       <p>{decodeWorkload}. Output throughput is aggregate across concurrent requests. TTFT means time to first token.</p>
       {config.decode?.length ? (
@@ -66,7 +66,7 @@ const percent = (value) => value == null ? unavailable : `${value}%`;
       ) : <p>{unavailable}</p>}
     </section>
 
-    <section class="detail-panel" aria-labelledby="context">
+    <section class="card detail-panel" aria-labelledby="context">
       <h2 id="context">Prefill and context</h2>
       <dl class="facts context-facts">
         <div><dt>Configured request window</dt><dd>{config.configuredTokens ? `${number(config.configuredTokens)} tokens` : unavailable}</dd></div>
@@ -89,7 +89,7 @@ const percent = (value) => value == null ? unavailable : `${value}%`;
       ) : <p>{unavailable}</p>}
     </section>
 
-    <section class="detail-panel" aria-labelledby="soak">
+    <section class="card detail-panel" aria-labelledby="soak">
       <h2 id="soak">Sustained load</h2>
       {soak ? (
         <>
@@ -105,15 +105,15 @@ const percent = (value) => value == null ? unavailable : `${value}%`;
       <p>Serving regression checks <strong>{quality?.passed == null || quality?.total == null ? unavailable : `${quality.passed}/${quality.total} passed`}</strong></p>
     </section>
 
-    <section class="detail-panel" aria-labelledby="tools">
+    <section class="card detail-panel" aria-labelledby="tools">
       <h2 id="tools">Tool-use evaluation</h2>
       {tool ? (
         <>
           <div class="tool-flags">
-            <span class:list={['status', config.comparativeTool ? 'neutral' : 'caution']}>
+            <span class:list={['chip chip--soft status', config.comparativeTool ? 'chip--default' : 'chip--warning']}>
               {tool.status === 'incomplete' ? 'Incomplete pilot' : tool.status === 'complete' ? 'Complete' : 'Unsupported'} · {percent(tool.completion_rate)} completion
             </span>
-            <span class:list={['status', tool.safety_passed === false ? 'danger' : 'neutral']}>
+            <span class:list={['chip chip--soft status', tool.safety_passed === false ? 'chip--danger' : 'chip--default']}>
               Safety gate {tool.safety_passed == null ? 'unavailable' : tool.safety_passed ? 'passed' : 'failed'}
             </span>
           </div>
@@ -133,7 +133,7 @@ const percent = (value) => value == null ? unavailable : `${value}%`;
     </section>
 
     {related.length > 0 && (
-      <section class="detail-panel" aria-labelledby="other-configs">
+      <section class="card detail-panel" aria-labelledby="other-configs">
         <h2 id="other-configs">Other configurations for {config.model.name}</h2>
         <ul class="related">{related.map((other) => (
           <li><a href={modelUrl(other.id)}>{other.label}</a><span>{other.sparks}× DGX Spark · {other.runtime}</span></li>
