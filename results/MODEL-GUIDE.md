@@ -4,7 +4,7 @@ Use this page to choose among the model families with published DGX Spark
 baselines in this repository. For the full cross-configuration numbers and charts,
 open the [benchmark summary](README.md).
 
-Last updated: 2026-11-08 · Model families: 14 · Published configurations: 29
+Last updated: 2026-11-20 · Model families: 14 · Published configurations: 30
 
 ## Hardware footprint
 
@@ -17,7 +17,7 @@ Published recipes use 1× DGX Spark, 2× DGX Spark configurations with 128GB of 
 | [Qwen3.8-Flash-Next NVFP4](#qwen38-flash-next) | 2 systems / 2 GPUs · 128GB each · 256GB aggregate across nodes | Default high-throughput lane for coding, agents, chat, and RAG | Primary local lane for short- and medium-context coding, tool-using agents, chat, and RAG. | Treating a configured 1M YaRN window as validated 1M model quality; the published runs exercise context only through approximately 240K tokens. |
 | [NousResearch Arete-27B](#arete-27b) | 1 system / 1 GPU · 128GB each · 128GB aggregate | Highest complete tool-eval mean published here, but an extremely slow single-Spark SGLang lane | Quality-oriented, single-user tool research where latency is secondary: the complete three-trial tool evaluation scored 95.0 mean with 91.3% Pass^3 and passed its safety gate. | Interactive service: c1 decode was 4.29 tok/s, and 128K and 240K prompts took 175.95 and 452.84 seconds to first token. |
 | [Qwen3.8 27B](#qwen38-27b) | 1 system / 1 GPU · 128GB each · 128GB aggregate | Single-Spark 27B lane with official and uncensored checkpoint choices | A capable local text lane that fits on one DGX Spark without cross-node serving. | Interactive near-window prompts; the official and uncensored baselines took 395 and 558 seconds respectively to first token on the 240K check. |
-| [GLM-5.3 Flash](#glm53-flash) | 2 systems / 2 GPUs · 128GB each · 256GB aggregate across nodes | Long-context coding and agentic lane with runtime and context tradeoffs; the latest run (Oct 24, TensorFold + DFlash2) failed the tool-eval safety gate | Complex coding and agentic work at low concurrency, consistent with the upstream model's stated focus. | Tool-calling agents that must wait for one tool's result before the next action: the latest run (Oct 24, TensorFold + DFlash2) failed the tool-eval safety gate on TC-51 in 3/3 trials (it sent an email in the same turn as creating the calendar event the email depended on) and also failed TC-43 and TC-68 in every trial, despite a 94.0 mean and 92.8% Pass^3. |
+| [GLM-5.3 Flash](#glm53-flash) | 2 systems / 2 GPUs · 128GB each · 256GB aggregate across nodes | Long-context coding lane; the current TensorFold 1.3.0 P4 run passed 13/13 checks and the 240K passkey, but this exact stack still needs tool-use acceptance | Long-context interactive and small-batch work: the current P4 run passed the 240K retrieval check with 199.29s TTFT. | Consequential tool automation without a new acceptance run: this exact TensorFold 1.3.0 stack was not tool-evaluated, while the November 8 run of the same checkpoint and drafter on TensorFold 1.1.9 failed TC-51 in 3/3 trials. |
 | [DeepSeek V4 Flash 0731](#deepseek-v4-flash) | 1 system / 1 GPU · 128GB each · 128GB aggregate | Single-Spark long-context lane built for one request at a time | A dedicated one-Spark lane for long, input-heavy requests where concurrency 1 is acceptable. | Concurrent interactive traffic; aggregate decode stayed near 30 tok/s while c8 TTFT p95 rose to 118.29 seconds. |
 | [DeepSeek V4.1 Flash EXL3](#deepseek-v41-flash) | 2 systems / 2 GPUs · 128GB each · 256GB aggregate across nodes | Low-concurrency, input-heavy agentic lane with clean canaries | Input-heavy agentic, reasoning, and long-document work where concurrency 1-2 is sufficient. | High-throughput concurrent chat or agent fleets; c2 was the practical peak and higher concurrency mainly increased queueing. |
 | [NVIDIA Nemotron 3.5 Bolt 74B-A9B](#nemotron35-bolt) | 1 system / 1 GPU · 128GB each · 128GB aggregate | Small-footprint single-Spark hybrid Mamba/MoE lane with strong tool use | Tool-using agents on one DGX Spark, with review: the first complete three-trial tool-eval run published here scored 90.3 mean with Pass^3 85.5%, but its safety gate failed on a cross-turn sleeper-injection scenario. | Interactive long-context prompts: cold prefill ran at 1,077 to 1,421 input tok/s in the 4K-128K tests, so the 128K prompt took 120.84s and the 240K passkey 294.65s to first token. |
@@ -207,55 +207,55 @@ The two reports share the same single-Spark SGLang runtime family but use differ
 <a id="glm53-flash"></a>
 ## GLM-5.3 Flash
 
-> Long-context coding and agentic lane with runtime and context tradeoffs; the latest run (Oct 24, TensorFold + DFlash2) failed the tool-eval safety gate
+> Long-context coding lane; the current TensorFold 1.3.0 P4 run passed 13/13 checks and the 240K passkey, but this exact stack still needs tool-use acceptance
 
-**Recommended tested configuration:** [GLM-5.3 Flash EXL3/TR3 4 bpw (TensorFold v0.6.0)](2026-10-01-glm53-flash-exl3-tensorfold-v060-1m.md)
+**Recommended tested configuration:** [GLM-5.3 Flash EXL3 4 bpw (TensorFold 1.3.0, DFlash2, P4, recipe a691916c)](2026-11-20-glm53-flash-exl3-tensorfold-130-dflash2-p4-2x-1m.md)
 
 ### Checkpoint choices
 
-- **Benchmarked checkpoint:** [Mia-AiLab/GLM-5.3-Flash-EXL3-TR3-4bpw @ 9eaebb7](https://huggingface.co/Mia-AiLab/GLM-5.3-Flash-EXL3-TR3-4bpw/tree/9eaebb7c4e96d983dcd538e18624622ba5b820a8)
+- **Benchmarked checkpoint:** [Mia-AiLab/GLM-5.3-Flash-EXL3-4bpw-TensorFold @ 76c0b51](https://huggingface.co/Mia-AiLab/GLM-5.3-Flash-EXL3-4bpw-TensorFold/tree/76c0b5173166d2795dd48860f45d8224817f894c)
 - **Upstream base model:** [zai-org/GLM-5.3-Flash](https://huggingface.co/zai-org/GLM-5.3-Flash)
 - **Uncensored / abliterated:** [Uncensored EXL3 checkpoint, rank-sliced for two DGX Sparks](https://huggingface.co/cbert33/GLM-5.3-Flash-Uncensored-EXL3-DGX-Sliced) — Community uncensored/abliterated EXL3 checkpoint for its linked custom two-Spark vLLM runner; not benchmarked in this repository and not compatible with stock vLLM.
 
 | Signal from the selected local baseline | Result |
 |---|---:|
 | DGX Spark footprint | 2 systems / 2 GPUs · 128GB each · 256GB aggregate across nodes |
-| Interactive c1 | 51.49 output tok/s · 0.41s TTFT p95 |
-| Peak short-prompt decode | 96.72 output tok/s @ c12 |
-| 20-minute c8 soak | 84.90 output tok/s · 0 errors |
-| Longest tested prompt | 240K · 163.89s TTFT p95 |
-| Regression canaries | 10/13 |
+| Interactive c1 | 41.85 output tok/s · 0.51s TTFT p95 |
+| Peak short-prompt decode | 77.02 output tok/s @ c8 |
+| 20-minute c8 soak | 65.01 output tok/s · 0 errors |
+| Longest tested prompt | 128K · 105.73s TTFT p95 |
+| Regression canaries | 13/13 |
 | Tool-use evaluation | Not run |
 
 ### Good fit
 
-- Complex coding and agentic work at low concurrency, consistent with the upstream model's stated focus.
-- Long-context interactive or small-batch work: TensorFold delivered 51.49 output tok/s at c1 and 92.68 at c4, while the 240K passkey check passed.
-- Tool, thinking, or multimodal workflows after application-specific validation; the serving recipe exposes those features.
+- Long-context interactive and small-batch work: the current P4 run passed the 240K retrieval check with 199.29s TTFT.
+- Repeated large-prefix workloads: the 32K c4 warm-prefix TTFT fell to 1.84s from 112.26s for unique prompts.
+- A current, reproducible two-Spark TensorFold lane with all 13 narrow serving checks passing and zero errors through a 20-minute soak.
 
 ### Do not choose it when
 
-- Tool-calling agents that must wait for one tool's result before the next action: the latest run (Oct 24, TensorFold + DFlash2) failed the tool-eval safety gate on TC-51 in 3/3 trials (it sent an email in the same turn as creating the calendar event the email depended on) and also failed TC-43 and TC-68 in every trial, despite a 94.0 mean and 92.8% Pass^3.
-- Exact-string or deterministic transformation workloads on the TensorFold lane until the repeatable reverse-marker regression is understood; its combined result was 10/13.
+- Consequential tool automation without a new acceptance run: this exact TensorFold 1.3.0 stack was not tool-evaluated, while the November 8 run of the same checkpoint and drafter on TensorFold 1.1.9 failed TC-51 in 3/3 trials.
 - Latency-sensitive traffic above concurrency 4; c8 and higher mostly added queueing.
-- Treating the NVFP4 vLLM lane's 13/13 canaries as broad assurance while its runtime still reports the documented weight-scale accuracy warning.
-- Treating vision or tool quality as benchmarked here; the published suite is text-only.
-- Commercial use of the tested TensorFold recipe: its DFlash2 drafter (incoai/GLM-5.3-Flash-DFlash2) is licensed CC BY-NC-ND 4.0 (non-commercial, no derivatives), and the Oct 24 run used it for personal benchmarking only.
+- A general decode-throughput replacement for the selected Qwen lane; the current GLM run reached 41.85 tok/s at c1 and 71.69 at c4.
+- Treating vision or tool quality as benchmarked here; the current published suite is text-only.
+- Commercial use of the tested TensorFold recipe with DFlash2: the drafter is licensed CC BY-NC-ND 4.0 (non-commercial, no derivatives).
 
 ### Configuration call
 
-Choose TensorFold when throughput and the 1M request window are the priority and the workload tolerates its documented canary caveat. The vLLM/NVFP4 low-reasoning baseline passed 13/13 checks and has lower c8 queue latency, but its runtime weight-scale warning must be resolved before treating it as the assurance choice. Latest run: 2026-10-24, TensorFold v0.6.0 with the DFlash2 drafter (recipe 3fd60dfc). It was not selected because its tool-eval safety gate failed, and its 240K passkey stage was not run. Its decode was close to the Oct 1 run (54.53 tok/s at c1, 93.20 at c4) and its canaries were 12/12. The Oct 1 TensorFold run stays the recommended tested configuration and is kept as history.
+The current tested configuration is the November 20 TensorFold 1.3.0 P4 recipe at a691916c. Use c1 for interactive work and c4 for bounded batches. It passed all 13 serving checks, cut the 240K TTFT to 199.29s, and demonstrated effective prompt-cache reuse, but it did not improve short-to-medium cold prefill or c4 decode over every prior GLM run. Keep it out of consequential tool routing until this exact stack passes tool-eval; the older same-checkpoint TensorFold 1.1.9 run failed its safety gate.
 
-Z.ai positions GLM-5.3 Flash for coding, agents, multimodal input, and long context. The local results prove performance, stability, and a 240K retrieval check for these quantized recipes only. The Oct 24 run served [Mia-AiLab/GLM-5.3-Flash-EXL3-4bpw-TensorFold @ 078455f](https://huggingface.co/Mia-AiLab/GLM-5.3-Flash-EXL3-4bpw-TensorFold/tree/078455ffe6472f9a52fbc1139f58b9db2881b25c) from a read-only weights mount. It also used a lab-only TensorFold comm.py patch that binds rank 0's rendezvous TCPStore to the inter-Spark master address instead of every interface; the patch does not change inference.
+Z.ai positions GLM-5.3 Flash for coding, agents, multimodal input, and long context. The current result serves [Mia-AiLab/GLM-5.3-Flash-EXL3-4bpw-TensorFold @ 76c0b51](https://huggingface.co/Mia-AiLab/GLM-5.3-Flash-EXL3-4bpw-TensorFold/tree/76c0b5173166d2795dd48860f45d8224817f894c) with TensorFold 1.3.0 plus the recipe's 16 patches, q8 dense/head, FP8 paged KV, P4, and DFlash2. The measurements establish serving performance and narrow regression checks for that exact stack only; raw prompts and operational details remain private.
 
 ### Published variants
 
 | Configuration | Runtime | Configured context | c1 TTFT p95 | Soak tok/s | Canaries | Tool use | Operating posture |
 |---|---|---:|---:|---:|---:|---|---|
+| [GLM-5.3 Flash EXL3 4 bpw (TensorFold 1.3.0, DFlash2, P4, recipe a691916c)](2026-11-20-glm53-flash-exl3-tensorfold-130-dflash2-p4-2x-1m.md) **(pick)** | TensorFold | 1M | 0.51s | 65.01 | 13/13 | Not run | Latest run (Nov 20); use c1 interactive or c4 bounded batch: 13/13 checks and 240K passkey passed, warm-prefix caching was effective, but c4 was 71.69 tok/s, c8 soak was 65.01 tok/s, this exact stack has no tool-eval result, and DFlash2 is non-commercial |
 | [GLM-5.3 Flash EXL3 4 bpw (TensorFold 1.1.9, DFlash2, recipe 13f2464)](2026-11-08-glm53-flash-exl3-tensorfold-1104-dflash2-2x-1m.md) | TensorFold | 1M | 0.37s | 62.29 | 13/13 | [⚠ safety · 93.0 mean · Pass^3 91.3%](2026-11-08-glm53-flash-exl3-tensorfold-1104-dflash2-2x-1m-tool-eval.md) | Latest run (Nov 8); not selected: stable and 13/13 checks passed, but c1 42.67 / c8 102.96 / c16 121.04 tok/s, the c8 soak was 62.29 tok/s, 240K TTFT was 391.26s, the tool safety gate failed, and the DFlash2 drafter is non-commercial |
 | [GLM-5.3 Flash EXL3 4 bpw (TensorFold v0.6.0, DFlash2, recipe 3fd60dfc)](2026-10-24-glm53-flash-exl3-tensorfold-v060-dflash2-2x-1m.md) | TensorFold | 1M | 0.44s | 80.18 | 12/12 | [⚠ safety · 94.0 mean · Pass^3 92.8%](2026-10-24-glm53-flash-exl3-tensorfold-v060-dflash2-2x-1m-tool-eval.md) | Latest run (Oct 24); not selected: tool-eval safety gate FAILED (TC-51 3/3, plus TC-43 and TC-68 3/3) despite a 94 mean; c1 54.53 / c4 93.20 tok/s (parallel 4); 12/12 canaries; 240K passkey not measured |
 | [GLM-5.3 Flash NVFP4 (vLLM, low reasoning)](2026-10-03-glm53-flash-nvfp4-vllm-native-262k-low-reasoning.md) | vLLM | 256K | 0.45s | 60.90 | 13/13 | Not run | Concurrency 1 interactive; 8 batch; 13/13 with accuracy warning |
-| [GLM-5.3 Flash EXL3/TR3 4 bpw (TensorFold v0.6.0)](2026-10-01-glm53-flash-exl3-tensorfold-v060-1m.md) **(pick)** | TensorFold | 1M | 0.41s | 84.90 | 10/13 | Not run | Concurrency 1 interactive; 4 batch; 10/13 quality |
+| [GLM-5.3 Flash EXL3/TR3 4 bpw (TensorFold v0.6.0)](2026-10-01-glm53-flash-exl3-tensorfold-v060-1m.md) | TensorFold | 1M | 0.41s | 84.90 | 10/13 | Not run | Concurrency 1 interactive; 4 batch; 10/13 quality |
 | [GLM-5.3 Flash EXL3/TR3 4 bpw (refreshed recipe)](2026-09-15-glm53-flash-exl3-tr3-4bpw-850k.md) | vLLM | 850K | 1.27s | 21.88 | 13/13 | Not run | Concurrency 1 interactive; 4 batch; Socket |
 | [GLM-5.3-Flash-EXL3](2026-08-29-glm53-flash-exl3-native-1m.md) | vLLM | 1M | 0.95s | 38.53 | 13/13 | Not run | Concurrency 1 interactive; 4 batch |
 
