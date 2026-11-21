@@ -3,23 +3,27 @@ import EvaluationBadges from '../components/EvaluationBadges.astro';
 import InstallDialog from '../components/InstallDialog.astro';
 import InstallModelButton from '../components/InstallModelButton.astro';
 import Layout from '../components/Layout.astro';
+import SparkCountFilter from '../components/SparkCountFilter.astro';
 import {
-  benchmarkLeaders, decodeWorkload, modelUrl, number, passkeyTokens, rate, repository, soakConcurrency, soakMinutes,
+  benchmarkLeaders, decodeWorkload, modelUrl, number, passkeyTokens, rate, repository, soakConcurrency, soakMinutes, sparkCounts,
 } from '../lib/benchmarks.js';
 
-const leaders = benchmarkLeaders();
+const rankings = [undefined, ...sparkCounts].map((sparks) => ({
+  count: sparks == null ? '' : String(sparks),
+  leaders: benchmarkLeaders(sparks),
+}));
 const results = `${repository}/blob/main/results/README.md`;
 const boards = [
   {
-    id: 'decode-scaling', title: 'Decode scaling', rows: leaders.decode, unit: 'output tok/s',
+    id: 'decode-scaling', title: 'Decode scaling', metric: 'decode', unit: 'output tok/s',
     description: `Highest aggregate throughput at any measured concurrency using ${decodeWorkload}. Higher concurrency can include queueing.`,
   },
   {
-    id: 'long-context-prefill', title: 'Long-context prefill', rows: leaders.prefill, unit: 's',
+    id: 'long-context-prefill', title: 'Long-context prefill', metric: 'prefill', unit: 's',
     description: `Lowest p95 time to first token on the ${number(passkeyTokens)}-token passkey workload at concurrency 1.`,
   },
   {
-    id: 'sustained-load', title: 'Sustained load', rows: leaders.soak, unit: 'output tok/s',
+    id: 'sustained-load', title: 'Sustained load', metric: 'soak', unit: 'output tok/s',
     description: `Highest aggregate throughput in the ${soakMinutes}-minute test at concurrency ${soakConcurrency}, with zero request errors.`,
   },
 ];
@@ -33,16 +37,19 @@ const boards = [
   </div>
 
   <div class="wrap detail">
-    {boards.map(({ id, title, description, rows, unit }) => (
+    <div class="card filters summary-filters" id="summary-filters" hidden>
+      <SparkCountFilter />
+    </div>
+    {boards.map(({ id, title, description, metric, unit }) => (
       <section id={id} class="card summary-board" aria-labelledby={`${id}-heading`}>
         <div class="summary-intro">
           <h2 id={`${id}-heading`}>{title}</h2>
           <p>{description}</p>
           <a class="text-link" href={`${results}#${id}`}>View {title.toLowerCase()} chart</a>
         </div>
-        {rows.length ? (
-          <ol class="summary-ranking">
-            {rows.map(({ config, value, concurrency }) => (
+        {rankings.map(({ count, leaders }) => leaders[metric].length ? (
+          <ol class="summary-ranking" data-ranking-sparks={count} hidden={count !== ''}>
+            {leaders[metric].map(({ config, value, concurrency }) => (
               <li>
                 <div class="summary-row">
                   <div>
@@ -59,9 +66,37 @@ const boards = [
               </li>
             ))}
           </ol>
-        ) : <p>No published measurements for this workload.</p>}
+        ) : <p data-ranking-sparks={count} hidden={count !== ''}>No published measurements for this workload.</p>)}
       </section>
     ))}
   </div>
   <InstallDialog />
 </Layout>
+<script>
+  const filters = document.querySelector<HTMLElement>('#summary-filters')!;
+  const sparks = filters.querySelector<HTMLSelectElement>('#sparks')!;
+  const rankings = document.querySelectorAll<HTMLElement>('[data-ranking-sparks]');
+
+  function showRankings() {
+    for (const ranking of rankings) {
+      ranking.hidden = ranking.dataset.rankingSparks !== sparks.value;
+    }
+  }
+
+  function readFilter() {
+    sparks.value = new URLSearchParams(location.search).get('sparks') ?? '';
+    if (sparks.selectedIndex < 0) sparks.value = '';
+    showRankings();
+  }
+
+  readFilter();
+  filters.hidden = false;
+  sparks.addEventListener('change', () => {
+    const url = new URL(location.href);
+    if (sparks.value) url.searchParams.set('sparks', sparks.value);
+    else url.searchParams.delete('sparks');
+    history.replaceState(null, '', url);
+    showRankings();
+  });
+  window.addEventListener('popstate', readFilter);
+</script>

@@ -1,0 +1,9 @@
+---
+import { sparkCounts } from '../lib/benchmarks.js';
+---
+<label class="select-label" for="sparks">DGX Spark count
+  <select id="sparks">
+    <option value="">Any Spark count</option>
+    {sparkCounts.map((count) => <option value={count}>{count}× DGX Spark</option>)}
+  </select>
+</label>

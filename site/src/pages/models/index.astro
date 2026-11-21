@@ -2,7 +2,8 @@
 import Layout from '../../components/Layout.astro';
 import ConfigCard from '../../components/ConfigCard.astro';
 import InstallDialog from '../../components/InstallDialog.astro';
-import { baselines, decodeWorkload, engines, families, sparkCounts } from '../../lib/benchmarks.js';
+import SparkCountFilter from '../../components/SparkCountFilter.astro';
+import { baselines, decodeWorkload, engines, families } from '../../lib/benchmarks.js';
 
 const safetyOptions = Object.entries({ passed: 'Passed', failed: 'Failed', unavailable: 'Unavailable' })
   .filter(([value]) => baselines.some((config) => config.safetyGate === value));
@@ -19,12 +20,7 @@ const toolOptions = Object.entries({ complete: 'Complete', incomplete: 'Incomple
   </div>
   <div class="wrap catalog">
     <div class="card filters" id="filters" hidden>
-      <label class="select-label" for="sparks">DGX Spark count
-        <select id="sparks">
-          <option value="">Any Spark count</option>
-          {sparkCounts.map((count) => <option value={count}>{count}× DGX Spark</option>)}
-        </select>
-      </label>
+      <SparkCountFilter />
       <label class="select-label" for="engine">Serving engine
         <select id="engine">
           <option value="">Any engine</option>
