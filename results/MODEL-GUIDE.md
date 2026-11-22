@@ -4,7 +4,7 @@ Use this page to choose among the model families with published DGX Spark
 baselines in this repository. For the full cross-configuration numbers and charts,
 open the [benchmark summary](README.md).
 
-Last updated: 2026-11-21 · Model families: 14 · Published configurations: 31
+Last updated: 2026-11-21 · Model families: 15 · Published configurations: 32
 
 ## Hardware footprint
 
@@ -14,6 +14,7 @@ Published recipes use 1× DGX Spark, 2× DGX Spark configurations with 128GB of 
 
 | Model | DGX Spark requirement | Position | Good default for | Choose something else when |
 |---|---|---|---|---|
+| [Thinking Machines Inkling 2 Mini](#inkling-2-mini) | 1 system / 1 GPU · 128GB each · 128GB aggregate | One-Spark NVFP4 baseline with the official Inkling vLLM runtime | Measuring one-Spark text serving with DSpark. Single-request decode was 41.59 tok/s. | Inferring vision performance from the text serving and capability workloads. |
 | [Qwen3.8-Flash-Next NVFP4](#qwen38-flash-next) | 2 systems / 2 GPUs · 128GB each · 256GB aggregate across nodes | Default high-throughput lane for coding, agents, chat, and RAG | Primary local lane for short- and medium-context coding, tool-using agents, chat, and RAG. | Treating a configured 1M YaRN window as validated 1M model quality; the published runs exercise context only through approximately 240K tokens. |
 | [NousResearch Arete-27B](#arete-27b) | 1 system / 1 GPU · 128GB each · 128GB aggregate | Highest complete tool-eval mean published here, but an extremely slow single-Spark SGLang lane | Quality-oriented, single-user tool research where latency is secondary: the complete three-trial tool evaluation scored 95.0 mean with 91.3% Pass^3 and passed its safety gate. | Interactive service: c1 decode was 4.29 tok/s, and 128K and 240K prompts took 175.95 and 452.84 seconds to first token. |
 | [Qwen3.8 27B](#qwen38-27b) | 1 system / 1 GPU · 128GB each · 128GB aggregate | Single-Spark 27B lane with official and uncensored checkpoint choices | A capable local text lane that fits on one DGX Spark without cross-node serving. | Interactive near-window prompts; the official and uncensored baselines took 395 and 558 seconds respectively to first token on the 240K check. |
@@ -48,6 +49,52 @@ measures one serving stack against deterministic mock-tool scenarios. Baselines
 marked “Not run” have no tool-use evidence. None of these results establish broad
 intelligence, production vision quality, or quality at configured 850K/1M request
 limits. Validate those against the actual application before routing production work.
+
+<a id="inkling-2-mini"></a>
+## Thinking Machines Inkling 2 Mini
+
+> One-Spark NVFP4 baseline with the official Inkling vLLM runtime
+
+**Recommended tested configuration:** [Inkling 2 Mini NVFP4 (vLLM, DSpark7, 1 Spark, 262K)](2026-11-21-inkling-2-mini-nvfp4-vllm-1spark-262k.md)
+
+### Checkpoint choices
+
+- **Benchmarked checkpoint:** [thinkingmachines/Inkling-2-Mini @ b85c3cf](https://huggingface.co/thinkingmachines/Inkling-2-Mini/tree/b85c3cfa615fc413cc9af3379f491b963f3b586a)
+- **Upstream base model:** [thinkingmachines/Inkling-2-Mini](https://huggingface.co/thinkingmachines/Inkling-2-Mini)
+- **Uncensored / abliterated:** None benchmarked — This baseline uses the original Thinking Machines NVFP4 checkpoint.
+
+| Signal from the selected local baseline | Result |
+|---|---:|
+| DGX Spark footprint | 1 system / 1 GPU · 128GB each · 128GB aggregate |
+| Interactive c1 | 41.59 output tok/s · 0.28s TTFT p95 |
+| Peak short-prompt decode | 229.47 output tok/s @ c16 |
+| 20-minute c8 soak | 145.04 output tok/s · 0 errors |
+| Longest tested prompt | 240K · 155.99s TTFT p95 |
+| Regression canaries | 10/13 |
+| Tool-use evaluation | [⚠ safety · 88.3 mean · Pass^3 76.8%](2026-11-21-inkling-2-mini-nvfp4-vllm-1spark-262k-tool-eval.md) |
+
+### Good fit
+
+- Measuring one-Spark text serving with DSpark. Single-request decode was 41.59 tok/s.
+- Comparing output throughput under offered load. The c8 soak sustained 145.04 tok/s.
+
+### Do not choose it when
+
+- Inferring vision performance from the text serving and capability workloads.
+- Assuming the configured 262,144-token window has uniform latency. The 240K prompt took 155.99s to first token.
+- Unsupervised tool workflows based on this result. The 207-attempt tool evaluation scored 88.3 and failed its safety gate.
+
+### Configuration call
+
+One-Spark reference; 41.59 tok/s at c1; peak at c16; 10/13 serving checks
+
+Scores apply to the pinned checkpoint, DSpark7, and the vLLM Inkling tool and reasoning parsers.
+
+### Published variants
+
+| Configuration | Runtime | Configured context | c1 TTFT p95 | Soak tok/s | Canaries | Tool use | Operating posture |
+|---|---|---:|---:|---:|---:|---|---|
+| [Inkling 2 Mini NVFP4 (vLLM, DSpark7, 1 Spark, 262K)](2026-11-21-inkling-2-mini-nvfp4-vllm-1spark-262k.md) **(pick)** | vLLM + DSpark7 | 256K | 0.28s | 145.04 | 10/13 | [⚠ safety · 88.3 mean · Pass^3 76.8%](2026-11-21-inkling-2-mini-nvfp4-vllm-1spark-262k-tool-eval.md) | One-Spark reference; 41.59 tok/s at c1; peak at c16; 10/13 serving checks |
 
 <a id="qwen38-flash-next"></a>
 ## Qwen3.8-Flash-Next NVFP4

@@ -6,12 +6,13 @@ same tables and charts without hand-editing this page.
 
 Choosing a model for a workload? Open the [model selection dashboard](MODEL-GUIDE.md).
 
-Last updated: 2026-11-21 · Published baselines: 31
+Last updated: 2026-11-21 · Published baselines: 32
 
 ## At a glance
 
 | Model | Hardware / runtime | Configured context | Peak decode tok/s | c1 TTFT p95 | Longest-context TTFT p95 | Soak tok/s | Canaries | Tool use | Recommended concurrency | Recipe credit |
 |---|---|---:|---:|---:|---:|---:|---:|---|---|---|
+| [Inkling 2 Mini NVFP4 (vLLM, DSpark7, 1 Spark, 262K)](2026-11-21-inkling-2-mini-nvfp4-vllm-1spark-262k.md) | 1x NVIDIA DGX Spark (128GB) / vLLM + DSpark7 | 256K | 229.47 @ c16 | 0.28s | 155.99s | 145.04 | 10/13 | [⚠ safety · 88.3 mean · Pass^3 76.8%](2026-11-21-inkling-2-mini-nvfp4-vllm-1spark-262k-tool-eval.md) | One-Spark reference; 41.59 tok/s at c1; peak at c16; 10/13 serving checks | [vLLM's one-Spark Inkling serving recipe](https://recipes.vllm.ai/thinkingmachines/Inkling-2-Mini) |
 | [Qwen3.8-Flash-Next NVIDIA NVFP4 (vLLM 0.34.0, BF16 KV)](2026-11-21-qwen38-flash-next-nvfp4-vllm034-2x-262k.md) | 2x NVIDIA DGX Spark (128GB each) / vLLM 0.34.0 | 256K | 103.83 @ c4 | 0.36s | 99.43s | 140.54 | 13/13 | [⚠ safety · 92.0 mean · Pass^3 84.1%](2026-11-21-qwen38-flash-next-nvfp4-vllm034-2x-262k-tool-eval.md) | Up to 4 active sequences for decode | [MiaAI-Lab dual-Spark topology](https://github.com/MiaAI-Lab/Qwen3.8-Flash-Next-Dual-DGX-Sparks/tree/cd839d0b62f6c737178a0c2037733420e0524ebf) |
 | [Qwen3.8-Flash-Next FP4-Local QAD (TensorFold v1.1.4, 1 Spark, 262K, recipe 20e15e4)](2026-11-08-qwen38-flash-next-fp4-local-tensorfold-1spark-262k-20e15e4.md) | 1x NVIDIA DGX Spark (128GB) / TensorFold | 256K | 111.73 @ c4 | 0.35s | 126.64s | 77.79 | 13/13 | [⚠ safety · 89.0 mean · Pass^3 84.1%](2026-11-08-qwen38-flash-next-fp4-local-tensorfold-1spark-262k-20e15e4-tool-eval.md) | Latest single-Spark run (Nov 8); not selected for Hermes tools: 13/13 serving checks and stronger c1-c4 than the Oct 18 recipe, but the complete tool-eval safety gate failed TC-60 in all three trials | [MiaAI-Lab Qwen3.8 Flash Next single-Spark TensorFold recipe](https://github.com/MiaAI-Lab/Qwen3.8-Flash-Next-Single-DGX-Spark-TensorFold/tree/20e15e41f2f514a0d287710f4665ee1b5009ba41) |
 | [NousResearch Arete-27B (SGLang, FP8 KV, 1 Spark, 262K)](2026-11-08-arete-27b-sglang-fp8kv-1spark-262k.md) | 1x NVIDIA DGX Spark (128GB) / SGLang | 256K | 32.65 @ c16 | 0.61s | 452.84s | 31.28 | 13/13 | [95.0 mean · Pass^3 91.3%](2026-11-08-arete-27b-sglang-fp8kv-1spark-262k-tool-eval.md) | Research-only single-user lane: complete tool-eval 95 mean and safety passed, but c1 was 4.29 tok/s, 128K TTFT 175.95s, 240K TTFT 452.84s, and a transient scheduler exit occurred after the serving soak | [NousResearch/Arete-27B model card](https://huggingface.co/NousResearch/Arete-27B/tree/108f0afbdcfaa1ceeda4a635004304dfff6d4da2); local pinned SGLang launch configuration |
@@ -58,6 +59,7 @@ each model card, license, runtime requirements, and safety posture before deploy
 
 | Model family | Benchmarked checkpoint | Upstream base model | Uncensored / abliterated alternative | Compatibility note |
 |---|---|---|---|---|
+| Thinking Machines Inkling 2 Mini | [thinkingmachines/Inkling-2-Mini @ b85c3cf](https://huggingface.co/thinkingmachines/Inkling-2-Mini/tree/b85c3cfa615fc413cc9af3379f491b963f3b586a) | [thinkingmachines/Inkling-2-Mini](https://huggingface.co/thinkingmachines/Inkling-2-Mini) | None benchmarked | This baseline uses the original Thinking Machines NVFP4 checkpoint. |
 | Qwen3.8-Flash-Next NVFP4 | [nvidia/Qwen3.8-Flash-Next-NVFP4 @ fc694b5](https://huggingface.co/nvidia/Qwen3.8-Flash-Next-NVFP4/tree/fc694b54fb0174e0913e6adf86691ef85a4ead47) | [Qwen/Qwen3.8-Flash-Next](https://huggingface.co/Qwen/Qwen3.8-Flash-Next) | [Uncensored ModelOpt NVFP4 checkpoint](https://huggingface.co/jpezzulli/OrcaRouter-Qwen3.8-Flash-Next-Uncensored-ModelOpt-NVFP4) | Community uncensored/abliterated NVFP4 conversion for a Pennyroyal/SGLang runtime; not benchmarked in this repository, and its model card flags conflicting upstream license metadata. |
 | NousResearch Arete-27B | [NousResearch/Arete-27B @ 108f0af](https://huggingface.co/NousResearch/Arete-27B/tree/108f0afbdcfaa1ceeda4a635004304dfff6d4da2) | [Qwen/Qwen3.8-27B](https://huggingface.co/Qwen/Qwen3.8-27B) | None benchmarked | No alternative Arete checkpoint or quantization was benchmarked in this repository. |
 | Qwen3.8 27B | [RadixArk/Qwen3.8-27B-NVFP4 @ 319f741](https://huggingface.co/RadixArk/Qwen3.8-27B-NVFP4/tree/319f741cce68d7914884900c138a1fbb70a42f30) | [Qwen/Qwen3.8-27B](https://huggingface.co/Qwen/Qwen3.8-27B) | [orcarouter/Qwen3.8-27B-Uncensored-FP8 @ 830602f](https://huggingface.co/orcarouter/Qwen3.8-27B-Uncensored-FP8/tree/830602f9b81d083db78f60e889bca37b73b74469) | Uncensored/abliterated FP8 derivative independently benchmarked in this repository; it passed 13/13 standard checks but was materially slower and requires explicit trust and safety review. |
@@ -106,6 +108,7 @@ retained as explicitly qualified pilot evidence.
 
 | Serving baseline | Protocol | Status | Completion | Mean score | Pass@3 | Pass^3 | Safety gate |
 |---|---|---|---:|---:|---:|---:|---|
+| [Inkling 2 Mini NVFP4 (vLLM, DSpark7, 1 Spark, 262K)](2026-11-21-inkling-2-mini-nvfp4-vllm-1spark-262k-tool-eval.md) | `tool-eval-standard-v1-b60e2f0` | complete | 100.0% | 88.3 | 85.5% | 76.8% | **FAILED** |
 | [Qwen3.8-Flash-Next NVIDIA NVFP4 (vLLM 0.34.0, BF16 KV)](2026-11-21-qwen38-flash-next-nvfp4-vllm034-2x-262k-tool-eval.md) | `tool-eval-standard-v1-b60e2f0` | complete | 100.0% | 92.0 | 97.1% | 84.1% | **FAILED** |
 | [Qwen3.8-Flash-Next FP4-Local QAD (TensorFold v1.1.4, 1 Spark, 262K, recipe 20e15e4)](2026-11-08-qwen38-flash-next-fp4-local-tensorfold-1spark-262k-20e15e4-tool-eval.md) | `tool-eval-standard-v1-b60e2f0` | complete | 100.0% | 89.0 | 84.1% | 84.1% | **FAILED** |
 | [NousResearch Arete-27B (SGLang, FP8 KV, 1 Spark, 262K)](2026-11-08-arete-27b-sglang-fp8kv-1spark-262k-tool-eval.md) | `tool-eval-standard-v1-b60e2f0` | complete | 100.0% | 95.0 | 91.3% | 91.3% | pass |
@@ -151,6 +154,7 @@ capability results are omitted.
 
 | Serving baseline | Date | RULER v1 | LongBench v2 | τ²-Bench |
 |---|---|---|---|---|
+| [Inkling 2 Mini NVFP4 (vLLM, DSpark7, 1 Spark, 262K)](2026-11-21-inkling-2-mini-nvfp4-vllm-1spark-262k-capabilities.md) | 2026-11-21 | 3.85% at 4K · 0.00% at 32K · 7.69% at 128K | 0/24 correct (0.0%) | 6/9 full reward · 8/9 graded |
 | [Qwen3.8-Flash-Next NVIDIA NVFP4 (TensorFold, 1M YaRN)](2026-11-21-qwen38-flash-next-nvfp4-tensorfold-external-evals.md) | 2026-11-21 | 86.92% at 4K · 86.15% at 32K · 86.15% at 128K | 9/24 correct (37.5%) | 5/9 tasks earned full reward |
 
 ## Adding another baseline
