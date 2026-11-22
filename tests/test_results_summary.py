@@ -55,6 +55,54 @@ class ResultsSummaryTests(unittest.TestCase):
         self.assertIn("Not run", summary)
         self.assertIn("| Tool-use evaluation | Not run |", guide)
 
+    def test_capability_results_are_listed_by_configuration(self) -> None:
+        catalog = json.loads((ROOT / "results/catalog.json").read_text())
+        summary = (ROOT / "results/README.md").read_text()
+        readme = (ROOT / "README.md").read_text()
+
+        self.assertIn("## Capability benchmarks", summary)
+        for baseline in catalog["baselines"]:
+            evals = baseline.get("external_evals")
+            if not evals:
+                continue
+            self.assertIn(f'[{baseline["label"]}]({evals["report"]})', summary)
+            for row in evals["benchmarks"]:
+                self.assertIn(row["result"], summary)
+                # Per-configuration scores belong in results/README.md only.
+                self.assertNotIn(row["result"], readme)
+        self.assertIn("results/README.md#capability-benchmarks", readme)
+
+    def test_capability_rows_fill_missing_benchmarks_with_a_dash(self) -> None:
+        from scripts.generate_results_summary import _capability_rows
+
+        rows = _capability_rows([
+            {"label": "No evals"},
+            {
+                "label": "Partial",
+                "external_evals": {
+                    "date": "2026-11-21", "report": "r.md", "scope": "s",
+                    "benchmarks": [{"name": "LongBench v2", "source": "x",
+                                    "result": "9/24", "notes": "n"}],
+                },
+            },
+        ])
+        self.assertEqual(rows, ["| [Partial](r.md) | 2026-11-21 | — | 9/24 | — |"])
+
+    def test_external_evals_reject_unknown_benchmarks(self) -> None:
+        from scripts.generate_results_summary import _validate_external_evals
+
+        baseline = {
+            "id": "b",
+            "external_evals": {
+                "date": "2026-11-21",
+                "report": "2026-11-21-qwen38-flash-next-nvfp4-tensorfold-external-evals.md",
+                "scope": "s",
+                "benchmarks": [{"name": "MMLU", "source": "x", "result": "1", "notes": "n"}],
+            },
+        }
+        with self.assertRaisesRegex(ValueError, "unknown capability benchmark"):
+            _validate_external_evals(baseline)
+
     def test_summary_names_dgx_spark_memory_per_system(self) -> None:
         summary = (ROOT / "results/README.md").read_text()
         self.assertIn("2x NVIDIA DGX Spark (128GB each)", summary)

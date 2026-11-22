@@ -138,6 +138,21 @@ retained as explicitly qualified pilot evidence.
 | Qwen3.8-Flash-Next-NVFP4 | — | Not run | — | — | — | — | — |
 | GLM-5.3-Flash-EXL3 | — | Not run | — | — | — | — | — |
 
+## Capability benchmarks
+
+Capability results use the sampled standard profile described in the
+[main README](../README.md#capability-benchmarks): RULER v1 macro scores by
+context length, LongBench v2 accuracy, and a custom local τ²-Bench pilot. They
+are small samples, so treat them as screening evidence rather than leaderboard
+scores. Compare RULER rows only with matching corpus hashes (recorded in the run
+manifest), LongBench rows only with the same prompt cap, and all rows only with
+the same reasoning setting (both stated in the linked report). Baselines without
+capability results are omitted.
+
+| Serving baseline | Date | RULER v1 | LongBench v2 | τ²-Bench |
+|---|---|---|---|---|
+| [Qwen3.8-Flash-Next NVIDIA NVFP4 (TensorFold, 1M YaRN)](2026-11-21-qwen38-flash-next-nvfp4-tensorfold-external-evals.md) | 2026-11-21 | 86.92% at 4K · 86.15% at 32K · 86.15% at 128K | 9/24 correct (37.5%) | 5/9 tasks earned full reward |
+
 ## Adding another baseline
 
 1. Run `scripts/run_combined_benchmark.py` against an already-live direct endpoint

@@ -189,24 +189,19 @@ committing a curated report; CI also scans the full reachable history.
 
 ## Capability benchmarks
 
-| Benchmark | What it measures | Published results |
-| --- | --- | --- |
-| [tool-eval-bench](https://github.com/SeraphimSerapis/tool-eval-bench) | Mock-tool selection, arguments, multi-step behavior, and safety gates under the pinned three-trial profile. | [Tool-use results by configuration](results/README.md#tool-use-quality) |
-| [NVIDIA RULER v1](https://github.com/NVIDIA/RULER) | Synthetic long-context retrieval, tracking, aggregation, and question answering. | 86.92% at 4K, 86.15% at 32K, and 86.15% at 128K across 78 cases. |
-| [LongBench v2](https://github.com/THUDM/LongBench) | Multiple-choice reasoning across six long-context domains. | 9/24 correct (37.5%). Ten responses reached the output cap before producing a parseable answer. |
-| [τ²-Bench](https://github.com/sierra-research/tau2-bench/blob/main/docs/running-the-benchmark.md) | Tool-using agents completing tasks with a simulated user in airline, retail, and telecom environments. | 5/9 tasks earned full reward in the custom local pilot. |
+| Benchmark | What it measures | Standard sample | Results by configuration |
+| --- | --- | --- | --- |
+| [tool-eval-bench](https://github.com/SeraphimSerapis/tool-eval-bench) | Mock-tool selection, arguments, multi-step behavior, and safety gates. | 15-scenario smoke test, then 69 scenarios across three trials. Reports mean score, Pass@3, Pass^3, and the safety gate. | [Tool-use quality](results/README.md#tool-use-quality) |
+| [NVIDIA RULER v1](https://github.com/NVIDIA/RULER) | Synthetic long-context retrieval, tracking, aggregation, and question answering. | Two examples from each of 13 tasks at 4K, 32K, and 128K, for 78 cases. Reports macro scores by length. | [Capability benchmarks](results/README.md#capability-benchmarks) |
+| [LongBench v2](https://github.com/THUDM/LongBench) | Multiple-choice reasoning across six long-context domains. | 24 direct-answer questions across six domains. Reports accuracy, truncation, and unparseable answers. | [Capability benchmarks](results/README.md#capability-benchmarks) |
+| [τ²-Bench](https://github.com/sierra-research/tau2-bench/blob/main/docs/running-the-benchmark.md) | Tool-using agents completing tasks with a simulated user in airline, retail, and telecom environments. | Three text simulations per domain, one trial per task. Reports tasks with full reward. | [Capability benchmarks](results/README.md#capability-benchmarks) |
 
-The standard capability profile follows the sampled workloads in the
-[Qwen3.8-Flash-Next pilot report](results/2026-11-21-qwen38-flash-next-nvfp4-tensorfold-external-evals.md):
-
-- **RULER v1** runs two examples from each of 13 tasks at 4K, 32K, and 128K,
-  for 78 cases with full context coverage. It reports macro scores by length.
-- **LongBench v2** runs 24 direct-answer questions across six domains and reports
-  accuracy, truncation, and unparseable answers.
-- **Local τ²-Bench** runs three text simulations each for airline, retail, and
-  telecom, with one trial per task. The candidate serves as agent, simulated user,
-  and natural-language assertion judge. This custom protocol has its own scores
-  and uses different simulator and judge settings from the released leaderboard.
+The RULER, LongBench, and τ²-Bench samples were first run for the
+[Qwen3.8-Flash-Next pilot](results/2026-11-21-qwen38-flash-next-nvfp4-tensorfold-external-evals.md),
+which set the standard profile. They are small screening samples, not
+leaderboard runs. Local τ²-Bench uses the candidate as agent, simulated user,
+and natural-language assertion judge, so its scores use different simulator and
+judge settings from the released leaderboard and are not comparable with it.
 
 ## Published baselines
 
