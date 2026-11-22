@@ -8,6 +8,8 @@ Use concurrency 8 for interactive service and up to 16 for throughput-heavy work
 
 Serving recipe: [MiaAI-Lab Qwen3.8 Flash Dual DGX Sparks TensorFold](https://github.com/MiaAI-Lab/Qwen3.8-Flash-Dual-DGX-Sparks-TensorFold/tree/be3ed857ab1055ca47b36134d22691f00f2bb94a), commit `be3ed857ab1055ca47b36134d22691f00f2bb94a`.
 
+The [November external benchmark report](2026-11-21-qwen38-flash-next-nvfp4-tensorfold-external-evals.md) covers RULER v1, LongBench v2, and τ²-Bench pilots on this configuration.
+
 ## Configuration and reproducibility
 
 - Hardware: two NVIDIA DGX Sparks (GB10), one GPU per rank, connected over RoCEv2.
