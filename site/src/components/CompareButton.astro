@@ -1,0 +1,4 @@
+---
+const { config } = Astro.props;
+---
+<button type="button" class="button button--outline" aria-label={`Compare ${config.label}`} aria-pressed="false" data-compare-config={config.id} hidden>Compare</button>

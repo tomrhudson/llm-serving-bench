@@ -1,9 +1,11 @@
 ---
 import { sparkCounts } from '../lib/benchmarks.js';
+
+const { id = 'sparks', includeAny = true } = Astro.props;
 ---
-<label class="select-label" for="sparks">DGX Spark count
-  <select id="sparks">
-    <option value="">Any Spark count</option>
+<label class="select-label" for={id}>DGX Spark count
+  <select id={id}>
+    {includeAny && <option value="">Any</option>}
     {sparkCounts.map((count) => <option value={count}>{count}× DGX Spark</option>)}
   </select>
 </label>

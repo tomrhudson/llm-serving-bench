@@ -1,0 +1,154 @@
+---
+import EvaluationChip from '../components/EvaluationChip.astro';
+import Layout from '../components/Layout.astro';
+import { baselines, decodeWorkload, displayDate, families, modelUrl, number, rate, unavailable } from '../lib/benchmarks.js';
+import { comparisonLimit } from '../lib/comparison.js';
+
+const rows = [
+  'DGX Spark count', 'Serving runtime', 'Tested', 'Single-stream decode', 'Time to first token · p95, c1',
+  'Sustained throughput', 'Validated retrieval', 'Tool evaluation', 'Safety gate',
+];
+const measure = (value, unit) => value == null ? unavailable : `${rate(value)} ${unit}`;
+---
+<Layout title="Compare configurations" description="Compare DGX Spark model recipes by hardware, serving speed, context retrieval, and tool-use results.">
+  <div class="mast">
+    <div class="wrap">
+      <h1>Compare configurations</h1>
+      <p class="hero-lead">Choose up to {comparisonLimit} tested recipes to see their benchmark results side by side.</p>
+    </div>
+  </div>
+
+  <div class="wrap detail">
+    <noscript><p>Enable JavaScript to compare configurations. You can still browse results in the <a href="/models/">model catalog</a>.</p></noscript>
+    <div class="card comparison-controls" hidden>
+      <div class="comparison-selects">
+        {Array.from({ length: comparisonLimit }, (_, index) => (
+          <label class="select-label" for={`compare-${index + 1}`}>Configuration {index + 1}
+            <select id={`compare-${index + 1}`}>
+              <option value="">Choose a configuration</option>
+              {families.map(({ name, configs }) => (
+                <optgroup label={name}>
+                  {configs.map((config) => <option value={config.id}>{config.sparks}× · {config.label}</option>)}
+                </optgroup>
+              ))}
+            </select>
+          </label>
+        ))}
+      </div>
+      <p id="compare-empty">Choose at least two configurations to see the comparison.</p>
+      <div class="compare-share" hidden>
+        <button type="button" class="button button--outline" id="copy-comparison">Copy comparison link</button>
+        <input type="text" id="comparison-link" aria-label="Comparison link" readonly hidden />
+        <p id="compare-status" role="status"></p>
+      </div>
+    </div>
+    <section class="card detail-panel comparison-results" hidden aria-labelledby="comparison-results">
+      <h2 id="comparison-results">Benchmark results</h2>
+      <p>Single-stream speed and time to first token use the same short-prompt decode test ({decodeWorkload}). Sustained results show the duration, concurrency, and errors from each soak. Compare tool scores across complete runs with the same protocol ID.</p>
+      <p class="comparison-scroll-hint">Scroll the table to see every configuration.</p>
+      <div class="comparison-scroll" tabindex="0" role="region" aria-label="Side-by-side benchmark results">
+        <table class="comparison-table">
+          <thead><tr><th scope="col">Measurement</th></tr></thead>
+          <tbody>
+            {rows.map((label) => <tr><th scope="row">{label}</th></tr>)}
+          </tbody>
+        </table>
+      </div>
+    </section>
+    {baselines.map((config) => {
+      const { c1, soak, tool_eval: tool } = config;
+      return (
+        <template data-comparison-template={config.id}>
+          <div><a href={modelUrl(config.id)}>{config.label}</a></div>
+          <div>{config.sparks}× DGX Spark</div>
+          <div>{config.runtime}</div>
+          <div><time datetime={config.date}>{displayDate(config.date)}</time></div>
+          <div>{measure(c1?.output_tps, 'output tok/s')}</div>
+          <div>{measure(c1?.ttft_p95_seconds, 's')}</div>
+          <div>
+            {measure(soak?.output_tps, 'output tok/s')}
+            {soak?.output_tps != null && <small>{soak.minutes} min · c{soak.concurrency} · {number(soak.errors)} errors</small>}
+          </div>
+          <div>{config.validatedTokens ? `${number(config.validatedTokens)} tokens · passkey passed` : config.validation}</div>
+          <div>
+            <EvaluationChip status={config.toolStatus}>{config.toolStatus}</EvaluationChip>
+            {tool && <small>{tool.score_mean != null && `${rate(tool.score_mean)} / 100 · `}{tool.protocol_id}</small>}
+          </div>
+          <div><EvaluationChip status={config.safetyGate}>{config.safetyGate}</EvaluationChip></div>
+        </template>
+      );
+    })}
+  </div>
+</Layout>
+
+<script>
+  import { comparisonPath } from '../lib/comparison.js';
+
+  const controls = document.querySelector<HTMLElement>('.comparison-controls')!;
+  const selects = Array.from(controls.querySelectorAll('select'));
+  const empty = document.querySelector<HTMLElement>('#compare-empty')!;
+  const results = document.querySelector<HTMLElement>('.comparison-results')!;
+  const rows = results.querySelectorAll<HTMLTableRowElement>('tr');
+  const share = document.querySelector<HTMLElement>('.compare-share')!;
+  const link = document.querySelector<HTMLInputElement>('#comparison-link')!;
+  const status = document.querySelector<HTMLElement>('#compare-status')!;
+  const templates = new Map(
+    Array.from(document.querySelectorAll<HTMLTemplateElement>('[data-comparison-template]'),
+      (template) => [template.dataset.comparisonTemplate!, template]),
+  );
+
+  function render() {
+    const ids = selects.map((select) => select.value).filter(Boolean);
+    const comparing = ids.length >= 2;
+    for (const select of selects) {
+      for (const option of select.options) {
+        option.disabled = option.value !== select.value && ids.includes(option.value);
+      }
+    }
+
+    results.hidden = !comparing;
+    share.hidden = !comparing;
+    empty.hidden = comparing;
+    status.textContent = '';
+    link.hidden = true;
+    if (!comparing) return;
+
+    const columns = ids.map((id) => templates.get(id)!.content.children);
+    rows.forEach((row, index) => {
+      const cells = columns.map((column) => {
+        const cell = document.createElement(index === 0 ? 'th' : 'td');
+        if (index === 0) cell.scope = 'col';
+        cell.append(...Array.from(column[index].childNodes, (node) => node.cloneNode(true)));
+        return cell;
+      });
+      row.replaceChildren(row.cells[0], ...cells);
+    });
+    link.value = new URL(comparisonPath(ids), location.href).href;
+  }
+
+  function readUrl() {
+    const ids = [...new Set(new URLSearchParams(location.search).getAll('config'))].filter((id) => templates.has(id));
+    selects.forEach((select, index) => { select.value = ids[index] ?? ''; });
+    render();
+  }
+
+  controls.hidden = false;
+  readUrl();
+  controls.addEventListener('change', () => {
+    const ids = selects.map((select) => select.value).filter(Boolean);
+    history.replaceState(null, '', comparisonPath(ids));
+    render();
+  });
+  window.addEventListener('popstate', readUrl);
+  document.querySelector('#copy-comparison')!.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(link.value);
+      status.textContent = 'Comparison link copied.';
+    } catch {
+      link.hidden = false;
+      link.focus();
+      link.select();
+      status.textContent = 'Copy the selected link using your device’s copy command.';
+    }
+  });
+</script>
