@@ -1,12 +1,30 @@
 import unittest
 import urllib.request
-from unittest.mock import Mock, call
+from unittest.mock import Mock, call, patch
 
 from llm_serving_bench.client import (
     InsecureTransportError,
     OpenAIClient,
+    RequestResult,
     _reasoning_text,
+    answer_matches,
 )
+
+
+class _FakeStream:
+    def __init__(self, lines):
+        self._lines = [line.encode("utf-8") for line in lines]
+
+    def __enter__(self):
+        return iter(self._lines)
+
+    def __exit__(self, *exc):
+        return False
+
+
+def _stream_chat(client, lines, **kwargs):
+    with patch("urllib.request.urlopen", return_value=_FakeStream(lines)):
+        return client.chat("r", "prompt", 8, **kwargs)
 
 
 class ClientTests(unittest.TestCase):
@@ -147,6 +165,91 @@ class ClientTests(unittest.TestCase):
         for delta, expected in cases:
             with self.subTest(delta=delta):
                 self.assertEqual(_reasoning_text(delta), expected)
+
+
+    def test_empty_stream_is_a_failure(self) -> None:
+        client = OpenAIClient("http://example.test/v1", "model")
+        result = _stream_chat(client, ["data: [DONE]"])
+
+        self.assertIsNotNone(result.error)
+        self.assertIn("EmptyStream", result.error)
+        self.assertEqual(result.completion_tokens_source, "none")
+        self.assertFalse(result.passed)
+
+    def test_error_event_in_stream_is_a_failure(self) -> None:
+        client = OpenAIClient("http://example.test/v1", "model")
+        result = _stream_chat(client, [
+            'data: {"choices":[{"delta":{"content":"par"}}]}',
+            'data: {"error":{"message":"out of KV cache"}}',
+        ])
+
+        self.assertIsNotNone(result.error)
+        self.assertIn("StreamError", result.error)
+        self.assertIn("out of KV cache", result.error)
+
+    def test_usage_tokens_are_marked_as_usage(self) -> None:
+        client = OpenAIClient("http://example.test/v1", "model")
+        result = _stream_chat(client, [
+            'data: {"choices":[{"delta":{"content":"hi"}}]}',
+            'data: {"choices":[],"usage":{"prompt_tokens":3,"completion_tokens":2}}',
+            "data: [DONE]",
+        ])
+
+        self.assertIsNone(result.error)
+        self.assertEqual(result.completion_tokens, 2)
+        self.assertEqual(result.completion_tokens_source, "usage")
+
+    def test_missing_usage_falls_back_and_records_source(self) -> None:
+        client = OpenAIClient("http://example.test/v1", "model")
+        lines = ['data: {"choices":[{"delta":{"content":"abcdefgh"}}]}', "data: [DONE]"]
+
+        client.tokenize_count = Mock(return_value=5)
+        result = _stream_chat(client, lines)
+        self.assertEqual(result.completion_tokens, 5)
+        self.assertEqual(result.completion_tokens_source, "tokenize")
+
+        client.tokenize_count = Mock(side_effect=RuntimeError("no tokenizer"))
+        result = _stream_chat(client, lines)
+        self.assertEqual(result.completion_tokens, 2)
+        self.assertEqual(result.completion_tokens_source, "char_estimate")
+
+    def test_exact_answer_matching(self) -> None:
+        accepted = ["703", " 703\n", "703.", "**703**", "`703`", '"703"',
+                    "<think>37*19...</think>\n703"]
+        for reply in accepted:
+            with self.subTest(reply=reply):
+                self.assertTrue(answer_matches(reply, "703"))
+        self.assertTrue(answer_matches("Jade", "jade"))
+        rejected = [
+            ("1703", "703"),
+            ("The answer is 703.", "703"),
+            ("", "703"),
+            ("amber, cobalt, jade, violet", "jade"),
+        ]
+        for reply, expected in rejected:
+            with self.subTest(reply=reply):
+                self.assertFalse(answer_matches(reply, expected))
+
+    def test_contains_matching_requires_a_standalone_token(self) -> None:
+        self.assertTrue(answer_matches(
+            "The passkey is ORBIT-7319-CEDAR.", "ORBIT-7319-CEDAR", "contains"
+        ))
+        self.assertFalse(answer_matches("1703", "703", "contains"))
+        self.assertFalse(answer_matches(
+            "ORBIT-7319-CEDARS", "ORBIT-7319-CEDAR", "contains"
+        ))
+        with self.assertRaises(ValueError):
+            answer_matches("x", "x", "fuzzy")
+
+    def test_request_result_uses_match_mode(self) -> None:
+        result = RequestResult(
+            request_id="r", started_at=0, e2e_seconds=1, ttft_seconds=0.1,
+            prompt_tokens=1, completion_tokens=4,
+            content="Sure: CEDAR-17", expected="CEDAR-17",
+        )
+        self.assertFalse(result.passed)
+        result.match = "contains"
+        self.assertTrue(result.passed)
 
 
 if __name__ == "__main__":

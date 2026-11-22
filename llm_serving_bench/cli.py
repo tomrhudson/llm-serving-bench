@@ -29,7 +29,8 @@ def run_requests(
             executor.submit(
                 client.chat, item.request_id, item.prompt, item.output_tokens,
                 temperature=item.temperature, ignore_eos=item.ignore_eos,
-                expected=item.expected, extra_body=item.extra_body,
+                expected=item.expected, match=item.match,
+                extra_body=item.extra_body,
             )
             for item in prepared
         ]
@@ -59,6 +60,7 @@ def run_duration_requests(
                 temperature=item.temperature,
                 ignore_eos=item.ignore_eos,
                 expected=item.expected,
+                match=item.match,
                 extra_body=item.extra_body,
             ))
             sequence += 1
@@ -121,6 +123,14 @@ def execute(args: argparse.Namespace) -> dict[str, Any]:
                 results, wall = run_requests(client, prepared, concurrency)
             after = parse_selected_metrics(client.metrics_text())
             summary = summarize(results, wall, concurrency)
+            if summary["completion_tokens_estimated_requests"]:
+                run["notes"].append(
+                    "{name}: {count} request(s) had no usage or /tokenize count; "
+                    "completion tokens were estimated as characters/4.".format(
+                        name=config["name"],
+                        count=summary["completion_tokens_estimated_requests"],
+                    )
+                )
             run["scenarios"].append({
                 "config": config,
                 "prepared_prompt_tokens": [p.prepared_prompt_tokens for p in prepared],

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import time
 import urllib.error
 import urllib.parse
@@ -27,13 +28,18 @@ class RequestResult:
     reasoning_content: str = ""
     error: str | None = None
     expected: str | None = None
+    match: str = "exact"
+    # "usage" (server-reported), "tokenize" (recounted via /tokenize),
+    # "char_estimate" (len/4 fallback), or "none" (no output).
+    completion_tokens_source: str = "usage"
 
     @property
     def passed(self) -> bool:
-        return self.error is None and (
-            self.expected is None
-            or self.expected.lower() in self.content.lower()
-        )
+        if self.error is not None:
+            return False
+        if self.expected is None:
+            return True
+        return answer_matches(self.content, self.expected, self.match)
 
     def to_dict(self, include_text: bool = False) -> dict[str, Any]:
         data = asdict(self)
@@ -187,6 +193,7 @@ class OpenAIClient:
         temperature: float = 0.0,
         ignore_eos: bool = False,
         expected: str | None = None,
+        match: str = "exact",
         extra_body: dict[str, Any] | None = None,
     ) -> RequestResult:
         payload: dict[str, Any] = {
@@ -227,6 +234,8 @@ class OpenAIClient:
                     if not data or data == "[DONE]":
                         continue
                     event = json.loads(data)
+                    if isinstance(event, dict) and event.get("error"):
+                        raise StreamError(_stream_error_text(event["error"]))
                     if event.get("usage"):
                         usage = event["usage"]
                     choices = event.get("choices") or []
@@ -259,6 +268,8 @@ class OpenAIClient:
                 completion_tokens=0,
                 error=f"{type(exc).__name__}: {exc}",
                 expected=expected,
+                match=match,
+                completion_tokens_source="none",
             )
 
         ended = time.perf_counter()
@@ -266,13 +277,21 @@ class OpenAIClient:
         full_reasoning = "".join(reasoning_parts)
         prompt_tokens = int(usage.get("prompt_tokens") or 0)
         completion_tokens = int(usage.get("completion_tokens") or 0)
+        tokens_source = "usage"
         if completion_tokens <= 0 and (full_content or full_reasoning):
             try:
                 completion_tokens = self.tokenize_count(
                     full_reasoning + full_content
                 )
+                tokens_source = "tokenize"
             except Exception:
                 completion_tokens = max(1, len(full_reasoning + full_content) // 4)
+                tokens_source = "char_estimate"
+        error = None
+        if completion_tokens <= 0 and not (full_content or full_reasoning):
+            # A 200 response that streamed nothing is not a successful request.
+            error = "EmptyStream: no content, reasoning, or completion usage"
+            tokens_source = "none"
 
         return RequestResult(
             request_id=request_id,
@@ -285,8 +304,50 @@ class OpenAIClient:
             finish_reason=finish_reason,
             content=full_content,
             reasoning_content=full_reasoning,
+            error=error,
             expected=expected,
+            match=match,
+            completion_tokens_source=tokens_source,
         )
+
+
+class StreamError(RuntimeError):
+    """Raised when a 200 streaming response carries an error event."""
+
+
+def _stream_error_text(error: Any) -> str:
+    if isinstance(error, dict):
+        message = error.get("message") or error.get("type") or error
+        return str(message)[:500]
+    return str(error)[:500]
+
+
+_THINK_BLOCK = re.compile(r"^\s*<think>.*?</think>", re.DOTALL | re.IGNORECASE)
+_WRAPPERS = " \t\r\n\"'`*_."
+
+
+def _normalize_answer(text: str) -> str:
+    text = _THINK_BLOCK.sub("", text, count=1)
+    return text.strip().strip(_WRAPPERS).strip().casefold()
+
+
+def answer_matches(content: str, expected: str, match: str = "exact") -> bool:
+    """Check a canary or passkey answer.
+
+    ``exact`` compares the whole reply after trimming whitespace, quotes,
+    markdown emphasis, a trailing period, a leading <think> block, and case.
+    ``contains`` requires the expected text as a standalone token, so "703"
+    does not match "1703".
+    """
+    if match == "contains":
+        body = _THINK_BLOCK.sub("", content, count=1)
+        pattern = (
+            r"(?<![0-9A-Za-z])" + re.escape(expected.strip()) + r"(?![0-9A-Za-z])"
+        )
+        return re.search(pattern, body, re.IGNORECASE) is not None
+    if match == "exact":
+        return _normalize_answer(content) == _normalize_answer(expected)
+    raise ValueError(f"unknown answer match mode: {match!r}")
 
 
 def _reasoning_text(delta: dict[str, Any]) -> str:

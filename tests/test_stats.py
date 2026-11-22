@@ -25,6 +25,27 @@ class StatsTests(unittest.TestCase):
         self.assertEqual(summary["quality_passed"], 1)
         self.assertEqual(summary["output_throughput_tps"], 10)
 
+    def test_decode_rate_excludes_first_token(self):
+        result = RequestResult(
+            request_id="r", started_at=0, e2e_seconds=3, ttft_seconds=1,
+            prompt_tokens=10, completion_tokens=21,
+        )
+        summary = summarize([result], wall_seconds=3, concurrency=1)
+        self.assertEqual(summary["per_request_decode_tps_mean"], 10)
+
+    def test_estimated_completion_tokens_are_counted(self):
+        estimated = RequestResult(
+            request_id="e", started_at=0, e2e_seconds=1, ttft_seconds=0.1,
+            prompt_tokens=0, completion_tokens=5,
+            completion_tokens_source="char_estimate",
+        )
+        reported = RequestResult(
+            request_id="u", started_at=0, e2e_seconds=1, ttft_seconds=0.1,
+            prompt_tokens=0, completion_tokens=5,
+        )
+        summary = summarize([estimated, reported], wall_seconds=1, concurrency=2)
+        self.assertEqual(summary["completion_tokens_estimated_requests"], 1)
+
     def test_concurrency_effectiveness(self):
         scenarios = [
             {"config": {"comparison_group": "x"},

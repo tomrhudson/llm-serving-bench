@@ -151,6 +151,29 @@ adjust context lengths for models with smaller native windows.
 - Do not infer quality from throughput. These canaries detect only obvious
   serving regressions.
 
+### Measurement rules
+
+- A 200 stream that carries an `error` event, or that ends with no content,
+  reasoning, or completion usage, counts as a failed request.
+- Each request records `completion_tokens_source`: `usage`, `tokenize`, or
+  `char_estimate`. Scenario summaries report
+  `completion_tokens_estimated_requests`, and the run notes name any scenario
+  whose throughput relies on the characters/4 estimate.
+- Canaries use `exact` matching by default: the whole reply must equal the
+  expected answer after trimming whitespace, quotes, markdown emphasis, a
+  trailing period, a leading `<think>` block, and case. Set `"match":
+  "contains"` on a case or scenario to accept the answer as a standalone token
+  in a longer reply. Passkey scenarios default to `contains`.
+- `per_request_decode_tps` is `(completion_tokens - 1) / (e2e - ttft)`, since
+  the first token arrives at TTFT.
+- Unique and shared prompts are seeded from the suite seed plus the scenario
+  name and request index, so prompts never repeat across scenarios.
+
+Runs made before these rules are not directly comparable on canary pass
+counts or per-request decode rate. The decode rate is slightly lower now, and
+canary checks are stricter. Earlier runs also used different unique-prompt
+text of the same length.
+
 ## Tests
 
 ```bash
