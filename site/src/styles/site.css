@@ -93,6 +93,7 @@ option { color: var(--foreground); background: var(--surface); }
 .top nav { gap: .2rem; }
 .header-actions { gap: .85rem; }
 .top nav a { color: var(--muted); }
+.top nav .sponsor-nav { color: var(--accent-soft-foreground); }
 .top nav a[aria-current] { color: var(--accent-soft-foreground); background: var(--accent-soft); }
 .brand { display: inline-flex; align-items: center; gap: .58rem; white-space: nowrap; color: var(--foreground); font-size: 1.12rem; font-weight: 720; text-decoration: none; letter-spacing: -.04em; }
 .mark {
@@ -154,6 +155,17 @@ option { color: var(--foreground); background: var(--surface); }
 
 .home-section { padding-block: clamp(2.6rem, 6vw, 4.5rem); }
 .home-section > h1 { margin-bottom: 1rem; }
+.support-card {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: clamp(1.15rem, 3vw, 2rem);
+  margin-bottom: clamp(2.6rem, 6vw, 4.5rem);
+  background-image: radial-gradient(ellipse at 100% 0%, var(--accent-soft), transparent 70%);
+}
+.support-card p { margin-top: .55rem; color: var(--muted); }
 .workload-section { padding-bottom: 0; }
 .workload-picker { padding: clamp(1rem, 2.7vw, 1.75rem); }
 .workload-controls { display: flex; flex-wrap: wrap; gap: .75rem; margin-bottom: 1rem; }

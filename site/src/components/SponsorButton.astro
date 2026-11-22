@@ -1,0 +1,7 @@
+---
+const { label = 'Sponsor', class: className } = Astro.props;
+---
+<a class:list={['button', className]} href="https://github.com/sponsors/tomrhudson">
+  <span aria-hidden="true">♥</span>
+  {label}
+</a>
