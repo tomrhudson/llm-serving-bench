@@ -82,7 +82,13 @@ const maxRate = Math.max(1, ...measuredDecode.map((row) => row.output_tps));
       <h2 id="support-heading">Support Spark Bench</h2>
       <p>Help fund independent DGX Spark benchmarking.</p>
     </div>
-    <SponsorButton label="Sponsor on GitHub" class="button--primary button--lg" />
+    <div class="support-actions">
+      <div class="support-links">
+        <SponsorButton label="Sponsor on GitHub" class="button--primary button--lg" />
+        <a class="button button--outline button--lg" href="https://nowpayments.io/donation/tomrhudson" aria-describedby="crypto-donation-note">Donate with crypto</a>
+      </div>
+      <p id="crypto-donation-note">Crypto checkout via NOWPayments. Please donate $10 USD or more.</p>
+    </div>
   </section>
   <InstallDialog />
 </Layout>
