@@ -166,6 +166,9 @@ option { color: var(--foreground); background: var(--surface); }
   background-image: radial-gradient(ellipse at 100% 0%, var(--accent-soft), transparent 70%);
 }
 .support-card p { margin-top: .55rem; color: var(--muted); }
+.support-actions { min-width: 0; }
+.support-links { display: flex; flex-wrap: wrap; gap: .6rem; }
+.support-actions p { font-size: .875rem; }
 .workload-section { padding-bottom: 0; }
 .workload-picker { padding: clamp(1rem, 2.7vw, 1.75rem); }
 .workload-controls { display: flex; flex-wrap: wrap; gap: .75rem; margin-bottom: 1rem; }
