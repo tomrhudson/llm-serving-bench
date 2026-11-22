@@ -2,6 +2,7 @@
 
 Configuration and serving results are in the [baseline report](2026-11-21-inkling-2-mini-nvfp4-vllm-1spark-262k.md).
 The run uses `spark-bench-capability-samples-v1` and the endpoint's default reasoning mode.
+A [2,048-token output-cap rerun](2026-11-22-inkling-2-mini-nvfp4-vllm-1spark-262k-context-output-cap-2048.md) compares RULER and LongBench v2 with these original scores.
 
 ## RULER v1
 
