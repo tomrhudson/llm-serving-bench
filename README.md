@@ -45,11 +45,11 @@ The JSON result contains per-request measurements, server metric snapshots,
 and host samples. A Markdown summary is written beside it. The endpoint URL
 and SSH targets are deliberately omitted from persisted output.
 
-## Combined serving and tool-use run
+## Standard new-model workflow
 
-New published baselines should run the serving suite first and the pinned
-[`tool-eval-bench`](https://github.com/SeraphimSerapis/tool-eval-bench) profile
-second:
+The combined runner executes the serving suite, the pinned
+[`tool-eval-bench`](https://github.com/SeraphimSerapis/tool-eval-bench) profile,
+NVIDIA RULER v1, LongBench v2, and local τ²-Bench in that order.
 
 ```bash
 python3 scripts/run_combined_benchmark.py \
@@ -57,18 +57,45 @@ python3 scripts/run_combined_benchmark.py \
   --model served-model-name \
   --baseline-id matching-catalog-id \
   --suite configs/qwen-native-standard.json \
+  --tokenizer /path/to/checkpoint/tokenizer.json \
+  --context-window 262144 \
   --label my-model-native-context \
   --server-label private-direct-endpoint
 ```
 
-The runner verifies the requested model, keeps the core package dependency-free,
-and installs the exact tool-eval commit into an isolated cache on first use. Use
-`--api-key-env NAME` for authenticated HTTPS endpoints; credentials are passed to
-both runners through the environment and never placed in command arguments.
+Use the tokenizer from the exact served checkpoint and the context window
+configured on the server. Run from the load-generator host with `git`, `uv`,
+and access to the upstream repositories, datasets, and Python package indexes.
+`uv` provisions isolated Python 3.12 environments for the capability adapters.
+Allow several GB for dependencies, source checkouts, and datasets. The standalone
+serving harness still runs with just Python 3.11 or newer.
 
-Raw serving output, tool conversations, SQLite data, and setup logs stay under
-the ignored `.bench-runs/` directory. After review, create the allowlisted public
-tool report and catalog entry with:
+Use `--api-key-env NAME` for authenticated HTTPS endpoints. The key is passed to
+inference clients through the environment. All capability inference targets the
+provided endpoint, including the τ² simulator and assertion judge.
+`--disable-capability-thinking` sends `enable_thinking=false` to compatible chat
+templates and matches the Qwen pilot's reasoning setting. Otherwise the endpoint
+uses its configured default. For the previous two-stage workflow, use
+`--serving-and-tools-only` and omit capability inputs.
+
+The RULER essay downloader builds its corpus from public sources. Use
+`--ruler-essays /path/to/PaulGrahamEssays.json` to reuse a corpus from an earlier
+run. The runner records its SHA-256, the served tokenizer's SHA-256, pinned
+source revisions, dataset checksums, and context and reasoning settings. Compare
+RULER runs with matching corpus hashes. Compare LongBench rows with the same
+prompt cap, and use the same reasoning setting across capability comparisons.
+
+Raw output, conversations, SQLite data, and logs stay under the ignored
+`.bench-runs/` directory. The manifest identifies the capability attempt
+directory, which contains `summary.json`, per-suite summaries, and logs. A context
+window that cannot accommodate a RULER target plus 128 tokens of chat overhead
+skips that target. LongBench uses the smaller of 130,816 and the configured
+window minus 256 tokens as its prompt cap. Skipped RULER targets, request failures,
+and missing or timed-out τ² grades are marked incomplete in the capability summary.
+A wrong answer or a graded τ² simulation that reaches its step limit is scored
+normally. Review the manifest and stage logs before comparing results.
+
+After review, create the allowlisted public tool report and catalog entry with:
 
 ```bash
 python3 scripts/import_tool_eval_result.py \
@@ -84,12 +111,14 @@ run. Infrastructure failures or an incomplete smoke test stop safely. Tool-use
 scores measure the exact model/runtime/chat-template stack against public mock
 tools; they are not general intelligence or safety certification.
 
-A completed comparative result requires all 69 scenarios to be graded in all
-three trials. A full run with missing grades is retained as explicitly
-`incomplete` pilot evidence and must not be compared as if it were complete.
-After correcting a wrapper-only failure, `--resume-raw-dir` may reuse serving and
-smoke artifacts only when their private manifest and zero-error gates still
-match every requested run identity field.
+A comparative tool-use result requires all 69 scenarios to be graded in all
+three trials. The runner records missing grades as `tool-eval-incomplete` and
+continues to the capability stages after validating the tool artifact. The
+capability summary records its own coverage. After correcting a wrapper-only failure,
+`--resume-raw-dir` reuses serving and smoke artifacts when their manifest and
+validation checks match, including the endpoint and serving suite fingerprints
+for newly created manifests. Each retry creates a fresh capability attempt. A
+pre-capability manifest can be resumed with `--serving-and-tools-only`.
 
 ## Standard suite
 
@@ -144,11 +173,17 @@ committing a curated report; CI also scans the full reachable history.
 | [LongBench v2](https://github.com/THUDM/LongBench) | Multiple-choice reasoning across six long-context domains. | 9/24 correct (37.5%). Ten responses reached the output cap before producing a parseable answer. |
 | [τ²-Bench](https://github.com/sierra-research/tau2-bench/blob/main/docs/running-the-benchmark.md) | Tool-using agents completing tasks with a simulated user in airline, retail, and telecom environments. | 5/9 tasks earned full reward in the custom local pilot. |
 
-The [Qwen3.8-Flash-Next pilot report](results/2026-11-21-qwen38-flash-next-nvfp4-tensorfold-external-evals.md)
-covers the exact NVIDIA NVFP4 TensorFold configuration on two DGX Sparks.
-RULER and LongBench use sampled workloads. The custom τ²-Bench pilot uses
-the same local Qwen checkpoint as agent, simulated user, and natural-language
-judge. The report records sample sizes, output limits, and pinned sources.
+The standard capability profile follows the sampled workloads in the
+[Qwen3.8-Flash-Next pilot report](results/2026-11-21-qwen38-flash-next-nvfp4-tensorfold-external-evals.md):
+
+- **RULER v1** runs two examples from each of 13 tasks at 4K, 32K, and 128K,
+  for 78 cases with full context coverage. It reports macro scores by length.
+- **LongBench v2** runs 24 direct-answer questions across six domains and reports
+  accuracy, truncation, and unparseable answers.
+- **Local τ²-Bench** runs three text simulations each for airline, retail, and
+  telecom, with one trial per task. The candidate serves as agent, simulated user,
+  and natural-language assertion judge. This custom protocol has its own scores
+  and uses different simulator and judge settings from the released leaderboard.
 
 ## Published baselines
 

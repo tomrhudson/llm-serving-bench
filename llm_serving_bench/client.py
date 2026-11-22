@@ -119,6 +119,21 @@ class OpenAIClient:
     def models(self) -> dict[str, Any]:
         return self._json_request(self.api_url + "/models")
 
+    def chat_completion(
+        self,
+        prompt: str,
+        output_tokens: int,
+        temperature: float,
+        extra_body: dict[str, Any],
+    ) -> dict[str, Any]:
+        return self._json_request(self.api_url + "/chat/completions", {
+            "model": self.model,
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": output_tokens,
+            "temperature": temperature,
+            **extra_body,
+        })
+
     def tokenize_count(self, prompt: str) -> int:
         url = self.root_url + "/tokenize"
         content_payload = {"content": prompt, "add_special": False}
