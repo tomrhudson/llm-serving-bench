@@ -1,12 +1,12 @@
 ---
 import EvaluationChip from '../components/EvaluationChip.astro';
 import Layout from '../components/Layout.astro';
-import { baselines, decodeWorkload, displayDate, families, modelUrl, number, rate, unavailable } from '../lib/benchmarks.js';
+import { baselines, decodeWorkload, displayDate, families, modelUrl, number, passkeyTokens, peakDecode, rate, unavailable } from '../lib/benchmarks.js';
 import { comparisonLimit } from '../lib/comparison.js';
 
 const rows = [
   'DGX Spark count', 'Serving runtime', 'Tested', 'Single-stream decode', 'Time to first token · p95, c1',
-  'Sustained throughput', 'Validated retrieval', 'Tool evaluation', 'Safety gate',
+  'Peak decode', 'Sustained throughput', 'Validated retrieval', '240K passkey TTFT p95', 'Tool evaluation', 'Safety gate',
 ];
 const measure = (value, unit) => value == null ? unavailable : `${rate(value)} ${unit}`;
 ---
@@ -57,6 +57,8 @@ const measure = (value, unit) => value == null ? unavailable : `${rate(value)} $
     </section>
     {baselines.map((config) => {
       const { c1, soak, tool_eval: tool } = config;
+      const peak = peakDecode(config.decode);
+      const passkey = config.prefill.find((row) => row.input_tokens === passkeyTokens);
       return (
         <template data-comparison-template={config.id}>
           <div><a href={modelUrl(config.id)}>{config.label}</a></div>
@@ -66,10 +68,15 @@ const measure = (value, unit) => value == null ? unavailable : `${rate(value)} $
           <div>{measure(c1?.output_tps, 'output tok/s')}</div>
           <div>{measure(c1?.ttft_p95_seconds, 's')}</div>
           <div>
+            {measure(peak?.output_tps, 'output tok/s')}
+            {peak && <small>Offered concurrency {peak.concurrency}</small>}
+          </div>
+          <div>
             {measure(soak?.output_tps, 'output tok/s')}
             {soak?.output_tps != null && <small>{soak.minutes} min · c{soak.concurrency} · {number(soak.errors)} errors</small>}
           </div>
           <div>{config.validatedTokens ? `${number(config.validatedTokens)} tokens · passkey passed` : config.validation}</div>
+          <div>{measure(passkey?.ttft_p95_seconds, 's')}</div>
           <div>
             <EvaluationChip status={config.toolStatus}>{config.toolStatus}</EvaluationChip>
             {tool && <small>{tool.score_mean != null && `${rate(tool.score_mean)} / 100 · `}{tool.protocol_id}</small>}

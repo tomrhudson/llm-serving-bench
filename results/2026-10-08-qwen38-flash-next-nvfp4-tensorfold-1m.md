@@ -62,7 +62,7 @@ The 240K passkey was correct. Warm 32K prefix reuse reduced TTFT p95 by about 13
 
 ## Comparison with the NVIDIA/vLLM FP8-KV baseline
 
-The closest published comparison uses the same two-Spark hardware and NVIDIA NVFP4 weights. The earlier checkpoint revision has byte-identical safetensor files, but the runtime, draft engine, configured context, and other serving details differ, so this is a serving-system comparison rather than a pure runtime-only A/B.
+This earlier comparison uses the same two-Spark hardware and NVIDIA NVFP4 weights. The earlier checkpoint revision has byte-identical safetensor files, but the runtime, draft engine, configured context, and other serving details differ, so this is a serving-system comparison rather than a pure runtime-only A/B.
 
 | Metric | vLLM native 262K | TensorFold 1M YaRN | Change |
 |---|---:|---:|---:|
@@ -75,6 +75,11 @@ The closest published comparison uses the same two-Spark hardware and NVIDIA NVF
 | warm 32K-prefix TTFT p95 | 5.86s | 0.33s | -94% |
 
 TensorFold is the new throughput choice for this model. Keep the vLLM lane available as a rollback and compatibility fallback until application routing and workload-specific tool, vision, and exact-output behavior have been validated against the new served model identifier.
+
+The [stock vLLM 0.34.0 serving run](2026-11-21-qwen38-flash-next-nvfp4-vllm034-2x-262k.md)
+used the exact same checkpoint revision and suite. It sustained 140.54 output
+tok/s in the c8 soak versus 432.90 for TensorFold. Both configurations passed
+all 13 serving checks and took about 99s to first token on the 240K passkey.
 
 ## Tool-use evaluation
 
