@@ -56,6 +56,8 @@ class ResultsSummaryTests(unittest.TestCase):
         self.assertIn("| Tool-use evaluation | Not run |", guide)
 
     def test_capability_results_are_listed_by_configuration(self) -> None:
+        from scripts.generate_results_summary import _format_capability_result
+
         catalog = json.loads((ROOT / "results/catalog.json").read_text())
         summary = (ROOT / "results/README.md").read_text()
         readme = (ROOT / "README.md").read_text()
@@ -67,10 +69,24 @@ class ResultsSummaryTests(unittest.TestCase):
                 continue
             self.assertIn(f'[{baseline["label"]}]({evals["report"]})', summary)
             for row in evals["benchmarks"]:
-                self.assertIn(row["result"], summary)
+                result = _format_capability_result(row["result"])
+                self.assertIn(result, summary)
                 # Per-configuration scores belong in results/README.md only.
-                self.assertNotIn(row["result"], readme)
+                self.assertNotIn(result, readme)
         self.assertIn("results/README.md#capability-benchmarks", readme)
+
+    def test_capability_comparison_renders_each_run_on_its_own_line(self) -> None:
+        from scripts.generate_results_summary import _format_capability_result
+
+        result = {
+            "context": "4K / 32K",
+            "runs": [{"label": "Standard", "score": "3% / 7%"},
+                     {"label": "2,048-token cap", "score": "84% / 80%"}],
+        }
+        self.assertEqual(
+            _format_capability_result(result),
+            "4K / 32K<br>Standard 3% / 7%<br>2,048-token cap 84% / 80%",
+        )
 
     def test_capability_rows_fill_missing_benchmarks_with_a_dash(self) -> None:
         from scripts.generate_results_summary import _capability_rows

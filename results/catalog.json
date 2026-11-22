@@ -440,13 +440,24 @@
           {
             "name": "RULER v1",
             "source": "https://github.com/NVIDIA/RULER",
-            "result": "4K / 32K / 128K · Standard 3.85%/0.00%/7.69% · 2,048 cap 84.62%/80.77%/76.92%",
+            "result": {
+              "context": "4K / 32K / 128K",
+              "runs": [
+                {"label": "Standard", "score": "3.85% / 0.00% / 7.69%"},
+                {"label": "2,048-token cap", "score": "84.62% / 80.77% / 76.92%"}
+              ]
+            },
             "notes": "Same 78 prompts. Empty answers decreased from 75 to 15. The rerun had zero request errors."
           },
           {
             "name": "LongBench v2",
             "source": "https://github.com/THUDM/LongBench",
-            "result": "Standard 0/24 · 2,048 cap 4/24",
+            "result": {
+              "runs": [
+                {"label": "Standard", "score": "0/24"},
+                {"label": "2,048-token cap", "score": "4/24"}
+              ]
+            },
             "notes": "Same 24 questions and context cap. Unparseable answers changed from 24 to 17."
           },
           {
