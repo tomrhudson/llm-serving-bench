@@ -87,6 +87,9 @@ const sourceLabel = recipe.label === 'Recipe' ? 'View recipe' : 'View model card
   <div class="card-bottom">
     <p class="card-date">Tested <time datetime={config.date}>{displayDate(config.date)}</time></p>
     <EvaluationBadges config={config} />
+    {config.external_evals && (
+      <p class="card-pilots"><a href={`${modelUrl(config.id)}#external-benchmarks`}>External benchmark pilots</a></p>
+    )}
   </div>
 
   <div class="card-actions">
