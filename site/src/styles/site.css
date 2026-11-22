@@ -166,11 +166,14 @@ option { color: var(--foreground); background: var(--surface); }
 .text-link { font-weight: 650; }
 .measure-grid { display: grid; grid-template-columns: repeat(var(--measure-columns, 3), minmax(0, 1fr)); gap: 1rem; }
 .measure-definitions { --measure-columns: 2; margin-top: 1rem; }
-.measure-grid .card { padding: 1.35rem; }
-.measure-grid p { color: var(--muted); margin-top: .6rem; }
+.measure-grid .card, .tool-eval-credit { padding: 1.35rem; }
+.measure-grid p, .tool-eval-credit p { color: var(--muted); margin-top: .6rem; }
 .home-section.external-evals { padding-bottom: 0; }
 .external-evals-meta, .external-evals-scope { margin-top: .6rem; color: var(--muted); }
 .external-evals .measure-grid strong { color: var(--foreground); font-variant-numeric: tabular-nums; }
+.home-section.external-evals + .tool-eval-credit { margin-top: 1rem; }
+.tool-eval-credit h2 { font-size: 1.14rem; letter-spacing: -.025em; }
+.tool-eval-credit-links { display: flex; flex-wrap: wrap; gap: .4rem 1.25rem; margin-top: .75rem; }
 .card-pilots { margin-top: .45rem; font-size: .94rem; }
 
 .mast .wrap { padding-block: clamp(2.5rem, 5vw, 4.25rem); }
