@@ -186,6 +186,23 @@ option { color: var(--foreground); background: var(--surface); }
 .home-section.external-evals { padding-bottom: 0; }
 .external-evals-meta, .external-evals-scope { margin-top: .6rem; color: var(--muted); }
 .external-evals .measure-grid strong { color: var(--foreground); font-variant-numeric: tabular-nums; }
+.external-evals .external-eval-context { font-size: .875rem; }
+.external-eval-runs { container-type: inline-size; display: grid; gap: .35rem; margin: .6rem 0 0; }
+.external-eval-runs > div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: .15rem .65rem;
+}
+.external-eval-runs dt { color: var(--muted); font-size: .875rem; font-weight: 650; }
+.external-eval-runs dd { margin: 0; }
+@container (max-width: 20rem) {
+  .external-eval-context + .external-eval-runs > div {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
 .home-section.external-evals + .tool-eval-credit { margin-top: 1rem; }
 .tool-eval-credit h2 { font-size: 1.14rem; letter-spacing: -.025em; }
 .tool-eval-credit-links { display: flex; flex-wrap: wrap; gap: .4rem 1.25rem; margin-top: .75rem; }

@@ -160,8 +160,27 @@ def _validate_external_evals(baseline: dict[str, Any]) -> None:
         if row["name"] in names:
             raise ValueError(f"{baseline['id']} repeats capability benchmark: {row['name']}")
         names.add(row["name"])
+        result = row["result"]
+        if isinstance(result, str):
+            continue
+        runs = result.get("runs") if isinstance(result, dict) else None
+        if not isinstance(runs, list) or len(runs) < 2 or any(
+            not isinstance(run, dict)
+            or not all(isinstance(run.get(key), str) and run[key].strip() for key in ("label", "score"))
+            for run in runs
+        ):
+            raise ValueError(f"{baseline['id']} {row['name']} needs at least two labeled run scores")
+        if "context" in result and not isinstance(result["context"], str):
+            raise ValueError(f"{baseline['id']} {row['name']} context must be text")
     if not (RESULTS / str(evals["report"])).is_file():
         raise ValueError(f"missing capability report: {evals['report']}")
+
+
+def _format_capability_result(result: str | dict[str, Any]) -> str:
+    if isinstance(result, str):
+        return result
+    context = [result["context"]] if result.get("context") else []
+    return "<br>".join(context + [f"{run['label']} {run['score']}" for run in result["runs"]])
 
 
 def _capability_rows(baselines: list[dict[str, Any]]) -> list[str]:
@@ -170,7 +189,7 @@ def _capability_rows(baselines: list[dict[str, Any]]) -> list[str]:
         evals = item.get("external_evals")
         if not evals:
             continue
-        results = {row["name"]: row["result"] for row in evals["benchmarks"]}
+        results = {row["name"]: _format_capability_result(row["result"]) for row in evals["benchmarks"]}
         cells = " | ".join(results.get(name, "—") for name in CAPABILITY_BENCHMARKS)
         rows.append(
             f'| [{item["label"]}]({evals["report"]}) | {evals["date"]} | {cells} |'

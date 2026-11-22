@@ -154,7 +154,7 @@ capability results are omitted.
 
 | Serving baseline | Date | RULER v1 | LongBench v2 | τ²-Bench |
 |---|---|---|---|---|
-| [Inkling 2 Mini NVFP4 (vLLM, DSpark7, 1 Spark, 262K)](2026-11-22-inkling-2-mini-nvfp4-vllm-1spark-262k-context-output-cap-2048.md) | 2026-11-22 | 4K / 32K / 128K · Standard 3.85%/0.00%/7.69% · 2,048 cap 84.62%/80.77%/76.92% | Standard 0/24 · 2,048 cap 4/24 | 6/9 full reward · 8/9 graded |
+| [Inkling 2 Mini NVFP4 (vLLM, DSpark7, 1 Spark, 262K)](2026-11-22-inkling-2-mini-nvfp4-vllm-1spark-262k-context-output-cap-2048.md) | 2026-11-22 | 4K / 32K / 128K<br>Standard 3.85% / 0.00% / 7.69%<br>2,048-token cap 84.62% / 80.77% / 76.92% | Standard 0/24<br>2,048-token cap 4/24 | 6/9 full reward · 8/9 graded |
 | [Qwen3.8-Flash-Next NVIDIA NVFP4 (TensorFold, 1M YaRN)](2026-11-21-qwen38-flash-next-nvfp4-tensorfold-external-evals.md) | 2026-11-21 | 86.92% at 4K · 86.15% at 32K · 86.15% at 128K | 9/24 correct (37.5%) | 5/9 tasks earned full reward |
 
 ## Adding another baseline

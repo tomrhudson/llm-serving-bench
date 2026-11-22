@@ -19,7 +19,21 @@ const { date, report, scope, benchmarks } = config.external_evals;
     {benchmarks.map(({ name, source, result, notes }) => (
       <article class="card">
         <h3><a href={source}>{name}</a></h3>
-        <p><strong>{result}</strong></p>
+        {typeof result === 'string' ? (
+          <p><strong>{result}</strong></p>
+        ) : (
+          <>
+            {result.context && <p class="external-eval-context">{result.context} context</p>}
+            <dl class="external-eval-runs">
+              {result.runs.map(({ label, score }) => (
+                <div>
+                  <dt>{label}</dt>
+                  <dd><strong>{score}</strong></dd>
+                </div>
+              ))}
+            </dl>
+          </>
+        )}
         <p>{notes}</p>
       </article>
     ))}
