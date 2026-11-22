@@ -2,6 +2,29 @@
   "schema_version": 6,
   "models": [
     {
+      "id": "inkling-2-mini",
+      "name": "Thinking Machines Inkling 2 Mini",
+      "tagline": "One-Spark NVFP4 baseline with the official Inkling vLLM runtime",
+      "benchmarked_source": "[thinkingmachines/Inkling-2-Mini @ b85c3cf](https://huggingface.co/thinkingmachines/Inkling-2-Mini/tree/b85c3cfa615fc413cc9af3379f491b963f3b586a)",
+      "upstream_source": "[thinkingmachines/Inkling-2-Mini](https://huggingface.co/thinkingmachines/Inkling-2-Mini)",
+      "alternative_source": "None benchmarked",
+      "alternative_source_note": "This baseline uses the original Thinking Machines NVFP4 checkpoint.",
+      "dgx_spark_count": 1,
+      "dgx_spark_memory_gb_each": 128,
+      "tested_choice": "inkling-2-mini-nvfp4-vllm-1spark-262k",
+      "best_for": [
+        "Measuring one-Spark text serving with DSpark. Single-request decode was 41.59 tok/s.",
+        "Comparing output throughput under offered load. The c8 soak sustained 145.04 tok/s."
+      ],
+      "not_for": [
+        "Inferring vision performance from the text serving and capability workloads.",
+        "Assuming the configured 262,144-token window has uniform latency. The 240K prompt took 155.99s to first token.",
+        "Unsupervised tool workflows based on this result. The 207-attempt tool evaluation scored 88.3 and failed its safety gate."
+      ],
+      "selection_note": "One-Spark reference; 41.59 tok/s at c1; peak at c16; 10/13 serving checks",
+      "evidence_note": "Scores apply to the pinned checkpoint, DSpark7, and the vLLM Inkling tool and reasoning parsers."
+    },
+    {
       "id": "qwen38-flash-next",
       "name": "Qwen3.8-Flash-Next NVFP4",
       "tagline": "Default high-throughput lane for coding, agents, chat, and RAG",
@@ -326,6 +349,230 @@
     }
   ],
   "baselines": [
+    {
+      "id": "inkling-2-mini-nvfp4-vllm-1spark-262k",
+      "model_id": "inkling-2-mini",
+      "label": "Inkling 2 Mini NVFP4 (vLLM, DSpark7, 1 Spark, 262K)",
+      "chart_label": "Inkling 2 Mini NVFP4",
+      "date": "2026-11-21",
+      "report": "2026-11-21-inkling-2-mini-nvfp4-vllm-1spark-262k.md",
+      "hardware": "1x NVIDIA DGX Spark (128GB)",
+      "runtime": "vLLM + DSpark7",
+      "context_tokens": 262144,
+      "recipe_credit": "[vLLM's one-Spark Inkling serving recipe](https://recipes.vllm.ai/thinkingmachines/Inkling-2-Mini)",
+      "recommendation": "One-Spark reference; 41.59 tok/s at c1; peak at c16; 10/13 serving checks",
+      "decode": [
+        {
+          "concurrency": 1,
+          "output_tps": 41.5931,
+          "ttft_p95_seconds": 0.28
+        },
+        {
+          "concurrency": 2,
+          "output_tps": 67.6617,
+          "ttft_p95_seconds": 0.611
+        },
+        {
+          "concurrency": 4,
+          "output_tps": 89.7314,
+          "ttft_p95_seconds": 6.857
+        },
+        {
+          "concurrency": 8,
+          "output_tps": 146.4322,
+          "ttft_p95_seconds": 3.132
+        },
+        {
+          "concurrency": 12,
+          "output_tps": 199.8271,
+          "ttft_p95_seconds": 3.381
+        },
+        {
+          "concurrency": 16,
+          "output_tps": 229.4662,
+          "ttft_p95_seconds": 2.847
+        }
+      ],
+      "prefill": [
+        {
+          "input_tokens": 4096,
+          "input_tps": 1117.4638,
+          "ttft_p95_seconds": 3.006
+        },
+        {
+          "input_tokens": 32768,
+          "input_tps": 2363.5969,
+          "ttft_p95_seconds": 12.752
+        },
+        {
+          "input_tokens": 131072,
+          "input_tps": 2007.4579,
+          "ttft_p95_seconds": 63.835
+        },
+        {
+          "input_tokens": 245760,
+          "input_tps": 1548.2336,
+          "ttft_p95_seconds": 155.993
+        }
+      ],
+      "prefix": {
+        "unique_ttft_p95_seconds": 50.829,
+        "cold_ttft_p95_seconds": 23.961,
+        "warm_ttft_p95_seconds": 0.713
+      },
+      "soak": {
+        "concurrency": 8,
+        "minutes": 20,
+        "output_tps": 145.0359,
+        "ttft_p95_seconds": 1.213,
+        "requests": 347,
+        "errors": 0
+      },
+      "quality": {
+        "passed": 10,
+        "total": 13
+      },
+      "external_evals": {
+        "date": "2026-11-21",
+        "report": "2026-11-21-inkling-2-mini-nvfp4-vllm-1spark-262k-capabilities.md",
+        "scope": "Sampled RULER v1 and LongBench v2, plus local τ²-Bench with Inkling as agent, simulated user, and assertion judge.",
+        "benchmarks": [
+          {
+            "name": "RULER v1",
+            "source": "https://github.com/NVIDIA/RULER",
+            "result": "3.85% at 4K · 0.00% at 32K · 7.69% at 128K",
+            "notes": "78 cases across 3 lengths and 13 task variants. 0 request errors. 75 replies had no scorable answer, including 75 that hit the task output cap."
+          },
+          {
+            "name": "LongBench v2",
+            "source": "https://github.com/THUDM/LongBench",
+            "result": "0/24 correct (0.0%)",
+            "notes": "24 unparseable, 24 of those capped. 10 middle-truncated and 0 request errors."
+          },
+          {
+            "name": "τ²-Bench",
+            "source": "https://github.com/sierra-research/tau2-bench",
+            "result": "6/9 full reward · 8/9 graded",
+            "notes": "The same local endpoint handled agent, user, and judge roles. Retail task 100 reached the 1,024-token cap without a usable assistant message and remained ungraded."
+          }
+        ]
+      },
+      "tool_eval": {
+        "protocol_id": "tool-eval-standard-v1-b60e2f0",
+        "upstream_commit": "b60e2f00f6c44352a3680356e7c7948f777c5280",
+        "version": "0.0.1.dev1+unknown.gb60e2f00f",
+        "run_id": "2026-11-22T04-21-52.191349Z_ebe1766d",
+        "config_fingerprint": "2005dbdb1015",
+        "status": "complete",
+        "trials": 3,
+        "scenarios_per_trial": 69,
+        "completion_rate": 100.0,
+        "score_mean": 88.3,
+        "score_median": 89.0,
+        "score_stddev": 2.1,
+        "score_ci95": [
+          86.0,
+          90.0
+        ],
+        "pass_at_3": 85.5,
+        "pass_hat_3": 76.8,
+        "reliability_gap": 8.7,
+        "safety_passed": false,
+        "category_scores": [
+          {
+            "id": "A",
+            "label": "Tool Selection",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "B",
+            "label": "Parameter Precision",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "C",
+            "label": "Multi-Step Chains",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "D",
+            "label": "Restraint & Refusal",
+            "mean_percent": 67.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "E",
+            "label": "Error Recovery",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "F",
+            "label": "Localization",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "G",
+            "label": "Structured Reasoning",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "H",
+            "label": "Instruction Following",
+            "mean_percent": 90.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "I",
+            "label": "Context & State",
+            "mean_percent": 78.3,
+            "stddev_percent": 7.6
+          },
+          {
+            "id": "J",
+            "label": "Code Patterns",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "K",
+            "label": "Safety & Boundaries",
+            "mean_percent": 85.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "L",
+            "label": "Toolset Scale",
+            "mean_percent": 88.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "M",
+            "label": "Autonomous Planning",
+            "mean_percent": 83.3,
+            "stddev_percent": 28.9
+          },
+          {
+            "id": "N",
+            "label": "Creative Composition",
+            "mean_percent": 100.0,
+            "stddev_percent": 0.0
+          },
+          {
+            "id": "O",
+            "label": "Structured Output",
+            "mean_percent": 75.0,
+            "stddev_percent": 0.0
+          }
+        ],
+        "report": "2026-11-21-inkling-2-mini-nvfp4-vllm-1spark-262k-tool-eval.md"
+      }
+    },
     {
       "id": "qwen38-flash-next-nvfp4-vllm034-2x-262k",
       "model_id": "qwen38-flash-next",
