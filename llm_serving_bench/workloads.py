@@ -28,6 +28,7 @@ class PreparedRequest:
     temperature: float
     ignore_eos: bool
     expected: str | None = None
+    match: str = "exact"
     extra_body: dict[str, Any] | None = None
     prepared_prompt_tokens: int = 0
 
@@ -39,7 +40,9 @@ class PromptFactory:
         self._word_counts: dict[tuple[int, str], int] = {}
         self._shared: dict[tuple[str, int], str] = {}
 
-    def _words(self, count: int, seed: int) -> str:
+    def _words(self, count: int, seed: int | str) -> str:
+        # String seeds are hashed with SHA-512 by random.Random, so they are
+        # stable across processes and distinct for distinct keys.
         rng = random.Random(seed)
         return " ".join(rng.choice(WORDS) for _ in range(max(1, count)))
 
@@ -58,10 +61,11 @@ class PromptFactory:
         self._word_counts[key] = count
         return count
 
-    def unique_prompt(self, target_tokens: int, seed_offset: int) -> str:
+    def unique_prompt(self, target_tokens: int, key: str) -> str:
+        """Return a prompt unique to ``key`` (scenario name plus index)."""
         suffix = "\nContinue with a detailed but concise benchmark response."
         count = self._calibrated_word_count(target_tokens, suffix)
-        return self._words(count, self.seed + seed_offset * 7919) + suffix
+        return self._words(count, f"{self.seed}:unique:{key}") + suffix
 
     def shared_prompt(
         self, group: str, target_tokens: int, seed_offset: int
@@ -71,7 +75,7 @@ class PromptFactory:
             suffix = "\nThis is a reusable shared benchmark prefix."
             count = self._calibrated_word_count(target_tokens, suffix)
             self._shared[key] = self._words(
-                count, self.seed + sum(ord(c) for c in group)
+                count, f"{self.seed}:shared:{group}"
             ) + suffix
         return (
             self._shared[key]
@@ -112,6 +116,7 @@ def prepare_requests(
                     temperature=float(case.get("temperature", temperature)),
                     ignore_eos=False,
                     expected=str(case["expected"]),
+                    match=str(case.get("match", scenario.get("match", "exact"))),
                     extra_body=case.get("extra_body", extra_body),
                     prepared_prompt_tokens=factory.client.tokenize_count(prompt),
                 ))
@@ -130,8 +135,7 @@ def prepare_requests(
         elif mode == "shared":
             prompt = factory.shared_prompt(group, target, index)
         else:
-            stable_name = sum(ord(char) for char in name)
-            prompt = factory.unique_prompt(target, index + stable_name)
+            prompt = factory.unique_prompt(target, f"{name}:{index}")
         requests.append(PreparedRequest(
             request_id=f"{name}-{index}",
             prompt=prompt,
@@ -139,6 +143,9 @@ def prepare_requests(
             temperature=temperature,
             ignore_eos=ignore_eos,
             expected=expected,
+            # A passkey is retrieval, not format compliance: accept it as a
+            # standalone token inside a longer reply.
+            match=str(scenario.get("match", "contains")),
             extra_body=extra_body,
             prepared_prompt_tokens=factory.client.tokenize_count(prompt),
         ))

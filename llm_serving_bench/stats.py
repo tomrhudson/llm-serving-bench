@@ -38,9 +38,11 @@ def summarize(
     ]
     decode_rates = []
     for result in successful:
+        # The first token arrives at TTFT, so only the remaining n-1 tokens
+        # are generated during the decode window.
         decode_time = result.e2e_seconds - (result.ttft_seconds or 0.0)
         if result.completion_tokens > 1 and decode_time > 0:
-            decode_rates.append(result.completion_tokens / decode_time)
+            decode_rates.append((result.completion_tokens - 1) / decode_time)
     prompt_tokens = sum(r.prompt_tokens for r in successful)
     completion_tokens = sum(r.completion_tokens for r in successful)
     checks = [r for r in successful if r.expected is not None]
@@ -57,6 +59,9 @@ def summarize(
         "output_throughput_tps": _round(completion_tokens / wall_seconds),
         "total_prompt_tokens": prompt_tokens,
         "total_completion_tokens": completion_tokens,
+        "completion_tokens_estimated_requests": sum(
+            1 for r in successful if r.completion_tokens_source == "char_estimate"
+        ),
         "ttft_mean_ms": _round(statistics.fmean(ttfts) * 1000 if ttfts else None, 2),
         "ttft_p50_ms": _round(percentile(ttfts, 50) * 1000 if ttfts else None, 2),
         "ttft_p95_ms": _round(percentile(ttfts, 95) * 1000 if ttfts else None, 2),
