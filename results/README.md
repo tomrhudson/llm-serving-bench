@@ -144,8 +144,9 @@ retained as explicitly qualified pilot evidence.
    with the matching serving suite and catalog baseline ID.
 2. Import the allowlisted tool summary with `scripts/import_tool_eval_result.py`;
    keep `.bench-runs/`, raw JSON, SQLite data, traces, and generated text private.
-3. Review the separate serving and tool-use reports and update any workload guidance
-   warranted by the observed evidence.
+3. Review the serving and tool-use reports and the private RULER, LongBench v2,
+   and local τ²-Bench summaries linked by the run manifest. Update workload
+   guidance warranted by the observed evidence.
 4. Run `python3 scripts/generate_results_summary.py`, then
    `python3 -m unittest discover -s tests -v`.
 

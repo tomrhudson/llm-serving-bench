@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
-"""Run the serving suite, then a pinned tool-use evaluation, without publishing raw data."""
+"""Run the standard new-model benchmarks against an already-live endpoint."""
 
 from __future__ import annotations
 
 import argparse
 import datetime as dt
+import hashlib
 import json
 import os
+from pathlib import Path
 import re
 import shutil
 import subprocess
 import sys
-from pathlib import Path
+from tempfile import mkdtemp
 from typing import Any
 
 
@@ -20,6 +22,8 @@ DEFAULT_PROFILE = ROOT / "configs" / "tool-eval-standard-v1.json"
 RAW_ROOT = ROOT / ".bench-runs"
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
+
+from scripts import run_capability_benchmarks as capabilities
 
 
 class CombinedRunError(RuntimeError):
@@ -307,8 +311,152 @@ def _standard_completion_rate(
     return round(100.0 * graded / (scenarios * trials), 1)
 
 
+def capability_settings(args: argparse.Namespace) -> dict[str, Any] | None:
+    if args.serving_and_tools_only:
+        if args.tokenizer or args.context_window or args.ruler_essays or args.disable_capability_thinking:
+            raise CombinedRunError("capability options require the full benchmark workflow")
+        return None
+    if not args.tokenizer or not args.context_window or args.context_window <= 256:
+        raise CombinedRunError("the full workflow requires --tokenizer and --context-window above 256")
+    for path in (args.tokenizer, args.ruler_essays):
+        if path and not path.is_file():
+            raise CombinedRunError(f"capability input is missing: {path}")
+    return {
+        "protocol_id": capabilities.PROTOCOL,
+        "sources": {name: commit for name, (_, commit) in capabilities.SOURCES.items()},
+        "datasets": {name: digest for name, (_, digest) in capabilities.DATASETS.items()},
+        "seed": capabilities.SEED,
+        "context_dependencies": list(capabilities.CONTEXT_DEPENDENCIES),
+        "context_window": args.context_window,
+        "ruler_lengths": [length for length in capabilities.RULER_LENGTHS
+                          if length + 128 <= args.context_window],
+        "longbench_prompt_cap": min(130816, args.context_window - 256),
+        "tokenizer_sha256": capabilities.sha256(args.tokenizer),
+        "ruler_essays_sha256": capabilities.sha256(args.ruler_essays) if args.ruler_essays else None,
+        "timeout": args.serving_timeout,
+        "extra_body": {"chat_template_kwargs": {"enable_thinking": False}}
+        if args.disable_capability_thinking else {},
+    }
+
+
+def checkout_source(name: str, sources: Path, env: dict[str, str], log: Path) -> Path:
+    repository, commit = capabilities.SOURCES[name]
+    checkout = sources / name
+    checkout.mkdir()
+    with log.open("w", encoding="utf-8") as output:
+        for command in (
+            ["git", "init", "--quiet"],
+            ["git", "fetch", "--quiet", "--depth", "1", f"https://github.com/{repository}.git", commit],
+            ["git", "checkout", "--quiet", "--detach", commit],
+        ):
+            result = subprocess.run(command, cwd=checkout, env=env, stdout=output,
+                                    stderr=subprocess.STDOUT, check=False)
+            if result.returncode:
+                raise CombinedRunError(f"{name} source setup failed; private log: {log}")
+    return checkout
+
+
+def run_capabilities(
+    args: argparse.Namespace,
+    raw_dir: Path,
+    settings: dict[str, Any],
+    api_key: str | None,
+) -> tuple[bool, str]:
+    from llm_serving_bench.client import OpenAIClient
+
+    work = Path(mkdtemp(prefix="capabilities-", dir=raw_dir))
+    adapter = str(ROOT / "scripts" / "run_capability_benchmarks.py")
+    sources = work / "sources"
+    sources.mkdir()
+    shutil.copyfile(args.tokenizer, work / "tokenizer.json")
+    if capabilities.sha256(work / "tokenizer.json") != settings["tokenizer_sha256"]:
+        raise CombinedRunError("tokenizer changed during the run")
+    if args.ruler_essays:
+        essays = work / "ruler-essays.json"
+        shutil.copyfile(args.ruler_essays, essays)
+        if capabilities.sha256(essays) != settings["ruler_essays_sha256"]:
+            raise CombinedRunError("RULER essay corpus changed during the run")
+        settings = dict(settings, ruler_essays=str(essays))
+    capabilities.write_json(work / "settings.json", settings)
+
+    setup_env = dict(
+        os.environ, GIT_TERMINAL_PROMPT="0", GIT_LFS_SKIP_SMUDGE="1", UV_NO_PROGRESS="1"
+    )
+    for name in (args.api_key_env, "OPENAI_API_KEY", "LLM_SERVING_BENCH_ENDPOINT_KEY",
+                 "PYTHONPATH", "PYTHONHOME", "VIRTUAL_ENV", "UV_PROJECT_ENVIRONMENT"):
+        setup_env.pop(name, None)
+    client = OpenAIClient(args.base_url, args.model, api_key)
+    endpoint_env = dict(setup_env, LLM_SERVING_BENCH_BASE_URL=client.api_url,
+                        LLM_SERVING_BENCH_MODEL=args.model)
+    context_env = dict(endpoint_env, LLM_SERVING_BENCH_ENDPOINT_KEY=api_key or "")
+    tau_env = dict(endpoint_env, OPENAI_API_KEY=api_key or "local-endpoint",
+                   PYTHON_DOTENV_DISABLED="1", LITELLM_LOCAL_MODEL_COST_MAP="True")
+
+    results = {}
+    context_venv = work / ".context-venv"
+    context_python = context_venv / "bin" / "python"
+    try:
+        _run_logged(
+            ["uv", "venv", "--python", "3.12", str(context_venv)],
+            cwd=work, env=setup_env, log_path=work / "context-venv.log",
+        )
+        _run_logged(
+            ["uv", "pip", "install", "--python", str(context_python),
+             *capabilities.CONTEXT_DEPENDENCIES],
+            cwd=work, env=setup_env, log_path=work / "context-install.log",
+        )
+    except (CombinedRunError, OSError) as exc:
+        for stage in ("ruler", "longbench"):
+            results[stage] = {"complete": False, "error": type(exc).__name__}
+
+    for name, stage in (("RULER", "ruler"), ("LongBench", "longbench"), ("tau2-bench", "tau2")):
+        if stage in results:
+            continue
+        try:
+            if stage != "ruler" or settings["ruler_lengths"]:
+                checkout_source(name, sources, setup_env, work / f"{stage}-source.log")
+            if stage == "tau2":
+                _run_logged(
+                    ["uv", "sync", "--locked", "--no-dev", "--python", "3.12"],
+                    cwd=sources / name, env=setup_env, log_path=work / "tau2-install.log",
+                )
+        except (CombinedRunError, OSError) as exc:
+            results[stage] = {"complete": False, "error": type(exc).__name__}
+            continue
+
+        if stage == "tau2":
+            python = sources / name / ".venv" / "bin" / "python"
+            stages = [(domain, f"tau2-{domain}", [str(python), adapter], tau_env)
+                      for domain in capabilities.TAU_DOMAINS]
+        else:
+            stages = [(stage, stage, [str(context_python), adapter], context_env)]
+        stage_results = {}
+        for target, artifact, command, env in stages:
+            print(f"RUN {artifact} capability benchmark", flush=True)
+            try:
+                _run_logged([*command, target, str(work)], cwd=work,
+                            env=env, log_path=work / f"{artifact}.log")
+                stage_results[target] = load_json(work / f"{artifact}-summary.json")
+            except (CombinedRunError, OSError) as exc:
+                stage_results[target] = {"complete": False, "error": type(exc).__name__}
+        if stage == "tau2":
+            results[stage] = {
+                "complete": all(row["complete"] for row in stage_results.values()),
+                "domains": stage_results,
+            }
+        else:
+            results[stage] = stage_results[stage]
+
+    complete = all(row["complete"] for row in results.values())
+    capabilities.write_json(work / "summary.json", {
+        "protocol_id": capabilities.PROTOCOL, "complete": complete, **results,
+    })
+    return complete, work.name
+
+
 def _validate_resume(
-    raw_dir: Path, args: argparse.Namespace, profile: dict[str, Any]
+    raw_dir: Path, args: argparse.Namespace, profile: dict[str, Any],
+    capability_profile: dict[str, Any] | None,
 ) -> None:
     try:
         raw_dir.relative_to(RAW_ROOT.resolve())
@@ -319,15 +467,32 @@ def _validate_resume(
         "baseline_id": args.baseline_id,
         "model": args.model,
         "label": args.label,
+        "server_label": args.server_label,
+        "serving_suite": str(args.suite),
         "tool_eval_profile": profile,
+        "capability_profile": capability_profile,
     }
+    if "serving_identity" in manifest or capability_profile:
+        expected["serving_identity"] = _serving_identity(args)
     if any(manifest.get(key) != value for key, value in expected.items()):
         raise CombinedRunError("resume manifest does not match the requested run identity")
     _validate_serving_result(raw_dir / "serving.json")
 
 
+def _serving_identity(args: argparse.Namespace) -> dict[str, str]:
+    from llm_serving_bench.client import OpenAIClient
+
+    endpoint = OpenAIClient(args.base_url, args.model).api_url
+    return {
+        "endpoint_sha256": hashlib.sha256(endpoint.encode()).hexdigest(),
+        "suite_sha256": capabilities.sha256(args.suite),
+    }
+
+
 def _write_manifest(
-    raw_dir: Path, args: argparse.Namespace, profile: dict[str, Any], status: str
+    raw_dir: Path, args: argparse.Namespace, profile: dict[str, Any], status: str,
+    capability_profile: dict[str, Any] | None, capability_artifacts: str | None = None,
+    tool_eval_completion: float | None = None,
 ) -> None:
     manifest = {
         "schema_version": 1,
@@ -337,17 +502,22 @@ def _write_manifest(
         "label": args.label,
         "server_label": args.server_label,
         "serving_suite": str(args.suite),
+        "serving_identity": _serving_identity(args),
         "tool_eval_profile": profile,
+        "tool_eval_completion": tool_eval_completion,
+        "capability_profile": capability_profile,
+        "capability_artifacts": capability_artifacts,
     }
-    (raw_dir / "manifest.json").write_text(
-        json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
-    )
+    capabilities.write_json(raw_dir / "manifest.json", manifest)
 
 
 def execute(args: argparse.Namespace) -> Path:
     args.suite = args.suite.resolve()
     args.tool_eval_profile = args.tool_eval_profile.resolve()
     profile = load_profile(args.tool_eval_profile)
+    capability_profile = capability_settings(args)
+    if capability_profile and (not shutil.which("uv") or not shutil.which("git")):
+        raise CombinedRunError("the capability benchmarks require git and uv on PATH")
     validate_baseline(ROOT / "results" / "catalog.json", args.baseline_id)
     if not args.suite.is_file():
         raise CombinedRunError(f"serving suite does not exist: {args.suite}")
@@ -367,15 +537,16 @@ def execute(args: argparse.Namespace) -> Path:
 
     if args.resume_raw_dir:
         raw_dir = args.resume_raw_dir.resolve()
-        _validate_resume(raw_dir, args, profile)
+        _validate_resume(raw_dir, args, profile, capability_profile)
         print(f"RESUME validated serving evidence in {raw_dir}", flush=True)
     else:
         raw_dir = RAW_ROOT / _run_id(args.label)
-        raw_dir.mkdir(parents=True, exist_ok=False)
-    _write_manifest(raw_dir, args, profile, "running")
+        raw_dir.mkdir(mode=0o700, parents=True, exist_ok=False)
+    _write_manifest(raw_dir, args, profile, "running", capability_profile)
     env = dict(os.environ)
 
     failure_status = "failed"
+    completion = None
     try:
         if not args.resume_raw_dir:
             serving_output = raw_dir / "serving.json"
@@ -431,21 +602,35 @@ def execute(args: argparse.Namespace) -> Path:
         _validate_tool_identity(standard, profile)
         completion = _standard_completion_rate(standard, profile)
         if completion < 100.0:
-            _write_manifest(raw_dir, args, profile, "tool-eval-incomplete")
             print(f"INCOMPLETE tool-eval completion={completion:.1f}%", flush=True)
-            print(f"RAW_RESULT_DIR {raw_dir}", flush=True)
-            return raw_dir
+        status = "complete"
+        capability_artifacts = None
+        if capability_profile:
+            failure_status = "capability-failed"
+            try:
+                complete, capability_artifacts = run_capabilities(args, raw_dir, capability_profile, api_key)
+            except OSError as exc:
+                raise CombinedRunError(f"capability artifact setup failed ({type(exc).__name__})") from exc
+            if not complete:
+                status = "capability-incomplete"
+                print("INCOMPLETE capability benchmark coverage", flush=True)
+        else:
+            status = "serving-and-tools-complete"
+        if completion < 100.0:
+            status = "tool-eval-incomplete"
     except CombinedRunError:
-        _write_manifest(raw_dir, args, profile, failure_status)
+        _write_manifest(
+            raw_dir, args, profile, failure_status, capability_profile, tool_eval_completion=completion
+        )
         raise
-    _write_manifest(raw_dir, args, profile, "complete")
+    _write_manifest(raw_dir, args, profile, status, capability_profile, capability_artifacts, completion)
     print(f"RAW_RESULT_DIR {raw_dir}", flush=True)
     return raw_dir
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Run serving and pinned tool-use benchmarks against an already-live endpoint."
+        description="Run serving, tool use, RULER, LongBench v2, and local τ²-Bench."
     )
     parser.add_argument("--base-url", required=True)
     parser.add_argument("--model", required=True)
@@ -459,6 +644,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--serving-timeout", type=float, default=900.0)
     parser.add_argument("--tool-eval-profile", type=Path, default=DEFAULT_PROFILE)
     parser.add_argument("--tool-eval-bin", type=Path)
+    parser.add_argument("--tokenizer", type=Path, help="Local tokenizer.json for the served checkpoint.")
+    parser.add_argument("--context-window", type=int, help="Configured context length of the endpoint.")
+    parser.add_argument("--ruler-essays", type=Path, help="Reuse an existing RULER PaulGrahamEssays.json.")
+    parser.add_argument("--disable-capability-thinking", action="store_true",
+                        help="Send enable_thinking=false to compatible chat templates in capability runs.")
+    parser.add_argument("--serving-and-tools-only", action="store_true",
+                        help="Run the serving and tool-use workflow without the capability stages.")
     parser.add_argument(
         "--resume-raw-dir",
         type=Path,
