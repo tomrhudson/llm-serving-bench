@@ -1,5 +1,6 @@
 ---
 import '../styles/site.css';
+import SponsorButton from './SponsorButton.astro';
 import { repository } from '../lib/benchmarks.js';
 
 const { title, description, catalog = false } = Astro.props;
@@ -76,6 +77,7 @@ const { title, description, catalog = false } = Astro.props;
             <a class="button button--ghost button--sm" href="/summary/" aria-current={Astro.url.pathname === '/summary/' ? 'page' : undefined}>Top 5</a>
             <a class="button button--ghost button--sm" href="/compare/" aria-current={Astro.url.pathname === '/compare/' ? 'page' : undefined}>Compare</a>
             <a class="button button--ghost button--sm source-nav" href={repository}>GitHub</a>
+            <SponsorButton class="button--outline button--sm sponsor-nav" />
           </nav>
           <label class="appearance" for="appearance" hidden>
             <span>Appearance</span>
