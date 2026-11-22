@@ -26,3 +26,12 @@ const { date, report, scope, benchmarks } = config.external_evals;
   </div>
   <p class="external-evals-scope">{scope}</p>
 </section>
+
+<section class:list={['card tool-eval-credit', { wrap: showConfiguration }]} aria-labelledby="tool-eval-credit-heading">
+  <h2 id="tool-eval-credit-heading">Standard tool-use benchmark</h2>
+  <p><strong>tool-eval-bench by SeraphimSerapis</strong> powers Spark Bench’s Tool eval and Safety gate badges.</p>
+  <div class="tool-eval-credit-links">
+    <a class="text-link" href="https://github.com/SeraphimSerapis/tool-eval-bench">View upstream repository</a>
+    <a class="text-link" href={`${reportUrl('README.md')}#tool-use-quality`}>View tool-use results</a>
+  </div>
+</section>
