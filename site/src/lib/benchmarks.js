@@ -173,6 +173,7 @@ export const baselines = catalog.baselines.map((baseline) => {
 
   const tool = baseline.tool_eval;
   if (tool) readReport(tool.report); // Fail the build on a dangling report.
+  if (baseline.external_evals) readReport(baseline.external_evals.report);
   return {
     ...baseline,
     toolOnly: Boolean(tool && !baseline.decode.length),

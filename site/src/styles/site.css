@@ -168,6 +168,10 @@ option { color: var(--foreground); background: var(--surface); }
 .measure-definitions { --measure-columns: 2; margin-top: 1rem; }
 .measure-grid .card { padding: 1.35rem; }
 .measure-grid p { color: var(--muted); margin-top: .6rem; }
+.home-section.external-evals { padding-bottom: 0; }
+.external-evals-meta, .external-evals-scope { margin-top: .6rem; color: var(--muted); }
+.external-evals .measure-grid strong { color: var(--foreground); font-variant-numeric: tabular-nums; }
+.card-pilots { margin-top: .45rem; font-size: .94rem; }
 
 .mast .wrap { padding-block: clamp(2.5rem, 5vw, 4.25rem); }
 .mast h1 { font-size: clamp(2.5rem, 6vw, 4.6rem); }

@@ -135,6 +135,21 @@ and operational telemetry. Review and sanitize an artifact before force-adding
 it to version control. Run `python3 scripts/check_publication_hygiene.py` before
 committing a curated report; CI also scans the full reachable history.
 
+## Capability benchmarks
+
+| Benchmark | What it measures | Published results |
+| --- | --- | --- |
+| [tool-eval-bench](https://github.com/SeraphimSerapis/tool-eval-bench) | Mock-tool selection, arguments, multi-step behavior, and safety gates under the pinned three-trial profile. | [Tool-use results by configuration](results/README.md#tool-use-quality) |
+| [NVIDIA RULER v1](https://github.com/NVIDIA/RULER) | Synthetic long-context retrieval, tracking, aggregation, and question answering. | 86.92% at 4K, 86.15% at 32K, and 86.15% at 128K across 78 cases. |
+| [LongBench v2](https://github.com/THUDM/LongBench) | Multiple-choice reasoning across six long-context domains. | 9/24 correct (37.5%). Ten responses reached the output cap before producing a parseable answer. |
+| [τ²-Bench](https://github.com/sierra-research/tau2-bench/blob/main/docs/running-the-benchmark.md) | Tool-using agents completing tasks with a simulated user in airline, retail, and telecom environments. | 5/9 tasks earned full reward in the custom local pilot. |
+
+The [Qwen3.8-Flash-Next pilot report](results/2026-11-21-qwen38-flash-next-nvfp4-tensorfold-external-evals.md)
+covers the exact NVIDIA NVFP4 TensorFold configuration on two DGX Sparks.
+RULER and LongBench use sampled workloads. The custom τ²-Bench pilot uses
+the same local Qwen checkpoint as agent, simulated user, and natural-language
+judge. The report records sample sizes, output limits, and pinned sources.
+
 ## Published baselines
 
 [Build the Spark Bench website](site/README.md) for a browsable catalog of the
@@ -154,7 +169,6 @@ the upstream base model, and one community uncensored/abliterated alternative.
 Alternative checkpoints are discovery links only unless an individual report
 explicitly benchmarks them.
 
-- [Qwen3.8-Flash-Next external benchmark pilots](results/2026-11-21-qwen38-flash-next-nvfp4-tensorfold-external-evals.md) — RULER v1, LongBench v2, and τ²-Bench on the dual-Spark NVIDIA NVFP4 TensorFold configuration
 - [GLM-5.3 Flash EXL3 4 bpw, TensorFold 1.3.0, DFlash2, P4, two DGX Sparks, native 1M context](results/2026-11-20-glm53-flash-exl3-tensorfold-130-dflash2-p4-2x-1m.md) — current [MiaAI-Lab recipe](https://github.com/MiaAI-Lab/GLM-5.3-Flash-DGX-Sparks-1104/tree/a691916c16b6287ebb79ef8ee37ea182b5240a29); 13/13 serving checks and the 240K passkey passed; the [three-trial tool evaluation](results/2026-11-20-glm53-flash-exl3-tensorfold-130-dflash2-p4-2x-1m-tool-eval.md) scored 91.0 but failed the TC-51 safety gate in all three trials
 - [NVIDIA Nemotron 3.5 Bolt 74B-A9B 24GB, TensorFold, one DGX Spark, native 262K context](results/2026-10-17-nemotron35-bolt-tensorfold-262k.md) — served with [MiaAI-Lab's Bolt TensorFold recipe](https://github.com/MiaAI-Lab/Nemotron-3.5-Bolt-TensorFold-DGX-Spark/tree/6f61d7727ae3fac010f30e240799cc884d295f6e); complete tool-eval run with a failed safety gate
 - [Qwen3.8 27B MLX 4-bit, TensorFold, one DGX Spark, native 262K context, thinking off](results/2026-10-17-qwen38-27b-tensorfold-262k.md) — served with [MiaAI-Lab's Qwen3.8 27B TensorFold recipe](https://github.com/MiaAI-Lab/Qwen3.8-27B-DGX-Spark-TensorFold/tree/c11ff138871cf43d12898d79dbfa4dc952d17ca4); incomplete (98.6%) tool-eval run with a failed safety gate (TC-51)

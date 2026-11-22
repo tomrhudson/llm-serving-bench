@@ -1,0 +1,28 @@
+---
+import { displayDate, modelUrl, reportUrl } from '../lib/benchmarks.js';
+
+const { config, showConfiguration = false } = Astro.props;
+const { date, report, scope, benchmarks } = config.external_evals;
+---
+<section id="external-benchmarks" class:list={['external-evals', { 'wrap home-section': showConfiguration }]} aria-labelledby="external-benchmarks-heading">
+  <div class="section-intro">
+    <div>
+      <h2 id="external-benchmarks-heading">External benchmark pilots</h2>
+      <p class="external-evals-meta">
+        {showConfiguration && <><a href={`${modelUrl(config.id)}#external-benchmarks`}>{config.label}</a> · {config.sparks}× DGX Spark · </>}
+        <time datetime={date}>{displayDate(date)}</time>
+      </p>
+    </div>
+    <a class="text-link" href={reportUrl(report)}>Read the pilot report</a>
+  </div>
+  <div class="measure-grid">
+    {benchmarks.map(({ name, source, result, notes }) => (
+      <article class="card">
+        <h3><a href={source}>{name}</a></h3>
+        <p><strong>{result}</strong></p>
+        <p>{notes}</p>
+      </article>
+    ))}
+  </div>
+  <p class="external-evals-scope">{scope}</p>
+</section>

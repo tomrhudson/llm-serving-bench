@@ -1,5 +1,6 @@
 ---
 import EvaluationBadges from '../components/EvaluationBadges.astro';
+import ExternalBenchmarkPilots from '../components/ExternalBenchmarkPilots.astro';
 import InstallDialog from '../components/InstallDialog.astro';
 import InstallModelButton from '../components/InstallModelButton.astro';
 import Layout from '../components/Layout.astro';
@@ -7,6 +8,8 @@ import WorkloadPicker from '../components/WorkloadPicker.astro';
 import { baselines, displayDate, families, decodeWorkload, modelUrl, rate, repository } from '../lib/benchmarks.js';
 
 const latest = baselines.find((config) => config.decode.length);
+const latestPilot = baselines.filter((config) => config.external_evals)
+  .sort((a, b) => b.external_evals.date.localeCompare(a.external_evals.date))[0];
 const measuredDecode = (latest?.decode ?? []).filter((row) => row.output_tps != null);
 const maxRate = Math.max(1, ...measuredDecode.map((row) => row.output_tps));
 ---
@@ -46,6 +49,8 @@ const maxRate = Math.max(1, ...measuredDecode.map((row) => row.output_tps));
   </section>
 
   <WorkloadPicker />
+
+  {latestPilot && <ExternalBenchmarkPilots config={latestPilot} showConfiguration />}
 
   <section class="wrap home-section" aria-labelledby="measured-heading">
     <div class="section-intro">
