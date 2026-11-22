@@ -4,13 +4,28 @@ import SponsorButton from './SponsorButton.astro';
 import { repository } from '../lib/benchmarks.js';
 
 const { title, description, catalog = false } = Astro.props;
+const pageTitle = `${title} · Spark Bench`;
+const pageUrl = new URL(Astro.url.pathname, Astro.site);
+const previewImage = new URL('/spark-bench-share.jpg', Astro.site);
+const previewAlt = 'Spark Bench. DGX Spark serving benchmarks. Independent LLM benchmarks by Tom Hudson.';
 ---
 <!doctype html>
-<html lang="en">
+<html lang="en" prefix="og: https://ogp.me/ns#">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Spark Bench" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={pageUrl.href} />
+    <meta property="og:image" content={previewImage.href} />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={previewAlt} />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="color-scheme" content="light dark" />
     <script is:inline>
       (() => {
@@ -62,7 +77,8 @@ const { title, description, catalog = false } = Astro.props;
       })();
     </script>
     <link rel="icon" type="image/png" href="/icon.png" />
-    <title>{title} · Spark Bench</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <title>{pageTitle}</title>
   </head>
   <body>
     <a class="skip" href="#main">Skip to content</a>

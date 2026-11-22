@@ -14,7 +14,10 @@ const latestPilot = baselines.filter((config) => config.external_evals)
 const measuredDecode = (latest?.decode ?? []).filter((row) => row.output_tps != null);
 const maxRate = Math.max(1, ...measuredDecode.map((row) => row.output_tps));
 ---
-<Layout title="DGX Spark benchmarks" description="Independent, configuration-level LLM serving benchmarks for NVIDIA DGX Spark.">
+<Layout
+  title="DGX Spark serving benchmarks"
+  description="Independent LLM benchmarks for NVIDIA DGX Spark. Compare tested configurations by throughput, context, and tool use."
+>
   <section class="hero">
     <div class="wrap hero-grid">
       <div>
