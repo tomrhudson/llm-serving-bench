@@ -7,6 +7,7 @@ import Layout from '../../components/Layout.astro';
 import {
   baselines, decodeWorkload, displayDate, modelUrl, number, rate, reportUrl, soakWorkload, unavailable,
 } from '../../lib/benchmarks.js';
+import { comparisonPath } from '../../lib/comparison.js';
 
 export function getStaticPaths() {
   return baselines.map((config) => ({ params: { id: config.id }, props: { config } }));
@@ -15,6 +16,10 @@ export function getStaticPaths() {
 const { config } = Astro.props;
 const { c1, recipe, soak, tool_eval: tool, quality } = config;
 const related = baselines.filter((other) => other.model_id === config.model_id && other.id !== config.id);
+const comparison = related.find((other) => other.id === config.compare_with);
+if (config.compare_with && !comparison) {
+  throw new Error(`Unknown comparison configuration for ${config.id}: ${config.compare_with}`);
+}
 const measurement = (value, unit) => value == null ? unavailable : `${rate(value)} ${unit}`;
 const percent = (value) => value == null ? unavailable : `${value}%`;
 const toolCaveat = config.safetyGate === 'failed' ? 'This configuration failed a critical tool-use check. Review the findings before using it for consequential automation.'
@@ -50,6 +55,9 @@ const toolCaveat = config.safetyGate === 'failed' ? 'This configuration failed a
       </section>
       <div class="actions report-actions">
         <a class="button button--primary" href={reportUrl(config.report)}>Read the benchmark report</a>
+        {comparison && (
+          <a class="button button--outline" href={comparisonPath([config.id, comparison.id])}>Compare with {comparison.runtime}</a>
+        )}
         {recipe.href && <a class="button button--outline" href={recipe.href}>{recipe.revision ? 'Open pinned recipe' : `Open ${recipe.label.toLowerCase()}`}</a>}
       </div>
     </div>
