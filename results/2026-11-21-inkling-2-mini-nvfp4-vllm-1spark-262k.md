@@ -51,5 +51,6 @@ Some cache resets were unavailable. Cold prompts used distinct content and the w
 
 - [Tool-use evaluation](2026-11-21-inkling-2-mini-nvfp4-vllm-1spark-262k-tool-eval.md).
 - [RULER, LongBench v2, and local τ²-Bench](2026-11-21-inkling-2-mini-nvfp4-vllm-1spark-262k-capabilities.md).
+- [RULER and LongBench v2 output-cap comparison](2026-11-22-inkling-2-mini-nvfp4-vllm-1spark-262k-context-output-cap-2048.md).
 
 The serving workload exercised text and measured prefill through approximately 240K tokens.

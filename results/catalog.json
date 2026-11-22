@@ -433,21 +433,21 @@
         "total": 13
       },
       "external_evals": {
-        "date": "2026-11-21",
-        "report": "2026-11-21-inkling-2-mini-nvfp4-vllm-1spark-262k-capabilities.md",
-        "scope": "Sampled RULER v1 and LongBench v2, plus local τ²-Bench with Inkling as agent, simulated user, and assertion judge.",
+        "date": "2026-11-22",
+        "report": "2026-11-22-inkling-2-mini-nvfp4-vllm-1spark-262k-context-output-cap-2048.md",
+        "scope": "Standard and 2,048-token runs for sampled RULER v1 and LongBench v2. The local τ²-Bench row comes from the original run.",
         "benchmarks": [
           {
             "name": "RULER v1",
             "source": "https://github.com/NVIDIA/RULER",
-            "result": "3.85% at 4K · 0.00% at 32K · 7.69% at 128K",
-            "notes": "78 cases across 3 lengths and 13 task variants. 0 request errors. 75 replies had no scorable answer, including 75 that hit the task output cap."
+            "result": "4K / 32K / 128K · Standard 3.85%/0.00%/7.69% · 2,048 cap 84.62%/80.77%/76.92%",
+            "notes": "Same 78 prompts. Empty answers decreased from 75 to 15. The rerun had zero request errors."
           },
           {
             "name": "LongBench v2",
             "source": "https://github.com/THUDM/LongBench",
-            "result": "0/24 correct (0.0%)",
-            "notes": "24 unparseable, 24 of those capped. 10 middle-truncated and 0 request errors."
+            "result": "Standard 0/24 · 2,048 cap 4/24",
+            "notes": "Same 24 questions and context cap. Unparseable answers changed from 24 to 17."
           },
           {
             "name": "τ²-Bench",
