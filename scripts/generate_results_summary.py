@@ -73,6 +73,7 @@ def _load_catalog() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         if not (RESULTS / baseline["report"]).is_file():
             raise ValueError(f"missing report: {baseline['report']}")
         _validate_tool_eval(baseline)
+        _validate_external_evals(baseline)
         if not baseline["decode"] and (
             not baseline.get("tool_eval")
             or any(baseline[field] for field in ("prefill", "prefix", "soak", "quality"))
@@ -127,6 +128,54 @@ def _validate_tool_eval(baseline: dict[str, Any]) -> None:
         raise ValueError(f"{baseline['id']} tool_eval commit must be a full SHA")
     if not (RESULTS / str(tool_eval["report"])).is_file():
         raise ValueError(f"missing tool-eval report: {tool_eval['report']}")
+
+
+CAPABILITY_BENCHMARKS = ("RULER v1", "LongBench v2", "τ²-Bench")
+
+
+def _validate_external_evals(baseline: dict[str, Any]) -> None:
+    evals = baseline.get("external_evals")
+    if evals is None:
+        return
+    if not isinstance(evals, dict):
+        raise ValueError(f"{baseline['id']} external_evals must be an object")
+    missing = {"date", "report", "scope", "benchmarks"} - evals.keys()
+    if missing:
+        raise ValueError(f"{baseline['id']} external_evals missing: {sorted(missing)}")
+    if not isinstance(evals["benchmarks"], list) or not evals["benchmarks"]:
+        raise ValueError(f"{baseline['id']} external_evals benchmarks must be a non-empty list")
+    names: set[str] = set()
+    for row in evals["benchmarks"]:
+        if not isinstance(row, dict):
+            raise ValueError(f"{baseline['id']} external_evals benchmark must be an object")
+        row_missing = {"name", "source", "result", "notes"} - row.keys()
+        if row_missing:
+            raise ValueError(
+                f"{baseline['id']} external_evals benchmark missing: {sorted(row_missing)}"
+            )
+        if row["name"] not in CAPABILITY_BENCHMARKS:
+            raise ValueError(
+                f"{baseline['id']} has unknown capability benchmark: {row['name']}"
+            )
+        if row["name"] in names:
+            raise ValueError(f"{baseline['id']} repeats capability benchmark: {row['name']}")
+        names.add(row["name"])
+    if not (RESULTS / str(evals["report"])).is_file():
+        raise ValueError(f"missing capability report: {evals['report']}")
+
+
+def _capability_rows(baselines: list[dict[str, Any]]) -> list[str]:
+    rows = []
+    for item in baselines:
+        evals = item.get("external_evals")
+        if not evals:
+            continue
+        results = {row["name"]: row["result"] for row in evals["benchmarks"]}
+        cells = " | ".join(results.get(name, "—") for name in CAPABILITY_BENCHMARKS)
+        rows.append(
+            f'| [{item["label"]}]({evals["report"]}) | {evals["date"]} | {cells} |'
+        )
+    return rows
 
 
 def _tool_eval_signal(baseline: dict[str, Any]) -> str:
@@ -521,6 +570,14 @@ def _summary_markdown(
             f'{float(tool_eval["pass_hat_3"]):.1f}% | {safety} |'
         )
 
+    capability_rows = _capability_rows(baselines)
+    capability_table = (
+        "| Serving baseline | Date | RULER v1 | LongBench v2 | τ²-Bench |\n"
+        "|---|---|---|---|---|\n" + "\n".join(capability_rows)
+        if capability_rows
+        else "No capability results have been published yet."
+    )
+
     model_source_rows = [
         f'| {model["name"]} | {model["benchmarked_source"]} | '
         f'{model["upstream_source"]} | '
@@ -594,6 +651,19 @@ retained as explicitly qualified pilot evidence.
 | Serving baseline | Protocol | Status | Completion | Mean score | Pass@3 | Pass^3 | Safety gate |
 |---|---|---|---:|---:|---:|---:|---|
 {chr(10).join(tool_rows)}
+
+## Capability benchmarks
+
+Capability results use the sampled standard profile described in the
+[main README](../README.md#capability-benchmarks): RULER v1 macro scores by
+context length, LongBench v2 accuracy, and a custom local τ²-Bench pilot. They
+are small samples, so treat them as screening evidence rather than leaderboard
+scores. Compare RULER rows only with matching corpus hashes (recorded in the run
+manifest), LongBench rows only with the same prompt cap, and all rows only with
+the same reasoning setting (both stated in the linked report). Baselines without
+capability results are omitted.
+
+{capability_table}
 
 ## Adding another baseline
 
