@@ -1,0 +1,82 @@
+---
+import { baselines } from '../lib/benchmarks.js';
+
+const ids = baselines.map(({ id }) => id);
+---
+<div class="card compare-selection" data-compare-selection data-config-ids={JSON.stringify(ids)} hidden>
+  <p class="compare-selection-count" role="status"></p>
+  <div class="compare-selection-actions">
+    <button type="button" class="button button--ghost" data-clear-comparison>Clear selection</button>
+    <a class="button button--primary" href="/compare/" data-open-comparison hidden>View comparison</a>
+  </div>
+</div>
+
+<script>
+  import { comparisonLimit, comparisonPath } from '../lib/comparison.js';
+
+  const selection = document.querySelector<HTMLElement>('[data-compare-selection]')!;
+  const buttons = document.querySelectorAll<HTMLButtonElement>('[data-compare-config]');
+  const count = selection.querySelector<HTMLElement>('[role="status"]')!;
+  const clear = selection.querySelector<HTMLButtonElement>('[data-clear-comparison]')!;
+  const open = selection.querySelector<HTMLAnchorElement>('[data-open-comparison]')!;
+  const valid = new Set<string>(JSON.parse(selection.dataset.configIds!));
+  const key = 'spark-bench-comparison';
+  let selected: string[] = [];
+
+  function readSelection() {
+    try {
+      const saved = sessionStorage.getItem(key);
+      selected = [...new Set(new URLSearchParams(saved ?? '').getAll('config'))]
+        .filter((id) => valid.has(id)).slice(0, comparisonLimit);
+    } catch {
+      // Use the in-page selection when storage is unavailable.
+    }
+    render();
+  }
+
+  function render(atLimit = false) {
+    const canCompare = selected.length >= 2;
+    selection.hidden = selected.length === 0;
+    count.textContent = atLimit
+      ? `Up to ${comparisonLimit} configurations. Deselect one to add another.`
+      : `${selected.length} of ${comparisonLimit} selected${canCompare ? '' : ' · select at least 2'}`;
+    open.hidden = !canCompare;
+    open.href = comparisonPath(selected);
+    for (const button of buttons) {
+      const added = selected.includes(button.dataset.compareConfig!);
+      button.textContent = added ? 'Compare ✓' : 'Compare';
+      button.setAttribute('aria-pressed', String(added));
+    }
+  }
+
+  function update() {
+    try {
+      sessionStorage.setItem(key, comparisonPath(selected).split('?')[1] ?? '');
+    } catch {
+      // The URL still carries the selection to the comparison page.
+    }
+    render();
+  }
+
+  readSelection();
+  window.addEventListener('pageshow', readSelection);
+  for (const button of buttons) {
+    button.hidden = false;
+    button.addEventListener('click', () => {
+      const id = button.dataset.compareConfig!;
+      if (selected.includes(id)) selected = selected.filter((value) => value !== id);
+      else if (selected.length < comparisonLimit) selected.push(id);
+      else {
+        render(true);
+        return;
+      }
+      update();
+    });
+  }
+  clear.addEventListener('click', () => {
+    const firstSelected = [...buttons].find((button) => button.getAttribute('aria-pressed') === 'true' && button.getClientRects().length);
+    selected = [];
+    update();
+    (firstSelected ?? document.querySelector<HTMLElement>('main h1[tabindex]'))?.focus();
+  });
+</script>

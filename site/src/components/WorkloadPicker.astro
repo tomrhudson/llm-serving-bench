@@ -1,0 +1,96 @@
+---
+import EvaluationBadges from './EvaluationBadges.astro';
+import SparkCountFilter from './SparkCountFilter.astro';
+import { baselines, modelUrl, rate, reportUrl, sparkCounts } from '../lib/benchmarks.js';
+
+// Use the tested recipes and deployment caveats in the Model Guide.
+const workloads = [
+  {
+    id: 'chat', title: 'Interactive chat',
+    picks: {
+      1: ['flint-nvfp4-gguf-llamacpp-1x-262k', (c) => `${rate(c.c1.output_tps)} output tok/s and ${rate(c.c1.ttft_p95_seconds)} s p95 time to first token at concurrency 1. This recipe serves one request at a time.`],
+      2: ['qwen38-flash-next-nvfp4-tensorfold-1m', (c) => `${rate(c.c1.output_tps)} output tok/s and ${rate(c.c1.ttft_p95_seconds)} s p95 time to first token at concurrency 1. The guide uses concurrency 8 for shared interactive traffic.`],
+    },
+  },
+  {
+    id: 'batch', title: 'Batch serving',
+    picks: {
+      1: ['qwen36-35b-a3b-nvfp4-vllm-mtp2-1x-262k', (c) => `Sustained ${rate(c.soak.output_tps)} output tok/s over ${c.soak.minutes} minutes at concurrency ${c.soak.concurrency} with zero errors. The tool-eval safety gate failed.`],
+      2: ['qwen38-flash-next-nvfp4-tensorfold-1m', (c) => `Sustained ${rate(c.soak.output_tps)} output tok/s over ${c.soak.minutes} minutes at concurrency ${c.soak.concurrency} with zero errors. The guide uses up to 16 streams for throughput-heavy work.`],
+    },
+  },
+  {
+    id: 'context', title: 'Long documents',
+    picks: {
+      1: ['deepseek-v4-flash-0731-sparkinfer-384k', () => 'Passed the 240K-token retrieval check. Use one request at a time and review the documented launch dependency repair before installing.'],
+      2: ['glm53-flash-exl3-tensorfold-130-dflash2-p4-2x-1m', () => 'Passed the 240K-token retrieval check and all 13 serving checks. This recipe is suited to long prompts and small batches.'],
+    },
+  },
+  {
+    id: 'tools', title: 'Tool-using agents',
+    picks: {
+      1: ['arete-27b-sglang-fp8kv-1spark-262k', (c) => `Scored ${c.tool_eval.score_mean}/100. Single-stream decode was ${rate(c.c1.output_tps)} output tok/s, so this is a research pick for latency-tolerant work.`],
+      2: ['deepseek-v4-flash-dspark-2x-orig-1m', (c) => `Scored ${c.tool_eval.score_mean}/100 with thinking turned off. This setup uses two dedicated Sparks.`],
+    },
+  },
+];
+
+const recommendations = sparkCounts.flatMap((sparks) => workloads.flatMap(({ id, picks }) => {
+  const pick = picks[sparks];
+  if (!pick) return [];
+  const [configId, describe] = pick;
+  const config = baselines.find((entry) => entry.id === configId && entry.sparks === sparks);
+  if (!config) throw new Error(`Missing workload recommendation ${configId}`);
+  return [{ sparks, id, config, note: describe(config) }];
+}));
+const defaultSparks = sparkCounts[0];
+const defaultWorkload = workloads[0].id;
+---
+<section id="workloads" class="wrap home-section workload-section" aria-labelledby="workloads-heading">
+  <div class="section-intro">
+    <h2 id="workloads-heading">Choose by workload</h2>
+    <a class="text-link" href={reportUrl('MODEL-GUIDE.md')}>Read the model guide</a>
+  </div>
+  <div class="card workload-picker">
+    <div class="workload-controls" hidden>
+      <SparkCountFilter id="workload-sparks" includeAny={false} />
+      <label class="select-label" for="workload-kind">Workload
+        <select id="workload-kind">
+          {workloads.map(({ id, title }) => <option value={id}>{title}</option>)}
+        </select>
+      </label>
+    </div>
+    <div class="workload-result" aria-live="polite">
+      {recommendations.map(({ sparks, id, config, note }) => (
+        <div data-pick-sparks={sparks} data-pick-workload={id} hidden={sparks !== defaultSparks || id !== defaultWorkload}>
+          <h3><a href={modelUrl(config.id)}>{config.label}</a></h3>
+          <p>{note}</p>
+          {id === 'tools' && <EvaluationBadges config={config} />}
+        </div>
+      ))}
+      <p id="workload-empty" hidden>No model guide recommendation for this hardware and workload.</p>
+    </div>
+  </div>
+</section>
+
+<script>
+  const controls = document.querySelector<HTMLElement>('.workload-controls')!;
+  const sparks = controls.querySelector<HTMLSelectElement>('#workload-sparks')!;
+  const workload = controls.querySelector<HTMLSelectElement>('#workload-kind')!;
+  const picks = document.querySelectorAll<HTMLElement>('[data-pick-workload]');
+  const empty = document.querySelector<HTMLElement>('#workload-empty')!;
+
+  function showPick() {
+    let found = false;
+    for (const pick of picks) {
+      const match = pick.dataset.pickSparks === sparks.value && pick.dataset.pickWorkload === workload.value;
+      pick.hidden = !match;
+      found ||= match;
+    }
+    empty.hidden = found;
+  }
+
+  controls.hidden = false;
+  showPick();
+  controls.addEventListener('change', showPick);
+</script>

@@ -1,4 +1,5 @@
 ---
+import EvaluationBadges from '../../components/EvaluationBadges.astro';
 import EvaluationChip from '../../components/EvaluationChip.astro';
 import InstallDialog from '../../components/InstallDialog.astro';
 import InstallModelButton from '../../components/InstallModelButton.astro';
@@ -12,10 +13,14 @@ export function getStaticPaths() {
 }
 
 const { config } = Astro.props;
-const { recipe, soak, tool_eval: tool, quality } = config;
+const { c1, recipe, soak, tool_eval: tool, quality } = config;
 const related = baselines.filter((other) => other.model_id === config.model_id && other.id !== config.id);
 const measurement = (value, unit) => value == null ? unavailable : `${rate(value)} ${unit}`;
 const percent = (value) => value == null ? unavailable : `${value}%`;
+const toolCaveat = config.safetyGate === 'failed' ? 'This configuration failed a critical tool-use check. Review the findings before using it for consequential automation.'
+  : config.toolStatus === 'incomplete' ? 'This run has ungraded attempts. Its score reflects only part of the tool evaluation.'
+  : config.toolStatus === 'unsupported' ? 'The tested setup could not complete the tool-use protocol.'
+  : '';
 ---
 <Layout title={config.label} description={`${config.toolOnly ? 'Tool-use evaluation' : 'Serving results'} for ${config.label} on ${config.sparks} NVIDIA DGX Spark systems.`}>
   <div class="mast detail-mast">
@@ -27,9 +32,24 @@ const percent = (value) => value == null ? unavailable : `${value}%`;
       </nav>
       <h1>{config.title}</h1>
       <p class="hero-lead">{config.sparks}× DGX Spark · {config.runtime} · <time datetime={config.date}>{displayDate(config.date)}</time></p>
-      <div class="actions">
+      <section class="card benchmark-overview" aria-label="Key benchmark results">
+        {config.toolOnly ? (
+          <dl class="benchmark-highlights">
+            <div><dt>Tool-eval mean</dt><dd>{measurement(tool.score_mean, '/ 100')}</dd></div>
+            <div><dt>Graded attempts</dt><dd>{percent(tool.completion_rate)}</dd></div>
+          </dl>
+        ) : (
+          <dl class="benchmark-highlights">
+            <div><dt>Single-stream decode</dt><dd>{measurement(c1?.output_tps, 'output tok/s')}</dd></div>
+            <div><dt>Time to first token · p95, c1</dt><dd>{measurement(c1?.ttft_p95_seconds, 's')}</dd></div>
+          </dl>
+        )}
+        <EvaluationBadges config={config} showUnavailableSafety />
+        {toolCaveat && <p class="benchmark-caveat">{toolCaveat} {tool && <a href="#tools">See the tool evaluation</a>}</p>}
+        <div class="actions"><InstallModelButton config={config} /></div>
+      </section>
+      <div class="actions report-actions">
         <a class="button button--primary" href={reportUrl(config.report)}>Read the benchmark report</a>
-        <InstallModelButton config={config} />
         {recipe.href && <a class="button button--outline" href={recipe.href}>{recipe.revision ? 'Open pinned recipe' : `Open ${recipe.label.toLowerCase()}`}</a>}
       </div>
     </div>

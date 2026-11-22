@@ -1,4 +1,5 @@
 ---
+import CompareButton from './CompareButton.astro';
 import EvaluationBadges from './EvaluationBadges.astro';
 import InstallModelButton from './InstallModelButton.astro';
 import { displayDate, modelUrl, number, peakDecode, rate, unavailable } from '../lib/benchmarks.js';
@@ -91,6 +92,7 @@ const sourceLabel = recipe.label === 'Recipe' ? 'View recipe' : 'View model card
   <div class="card-actions">
     <a class="button button--primary card-benchmark" href={modelUrl(config.id)} aria-label={benchmarkLabel}>View benchmark</a>
     <InstallModelButton config={config} />
+    <CompareButton config={config} />
     {recipe.href && <a class="button button--outline" href={recipe.href} aria-label={`${sourceLabel} for ${config.label}`}>{sourceLabel}</a>}
   </div>
 </article>

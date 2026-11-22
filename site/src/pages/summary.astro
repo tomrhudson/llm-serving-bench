@@ -1,4 +1,6 @@
 ---
+import CompareButton from '../components/CompareButton.astro';
+import CompareSelection from '../components/CompareSelection.astro';
 import EvaluationBadges from '../components/EvaluationBadges.astro';
 import InstallDialog from '../components/InstallDialog.astro';
 import InstallModelButton from '../components/InstallModelButton.astro';
@@ -31,7 +33,7 @@ const boards = [
 <Layout title="Top 5" description="Top five DGX Spark model families by peak decode throughput, long-context prefill latency, and sustained throughput.">
   <div class="mast">
     <div class="wrap">
-      <h1>Top 5 models by benchmark</h1>
+      <h1 tabindex="-1">Top 5 models by benchmark</h1>
       <p class="hero-lead">Each ranking uses the best measured configuration per model family. Spark count and serving runtime can vary across entries.</p>
     </div>
   </div>
@@ -40,6 +42,7 @@ const boards = [
     <div class="card filters summary-filters" id="summary-filters" hidden>
       <SparkCountFilter />
     </div>
+    <CompareSelection />
     {boards.map(({ id, title, description, metric, unit }) => (
       <section id={id} class="card summary-board" aria-labelledby={`${id}-heading`}>
         <div class="summary-intro">
@@ -60,7 +63,10 @@ const boards = [
                   <div class="summary-result">
                     <p><strong>{rate(value)}</strong> <span>{unit}</span></p>
                     {concurrency != null && <p class="summary-meta">Concurrency {concurrency}</p>}
-                    <InstallModelButton config={config} />
+                    <div class="summary-actions">
+                      <InstallModelButton config={config} />
+                      <CompareButton config={config} />
+                    </div>
                   </div>
                 </div>
               </li>

@@ -1,4 +1,5 @@
 ---
+import CompareSelection from '../../components/CompareSelection.astro';
 import Layout from '../../components/Layout.astro';
 import ConfigCard from '../../components/ConfigCard.astro';
 import InstallDialog from '../../components/InstallDialog.astro';
@@ -11,48 +12,52 @@ const toolOptions = Object.entries({ complete: 'Complete', incomplete: 'Incomple
   .filter(([value]) => baselines.some((config) => config.toolStatus === value));
 ---
 <Layout title="Model catalog" description="Compare tested DGX Spark serving configurations by hardware, engine, safety gate, and tool evaluation status." catalog>
-  <div class="mast">
+  <div class="mast catalog-mast">
     <div class="wrap">
       <p class="kicker">DGX Spark benchmarks</p>
-      <h1>Model catalog</h1>
+      <h1 tabindex="-1">Model catalog</h1>
       <p class="hero-lead">Filter by hardware, serving engine, and evaluation results. Browse by model or sort across configurations by speed or date.</p>
     </div>
   </div>
   <div class="wrap catalog">
-    <div class="card filters" id="filters" hidden>
+    <div class="card filters catalog-filters" id="filters" hidden>
       <SparkCountFilter />
-      <label class="select-label" for="engine">Serving engine
-        <select id="engine">
-          <option value="">Any engine</option>
-          {engines.map((engine) => <option value={engine}>{engine}</option>)}
-        </select>
-      </label>
-      <label class="select-label" for="safety">Safety gate
-        <select id="safety">
-          <option value="">Any safety result</option>
-          {safetyOptions.map(([value, label]) => <option value={value}>{label}</option>)}
-        </select>
-      </label>
-      <label class="select-label" for="tool">Tool evaluation
-        <select id="tool">
-          <option value="">Any tool status</option>
-          {toolOptions.map(([value, label]) => <option value={value}>{label}</option>)}
-        </select>
-      </label>
       <label class="select-label" for="sort">Sort by
         <select id="sort">
           <option value="">Model groups</option>
-          <option value="decode">Single-stream decode</option>
-          <option value="sustained">Sustained throughput</option>
-          <option value="newest">Newest benchmark</option>
+          <option value="decode">Decode speed</option>
+          <option value="sustained">Sustained rate</option>
+          <option value="newest">Newest</option>
         </select>
       </label>
+      <button id="more-filters" class="button button--outline" type="button" aria-expanded="false" aria-controls="advanced-filters">More filters</button>
+      <div id="advanced-filters" class="advanced-filters">
+        <label class="select-label" for="engine">Serving engine
+          <select id="engine">
+            <option value="">Any</option>
+            {engines.map((engine) => <option value={engine}>{engine}</option>)}
+          </select>
+        </label>
+        <label class="select-label" for="safety">Safety gate
+          <select id="safety">
+            <option value="">Any</option>
+            {safetyOptions.map(([value, label]) => <option value={value}>{label}</option>)}
+          </select>
+        </label>
+        <label class="select-label" for="tool">Tool evaluation
+          <select id="tool">
+            <option value="">Any</option>
+            {toolOptions.map(([value, label]) => <option value={value}>{label}</option>)}
+          </select>
+        </label>
+      </div>
       <button id="clear" class="button button--outline" type="button">Reset filters</button>
     </div>
     <div class="catalog-summary">
       <p id="result-count" role="status">{baselines.length} configurations across {families.length} models</p>
       <p>Decode sweep · {decodeWorkload}</p>
     </div>
+    <CompareSelection />
     <p id="empty" class="card empty" hidden>No configurations match these filters.</p>
     <div id="sorted-configurations" class="card-grid" hidden></div>
     {families.map((family) => (
@@ -77,6 +82,8 @@ const toolOptions = Object.entries({ complete: 'Complete', incomplete: 'Incomple
   const count = document.querySelector<HTMLElement>('#result-count')!;
   const empty = document.querySelector<HTMLElement>('#empty')!;
   const reset = document.querySelector<HTMLButtonElement>('#clear')!;
+  const more = filters.querySelector<HTMLButtonElement>('#more-filters')!;
+  const advanced = filters.querySelector<HTMLElement>('#advanced-filters')!;
   const sorted = document.querySelector<HTMLElement>('#sorted-configurations')!;
   const families = Array.from(document.querySelectorAll<HTMLElement>('[data-family]'), (group) => ({
     group,
@@ -111,6 +118,8 @@ const toolOptions = Object.entries({ complete: 'Complete', incomplete: 'Incomple
   function render() {
     arrangeCards();
     const activeFilters = selects.filter((select) => select.value);
+    const advancedCount = activeFilters.filter((select) => advanced.contains(select)).length;
+    more.textContent = advancedCount ? `More filters (${advancedCount})` : 'More filters';
     let total = 0;
     let models = 0;
     for (const family of families) {
@@ -142,6 +151,9 @@ const toolOptions = Object.entries({ complete: 'Complete', incomplete: 'Incomple
   filters.hidden = false;
   readControls();
   filters.addEventListener('change', updateControls);
+  more.addEventListener('click', () => {
+    more.setAttribute('aria-expanded', String(more.getAttribute('aria-expanded') === 'false'));
+  });
   reset.addEventListener('click', () => {
     for (const select of selects) select.value = '';
     updateControls();
